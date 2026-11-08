@@ -123,6 +123,12 @@ def script(rows):
             out.append('cd /')
         out.append('/bin/rowtool snap %s home %s %s' % (name, HOME, exact))
         out.append('/bin/rowtool snap %s xdev %s %s' % (name, XDEV, exact))
+        # A name that is not UTF-8 outlives its row otherwise: no wolf call can
+        # name it to remove it (wolf-lang#687), so the C fixture does.
+        for st in row['steps']:
+            for op in st.get('make', []):
+                if op[0] == 'name':
+                    out.append('/bin/mkname rm %s %s' % (q(where(op[1])), op[2]))
         out.append('/bin/rowtool end %s' % name)
     out.append('printf "PAXROWS done\\n"')
     return '\n'.join(out) + '\n'
