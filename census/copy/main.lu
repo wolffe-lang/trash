@@ -24,7 +24,13 @@ fn main() -> int {
     }
     fs_close(src) else |_| {}
     fs_close(dst) else |_| {}
-    let same = (fs_read_bytes("{a[1]}/c2") else List[byte]()) == big
+    let back = fs_read_bytes("{a[1]}/c2") else List[byte]()
+    var same = back.len == big.len
+    var i = 0
+    while same && i < big.len {
+        same = back[i] == big[i]
+        i += 1
+    }
     print("ROW copy@{a[0]} bytes={n} same={same}")
     0
 }
