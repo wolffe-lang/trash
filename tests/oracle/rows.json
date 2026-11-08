@@ -1,0 +1,1291 @@
+{
+ "about": "The oracle rows (tools/oracle.py): each runs on trash-cli and on this repository's tools in matching scratch homes. Paths in make steps are relative to the home, or @xdev/ for the second file system; \\\\xHH in a path or an argument is one byte.",
+ "rows": [
+  {
+   "name": "put-file",
+   "about": "a plain file from the home",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-file-absolute",
+   "about": "the same file named by its absolute path",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/tmp/trash-rows/home/a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-file-modes",
+   "about": "a file whose mode and times must come through the trashing",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "x.sh",
+       "#!/bin/sh\n",
+       "0750"
+      ],
+      [
+       "file",
+       "ro.txt",
+       "r\n",
+       "0444"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "x.sh",
+      "ro.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-dir",
+   "about": "a directory with contents: one info file, the tree moved whole",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "dir",
+       "d/sub"
+      ],
+      [
+       "file",
+       "d/sub/g",
+       "g\n"
+      ],
+      [
+       "link",
+       "f",
+       "d/lf"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "d"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-empty-dir",
+   "about": "an empty directory",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "e"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "e"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-symlink",
+   "about": "a symbolic link: the link, never its target",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ],
+      [
+       "link",
+       "a.txt",
+       "l"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "l"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-dangling-symlink",
+   "about": "a link to nothing",
+   "steps": [
+    {
+     "make": [
+      [
+       "link",
+       "nowhere/x",
+       "l"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "l"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-symlink-to-dir",
+   "about": "a link to a directory",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "link",
+       "d",
+       "l"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "l"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-symlink-to-dir-slash",
+   "about": "a link to a directory, named with a trailing slash",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "link",
+       "d",
+       "l"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "l/"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-collision",
+   "about": "the same name trashed three times",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-collision-shapes",
+   "about": "collisions of a double extension, no extension, a dot file and a directory",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.tar.gz",
+       "1"
+      ],
+      [
+       "file",
+       "noext",
+       "1"
+      ],
+      [
+       "file",
+       ".hidden",
+       "1"
+      ],
+      [
+       "dir",
+       "dd"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.tar.gz",
+      "noext",
+      ".hidden",
+      "dd"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "a.tar.gz",
+       "2"
+      ],
+      [
+       "file",
+       "noext",
+       "2"
+      ],
+      [
+       "file",
+       ".hidden",
+       "2"
+      ],
+      [
+       "dir",
+       "dd"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.tar.gz",
+      "noext",
+      ".hidden",
+      "dd"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-collision-other-dirs",
+   "about": "one name from two directories",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "p/a.txt",
+       "p\n"
+      ],
+      [
+       "file",
+       "q/a.txt",
+       "q\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "p/a.txt",
+      "q/a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-spaces-utf8",
+   "about": "spaces and non-ASCII UTF-8 in the name",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "my file é.txt",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "my file é.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-punctuation",
+   "about": "every ASCII punctuation mark a name may hold",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a%b#c?d+e&f=g;h~i@j!k'l(m)n*o,p$q[r]s{t}u^v`w|x\"y<z>_-.:",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a%b#c?d+e&f=g;h~i@j!k'l(m)n*o,p$q[r]s{t}u^v`w|x\"y<z>_-.:"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-control-chars",
+   "about": "a tab and a newline in names",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "tab\there",
+       "t\n"
+      ],
+      [
+       "file",
+       "nl\nhere",
+       "n\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "tab\there",
+      "nl\nhere"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-not-utf8",
+   "about": "a name holding the byte 0xff",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "x\\xffy",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "x\\xffy"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-subdir",
+   "about": "a file in a subdirectory, named relatively",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "sub/x",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "sub/x"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-dotdot",
+   "about": "operands spelled with . and .. from a subdirectory",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "sub"
+      ],
+      [
+       "file",
+       "x",
+       "x\n"
+      ],
+      [
+       "file",
+       "sub/y",
+       "y\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "../x",
+      "./y"
+     ],
+     "cwd": "sub"
+    }
+   ]
+  },
+  {
+   "name": "put-missing",
+   "about": "a missing operand",
+   "steps": [
+    {
+     "run": [
+      "trash",
+      "nope"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-missing-force",
+   "about": "a missing operand under -f",
+   "steps": [
+    {
+     "run": [
+      "trash",
+      "-f",
+      "nope"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-missing-and-present",
+   "about": "a missing operand before a present one",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nope",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-dot",
+   "about": "the operands . and ..",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "sub/deeper"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "."
+     ],
+     "cwd": "sub/deeper"
+    },
+    {
+     "run": [
+      "trash",
+      ".."
+     ],
+     "cwd": "sub/deeper"
+    }
+   ]
+  },
+  {
+   "name": "put-trash-itself",
+   "about": "the trash, and an item inside it",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "Trash/files/a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "Trash"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-no-operand",
+   "about": "no operand",
+   "steps": [
+    {
+     "run": [
+      "trash"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-verbose",
+   "about": "-v",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ],
+      [
+       "dir",
+       "d"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-v",
+      "a.txt",
+      "d"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-rm-flags",
+   "about": "rm's flags: -r, -R, -d, -f together",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ],
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "dir",
+       "e"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-r",
+      "d"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-d",
+      "e"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-rf",
+      "a.txt",
+      "nope"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-dash-name",
+   "about": "a name that starts with a dash, after --",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "-foo",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--",
+      "-foo"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-unknown-option",
+   "about": "an option that is not one",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-x",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-interactive",
+   "about": "-i with a yes and a no on standard input",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ],
+      [
+       "file",
+       "b.txt",
+       "b\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "a.txt",
+      "b.txt"
+     ],
+     "stdin": "y\nn\n"
+    }
+   ]
+  },
+  {
+   "name": "put-other-fs",
+   "about": "a file on another file system, by default",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "@xdev/x.txt",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/x.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-other-fs-home-trash",
+   "about": "a file on another file system, into the home trash by --trash-dir",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "@xdev/x.txt",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--trash-dir",
+      "/tmp/trash-rows/home/Trash",
+      "/xdev/trash-rows/x.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-other-fs-dir-home-trash",
+   "about": "a directory tree on another file system, into the home trash by --trash-dir",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "@xdev/d"
+      ],
+      [
+       "file",
+       "@xdev/d/f",
+       "f\n",
+       "0640"
+      ],
+      [
+       "link",
+       "f",
+       "@xdev/d/l"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--trash-dir",
+      "/tmp/trash-rows/home/Trash",
+      "/xdev/trash-rows/d"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "list-empty",
+   "about": "trash-list with no trash",
+   "steps": [
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "list-one",
+   "about": "trash-list after one trashing",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "list-made",
+   "about": "trash-list over info files a fixture wrote: fixed dates, an encoded path, a relative path, an orphan, a malformed one",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/old.txt.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/old.txt\nDeletionDate=2020-01-02T03:04:05\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/old.txt",
+       "o\n"
+      ],
+      [
+       "file",
+       "Trash/info/sp ace.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/sp%20ace\nDeletionDate=2021-06-07T08:09:10\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/sp ace",
+       "s\n"
+      ],
+      [
+       "file",
+       "Trash/info/rel.trashinfo",
+       "[Trash Info]\nPath=docs/rel\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/rel",
+       "r\n"
+      ],
+      [
+       "file",
+       "Trash/info/orphan.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/orphan\nDeletionDate=2023-03-03T03:03:03\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/noinfo",
+       "n\n"
+      ],
+      [
+       "file",
+       "Trash/info/bad.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/bad\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/bad",
+       "b\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "restore-first",
+   "about": "trash-restore of the one item, chosen by its number",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-occupied",
+   "about": "trash-restore when the original path is taken again",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "new\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-parent-gone",
+   "about": "trash-restore when the original directory is gone",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "sub/x",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "sub/x"
+     ]
+    },
+    {
+     "make": [
+      [
+       "remove",
+       "sub"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-nothing",
+   "about": "trash-restore with nothing to restore",
+   "steps": [
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": ""
+    }
+   ]
+  },
+  {
+   "name": "rm-pattern",
+   "about": "trash-rm of a pattern",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ],
+      [
+       "file",
+       "b.txt",
+       "b\n"
+      ],
+      [
+       "file",
+       "c.log",
+       "c\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt",
+      "b.txt",
+      "c.log"
+     ]
+    },
+    {
+     "run": [
+      "trash-rm",
+      "*.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "rm-name",
+   "about": "trash-rm of one name",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ],
+      [
+       "file",
+       "b.txt",
+       "b\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt",
+      "b.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-rm",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "empty-all",
+   "about": "trash-empty",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ],
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt",
+      "d"
+     ]
+    },
+    {
+     "run": [
+      "trash-empty"
+     ],
+     "stdin": ""
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "empty-days",
+   "about": "trash-empty 1 over an item from 2020 and one from now",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ],
+      [
+       "file",
+       "Trash/info/old.txt.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/old.txt\nDeletionDate=2020-01-02T03:04:05\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/old.txt",
+       "o\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-empty",
+      "1"
+     ],
+     "stdin": ""
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-local-time",
+   "about": "the deletion date in a zone east of UTC",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ],
+   "tz": "Asia/Tokyo"
+  }
+ ]
+}

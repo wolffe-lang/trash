@@ -23,6 +23,8 @@ unset TZ
 source "$root/tools/gate-steps.sh"
 step pin-metadata python3 -I tools/check-pins.py
 step census-selftest python3 -I tools/census.py selftest
+step census-pax-selftest python3 -I tools/census-pax.py selftest
+step oracle-selftest python3 -I tools/oracle.py selftest
 [ "$mode" != unit ] || exit 0
 [ -f /opt/oracle-manifest.txt ] || { echo 'FAIL gate-linux-outside-the-image: run it through tools/in-container'; exit 2; }
 stage=$root/.wolf-bin
@@ -37,3 +39,5 @@ step census-linux python3 -I tools/census.py run --bin target/census-bin --same 
     --other /xdev/census --out target/census/linux.json
 step census-linux-verdict python3 -I tools/census.py verdict --record target/census/linux.json --platform linux
 step census-static python3 -I tools/census.py build --wolf "$wolf" --out target/census-static --static
+step oracle-live-selftest python3 -I tools/oracle.py selftest --live --rows tests/oracle/rows.json
+step oracle-goldens python3 -I tools/oracle.py check --rows tests/oracle/rows.json --golden tests/oracle/golden
