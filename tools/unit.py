@@ -23,7 +23,7 @@ def main():
     p.add_argument('--wolf', required=True)
     p.add_argument('--out', required=True)
     a = p.parse_args()
-    out = Path(a.out)
+    out = Path(a.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     want = json.loads((ROOT / 'tests/unit-rows.json').read_text())['programs']
     sources = {s.name: s for s in sorted((ROOT / 'src').glob('*_test.lu'))}
