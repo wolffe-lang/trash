@@ -194,6 +194,19 @@ def make(ops):
             os.utime(p, ns=(as_ * 10**9 + ans, ms * 10**9 + mns), follow_symlinks=False)
 
 
+def oracle_guard(row, tool, argv):
+    """Refuse to hand the oracle a path that begins with exactly two slashes.
+    Python keeps such a path as it is, the oracle's check against moving '/'
+    into itself misses it, and its fallback copies the whole root file system
+    into the trash (measured once, in a scratch container, and stopped)."""
+    if tool != oracle_bin():
+        return
+    for word in argv[1:]:
+        if word.startswith(b'//') and not word.startswith(b'///'):
+            raise SystemExit('FAIL oracle-guard %s: %r begins with two slashes; the oracle would copy the root file '
+                             'system for it' % (row['name'], show(word)))
+
+
 def tool_path(tool, command):
     if command not in COMMANDS:
         raise ValueError('not a command of the trash family: ' + command)
@@ -241,6 +254,7 @@ def run_row(row, tool):
             make(step['make'])
             continue
         argv = [unescape(a) for a in step['run']]
+        oracle_guard(row, tool, argv)
         argv[0] = tool_path(tool, argv[0].decode()).encode()
         cwd = where(unescape(step.get('cwd', '')))
         r = subprocess.run(argv, cwd=cwd, env=env_for(row), input=unescape(step.get('stdin', '')),
@@ -645,6 +659,17 @@ def mutations():
     }
 
 
+def guarded():
+    """The oracle is never handed '//' or '//x', and is handed '/' and '///'."""
+    def refused(word):
+        try:
+            oracle_guard({'name': 'g'}, oracle_bin(), [b'trash', word])
+        except SystemExit:
+            return True
+        return False
+    return refused(b'//') and refused(b'//tmp/..') and not refused(b'/') and not refused(b'///x')
+
+
 def in_window_ns(base):
     import copy
     c = copy.deepcopy(base)
@@ -686,6 +711,7 @@ def cmd_selftest(a):
         ('normalise-ns-kept', n['trees']['home']['Trash/files/a b.txt'].get('mtime_ns') == 123456789, ''),
         ('normalise-ns-in-window-dropped', 'mtime_ns' not in normalise(in_window_ns(base))['trees']['home']['Trash'], ''),
         ('own-words', own_words(base), ''),
+        ('oracle-guard', guarded(), ''),
     ]
     for name, ok, detail in checks:
         if ok:
