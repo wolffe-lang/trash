@@ -297,7 +297,7 @@ commands are listed as `OUT` by name and counted apart.
 
 ## Recommendations
 
-R-tb01-1 to R-tb01-7 are implemented as recommended (A), pending a ruling.
+R-tb01-1 to R-tb01-7 are implemented as recommended (A), and were ruled A.
 R-tb01-8 and R-tb01-9 were ruled A.
 
 - R-tb01-1: `-i` matches the oracle and asks nothing of a dangling link.
