@@ -1,9 +1,69 @@
 //! member: false
 //!
-//! trash-list: the stub T2's rows are held red against first. It refuses
-//! every invocation with one line of its own and touches nothing.
+//! trash-list — list what is in the trash: one line per item, the date and
+//! time it was trashed and where it came from.
+//!
+//! Written from the FreeDesktop.org Trash specification 1.0 and black-box
+//! runs of a pinned trash-cli (`trash-list`), the oracle whose bytes it is
+//! held to (`tests/oracle/`). Never trash-cli's source, nor any other
+//! trash's. The rules, and the measurement each came from, are in
+//! `notes/tb02-the-companions.md`.
+
+use can
+
+fn usage() -> str {
+    "usage: trash-list [-h] [--version]\n"
+}
+
+fn help() -> str {
+    """
+    usage: trash-list [-h] [--version]
+
+    List what is in the trash, ~/Trash: one line per item, the date and time
+    it was trashed and the path it was trashed from, in the order the trash's
+    directory lists them. An item whose date cannot be read shows question
+    marks for it.
+
+    options:
+      -h, --help  print this help and exit
+      --version   print the version and exit
+    """
+}
 
 fn main() -> int {
-    eprint("trash-list: not written yet")
-    74
+    let l = can.read_args(can.arg_words(), can.list_opts(), 0)
+    if l.help {
+        print_raw(help())
+        return 0
+    }
+    if l.version {
+        print_raw(can.version_of("trash-list"))
+        return 0
+    }
+    if l.error.len > 0 {
+        return can.usage_error(usage(), "trash-list", l.error)
+    }
+    let trash = can.trash_of("trash-list")
+    if trash.len == 0 {
+        return 74
+    }
+    var buf = List[byte]()
+    for x in can.scan(trash) {
+        let info = can.info_shown(trash, x)
+        if x.state == 0 {
+            can.add(mut buf, "{can.listed_date(x.date)} ")
+            can.add_bytes(mut buf, x.path)
+            can.add(mut buf, "\n")
+        } else if x.state == 1 {
+            eprint(can.errno_line(x.errno, info))
+        } else if x.state == 2 {
+            eprint("Parse Error: {info}: Unable to parse Path.")
+        } else {
+            eprint(
+                "trash-list: cannot read '{info}': its name is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)",
+            )
+        }
+    }
+    can.put_out(buf)
+    0
 }
