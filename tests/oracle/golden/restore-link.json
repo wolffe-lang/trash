@@ -1,0 +1,62 @@
+{
+ "row": "restore-link",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "l"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-restore"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /tmp/trash-rows/home/l\nWhat file to restore [0..0]: "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "a.txt": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
+    "size": 2,
+    "type": "file"
+   },
+   "l": {
+    "mode": "0777",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "target": "a.txt",
+    "type": "link"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

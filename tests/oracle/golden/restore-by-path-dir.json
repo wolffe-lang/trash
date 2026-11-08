@@ -1,0 +1,83 @@
+{
+ "row": "restore-by-path-dir",
+ "steps": [
+  {
+   "argv": [
+    "trash-restore",
+    "sub"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 2020-01-01 00:00:00 /tmp/trash-rows/home/sub/x\n   1 2021-01-01 00:00:00 /tmp/trash-rows/home/sub/y\nWhat file to restore [0..1]: "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/x": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/z": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "c865f6c5ab8d1b0bcd383a5e1e3879d22681c96bf462c269b7581d523fbe70ab",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/x.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/sub/x\nDeletionDate=<outside-window:2020-01-01T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/z.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/z\nDeletionDate=<outside-window:2019-01-01T00:00:00>\n",
+    "type": "file"
+   },
+   "sub": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "sub/y": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "3bb2abb69ebb27fbfe63c7639624c6ec5e331b841a5bc8c3ebc10b9285e90877",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

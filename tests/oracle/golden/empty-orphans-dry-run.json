@@ -1,0 +1,69 @@
+{
+ "row": "empty-orphans-dry-run",
+ "steps": [
+  {
+   "argv": [
+    "trash-empty",
+    "--dry-run"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "would remove /tmp/trash-rows/home/Trash/files/gone\nwould remove /tmp/trash-rows/home/Trash/files/noinfo\nwould remove /tmp/trash-rows/home/Trash/files/ok\nwould remove /tmp/trash-rows/home/Trash/info/gone.trashinfo\nwould remove /tmp/trash-rows/home/Trash/info/ok.trashinfo\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/noinfo": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "a4fb621495a0122493b2203591c448903c472e306a1ede54fabad829e01075c0",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/ok": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/gone.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/gone\nDeletionDate=<outside-window:2020-01-01T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/ok.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/ok\nDeletionDate=<outside-window:2021-01-01T00:00:00>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

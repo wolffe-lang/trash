@@ -1,0 +1,49 @@
+{
+ "row": "empty-v",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "a.txt",
+    "d"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-empty",
+    "-v"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "removing /tmp/trash-rows/home/Trash/files/a.txt\nremoving /tmp/trash-rows/home/Trash/files/d\nremoving /tmp/trash-rows/home/Trash/info/a.txt.trashinfo\nremoving /tmp/trash-rows/home/Trash/info/d.trashinfo\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

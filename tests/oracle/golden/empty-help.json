@@ -1,0 +1,20 @@
+{
+ "row": "empty-help",
+ "steps": [
+  {
+   "argv": [
+    "trash-empty",
+    "--help"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "<text>"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

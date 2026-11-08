@@ -1,0 +1,68 @@
+{
+ "row": "restore-into-trash",
+ "steps": [
+  {
+   "argv": [
+    "trash-restore"
+   ],
+   "exit": 1,
+   "stderr": "Refusing to overwrite existing file \"a.txt\".\n",
+   "stdout": "   0 2020-01-01 00:00:00 /tmp/trash-rows/home/Trash/files/a.txt\n   1 2021-01-01 00:00:00 /tmp/trash-rows/home/a.txt\nWhat file to restore [0..1]: "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/a.txt": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "10fbdce5d5e2ba7e0249a4a8921faede362fda69bae3c5bb8a59bb1b9407ad5e",
+    "size": 6,
+    "type": "file"
+   },
+   "Trash/files/a.txt_1": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "69061cbb057a53d62cd9178378607db2af37bb706c9e268dfa1ead3211f64980",
+    "size": 8,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/a.txt.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/a.txt\nDeletionDate=<outside-window:2021-01-01T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/a.txt_1.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/Trash/files/a.txt\nDeletionDate=<outside-window:2020-01-01T00:00:00>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

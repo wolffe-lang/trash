@@ -1,0 +1,20 @@
+{
+ "row": "restore-version",
+ "steps": [
+  {
+   "argv": [
+    "trash-restore",
+    "--version"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "<text>"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

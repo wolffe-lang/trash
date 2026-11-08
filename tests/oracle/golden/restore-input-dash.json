@@ -1,0 +1,83 @@
+{
+ "row": "restore-input-dash",
+ "steps": [
+  {
+   "argv": [
+    "trash-restore"
+   ],
+   "exit": 1,
+   "stderr": "Invalid entry: open interval: -\n",
+   "stdout": "   0 2020-01-01 00:00:00 /tmp/trash-rows/home/p0\n   1 2021-01-01 00:00:00 /tmp/trash-rows/home/p1\n   2 2022-01-01 00:00:00 /tmp/trash-rows/home/p2\nWhat file to restore [0..2]: "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/p0": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "b9f5f5b99acec3f75c23a4dfd4118105902523f9ecfacb4c24b895c7299fb9fc",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/p1": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "2dc43a466a3fb5896dace477dcf43876b5ff20c59d83a45c26229b743987893e",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/p2": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "e131a747fbac12c08cbcc950bad932a9534e1a2950dcf9366ce36cd4657de8cf",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/p0.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=<outside-window:2020-01-01T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/p1.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=<outside-window:2021-01-01T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/p2.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=<outside-window:2022-01-01T00:00:00>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

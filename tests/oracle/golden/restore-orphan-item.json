@@ -1,0 +1,46 @@
+{
+ "row": "restore-orphan-item",
+ "steps": [
+  {
+   "argv": [
+    "trash-restore"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "No files trashed from current dir ('/tmp/trash-rows/home')\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/noinfo": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "a4fb621495a0122493b2203591c448903c472e306a1ede54fabad829e01075c0",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

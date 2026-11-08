@@ -1,0 +1,55 @@
+{
+ "row": "empty-info-shapes",
+ "steps": [
+  {
+   "argv": [
+    "trash-empty",
+    "--dry-run"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "would remove /tmp/trash-rows/home/Trash/files/empty\nwould remove /tmp/trash-rows/home/Trash/files/nopath\nwould remove /tmp/trash-rows/home/Trash/files/ok\nwould remove /tmp/trash-rows/home/Trash/files/sub\nwould remove /tmp/trash-rows/home/Trash/info/empty.trashinfo\nwould remove /tmp/trash-rows/home/Trash/info/nopath.trashinfo\nwould remove /tmp/trash-rows/home/Trash/info/ok.trashinfo\nwould remove /tmp/trash-rows/home/Trash/info/sub.trashinfo\n"
+  },
+  {
+   "argv": [
+    "trash-empty"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/notinfo.txt": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "a4fb621495a0122493b2203591c448903c472e306a1ede54fabad829e01075c0",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

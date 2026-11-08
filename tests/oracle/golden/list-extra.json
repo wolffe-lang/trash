@@ -1,0 +1,20 @@
+{
+ "row": "list-extra",
+ "steps": [
+  {
+   "argv": [
+    "trash-list",
+    "extra"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash-list [-h] [--print-completion {bash,zsh,tcsh}] [--version]\n                  [--volumes] [--trash-dirs] [--trash-dir TRASH_DIRS]\n                  [--all-users]\ntrash-list: error: unrecognized arguments: extra\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

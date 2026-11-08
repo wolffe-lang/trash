@@ -1,0 +1,143 @@
+{
+ "row": "list-bad-dates",
+ "steps": [
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "????-??-?? ??:??:?? /tmp/trash-rows/home/m1\n????-??-?? ??:??:?? /tmp/trash-rows/home/m2\n????-??-?? ??:??:?? /tmp/trash-rows/home/m3\n????-??-?? ??:??:?? /tmp/trash-rows/home/m4\n????-??-?? ??:??:?? /tmp/trash-rows/home/m5\n????-??-?? ??:??:?? /tmp/trash-rows/home/m6\n????-??-?? ??:??:?? /tmp/trash-rows/home/m7\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/m1": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "7b14e2d92338aed25808bbc74dabe3a37da6be8f335f2106d11aa36e5e31f7ea",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/m2": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "808d06b879e48e9448adccba1e4dbde8e4614988ddb263ed52b0aa786c42a2ea",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/m3": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "3831561589b9de83145d35aebf9d2b55a9843a09e8b7754bedd56173e25b3aa6",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/m4": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "ffdd3b1b650e0f34126e0d5d8e3dbfef8088b5fcbdf8b8c6c7414c8817018abd",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/m5": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "0196d982cdfa14064dce858e4ebde8837e37cf776cd4e6b1f2432fafc62ecf69",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/m6": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "dc3f25e1a8699ccabb82f7b04f18ce51b88033d1ea963db5b606a23e6729596d",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/m7": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "2a81bcfcc73aa761b6a7b3b02008ccc7a18bb45d69fb7e932b23047924fa26a3",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/m1.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/m1\nDeletionDate=<bad-shape:2020-13-01T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/m2.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/m2\nDeletionDate=<bad-shape:>\n",
+    "type": "file"
+   },
+   "Trash/info/m3.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/m3\nDeletionDate=<bad-shape:2020-01-02T03:04:05Z>\n",
+    "type": "file"
+   },
+   "Trash/info/m4.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/m4\nDeletionDate=<bad-shape:2020-01-02T03:04:05.123>\n",
+    "type": "file"
+   },
+   "Trash/info/m5.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/m5\nDeletionDate=<bad-shape:garbage>\n",
+    "type": "file"
+   },
+   "Trash/info/m6.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/m6\nDeletionDate=<bad-shape:2020-01-02 03:04:05>\n",
+    "type": "file"
+   },
+   "Trash/info/m7.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/m7\nDeletionDate=<bad-shape:2020-02-30T00:00:00>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

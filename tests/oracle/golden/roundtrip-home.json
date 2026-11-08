@@ -1,0 +1,712 @@
+{
+ "property": [],
+ "row": "roundtrip-home",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "t1",
+    "t2",
+    "t3",
+    "t4",
+    "t5",
+    "t6"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/tmp/trash-rows/home/t1"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /tmp/trash-rows/home/t1\nWhat file to restore [0..0]: "
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/tmp/trash-rows/home/t2"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /tmp/trash-rows/home/t2\nWhat file to restore [0..0]: "
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/tmp/trash-rows/home/t3"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /tmp/trash-rows/home/t3\nWhat file to restore [0..0]: "
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/tmp/trash-rows/home/t4"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /tmp/trash-rows/home/t4\nWhat file to restore [0..0]: "
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/tmp/trash-rows/home/t5"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /tmp/trash-rows/home/t5\nWhat file to restore [0..0]: "
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/tmp/trash-rows/home/t6"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /tmp/trash-rows/home/t6\nWhat file to restore [0..0]: "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t1": {
+    "atime": 1531653560,
+    "atime_ns": 531969374,
+    "mode": "0755",
+    "mtime": 1516940109,
+    "mtime_ns": 273878287,
+    "owner": "0:100",
+    "type": "dir"
+   },
+   "t1/g h4": {
+    "atime": 1536672471,
+    "atime_ns": 609914210,
+    "mode": "0755",
+    "mtime": 1550641449,
+    "mtime_ns": 115463702,
+    "owner": "0:100",
+    "type": "dir"
+   },
+   "t1/g h4/.h3": {
+    "mode": "0777",
+    "mtime": 1581166937,
+    "mtime_ns": 505334445,
+    "owner": "0:100",
+    "target": ".",
+    "type": "link"
+   },
+   "t1/g h4/f0": {
+    "mode": "0777",
+    "mtime": 1655925134,
+    "mtime_ns": 269319762,
+    "owner": "1000:1000",
+    "target": "../x",
+    "type": "link"
+   },
+   "t1/g h4/g h1": {
+    "atime": 1587753989,
+    "atime_ns": 40101955,
+    "mode": "0750",
+    "mtime": 1502314798,
+    "mtime_ns": 357208476,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t1/g h4/g h1/g h0": {
+    "mode": "0777",
+    "mtime": 1583310179,
+    "mtime_ns": 857281142,
+    "owner": "0:0",
+    "target": "é dangling",
+    "type": "link"
+   },
+   "t1/g h4/g h1/ü ber1": {
+    "atime": 1541345891,
+    "atime_ns": 823126865,
+    "mode": "0700",
+    "mtime": 1616958031,
+    "mtime_ns": 315130842,
+    "owner": "0:100",
+    "type": "dir"
+   },
+   "t1/g h4/é2": {
+    "atime": 1517632474,
+    "atime_ns": 737977625,
+    "mode": "0700",
+    "mtime": 1515952664,
+    "mtime_ns": 792992426,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t1/g h4/é2/f0": {
+    "mode": "0777",
+    "mtime": 1641108317,
+    "mtime_ns": 939497877,
+    "owner": "0:0",
+    "target": ".",
+    "type": "link"
+   },
+   "t1/g h4/é2/g h1": {
+    "atime": 1625873492,
+    "atime_ns": 872197940,
+    "mode": "0600",
+    "mtime": 1573684871,
+    "mtime_ns": 275477827,
+    "owner": "0:100",
+    "sha256": "8ce86a6ae65d3692e7305e2c58ac62eebd97d3d943e093f577da25c36988246b",
+    "size": 1,
+    "type": "file"
+   },
+   "t1/g h4/é4": {
+    "atime": 1582907347,
+    "atime_ns": 757090816,
+    "mode": "0755",
+    "mtime": 1579028043,
+    "mtime_ns": 538437355,
+    "owner": "0:100",
+    "type": "dir"
+   },
+   "t1/g h4/é4/.h1": {
+    "atime": 1671221263,
+    "atime_ns": 554801107,
+    "mode": "0700",
+    "mtime": 1533565305,
+    "mtime_ns": 192272401,
+    "owner": "0:100",
+    "type": "dir"
+   },
+   "t1/g h4/é4/.h1/é0": {
+    "atime": 1517667701,
+    "atime_ns": 699654964,
+    "mode": "0755",
+    "mtime": 1588463516,
+    "mtime_ns": 341076002,
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "t1/g h4/é4/g h0": {
+    "atime": 1538268107,
+    "atime_ns": 697482040,
+    "mode": "0755",
+    "mtime": 1561230930,
+    "mtime_ns": 754367600,
+    "owner": "0:100",
+    "type": "dir"
+   },
+   "t1/g h4/é4/g h0/n0": {
+    "atime": 1604325992,
+    "atime_ns": 612584080,
+    "mode": "0644",
+    "mtime": 1581049390,
+    "mtime_ns": 244623207,
+    "owner": "0:0",
+    "sha256": "f87eb097804fad6da1242c1dcfd6cd98980139ebfc18c1af9dd08e9927a878f5",
+    "size": 70000,
+    "type": "file"
+   },
+   "t1/n1": {
+    "atime": 1665335933,
+    "atime_ns": 886480430,
+    "mode": "0755",
+    "mtime": 1633161717,
+    "mtime_ns": 279714624,
+    "owner": "0:0",
+    "sha256": "58e84bc53999fa35b2d5778743e40915fb51e6dc4200fb9b6b51f74832e7c598",
+    "size": 70000,
+    "type": "file"
+   },
+   "t1/n3": {
+    "atime": 1628400785,
+    "atime_ns": 438706275,
+    "mode": "0750",
+    "mtime": 1570838359,
+    "mtime_ns": 850622088,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t1/n3/g h0": {
+    "atime": 1606851771,
+    "atime_ns": 468228224,
+    "mode": "0750",
+    "mtime": 1596583964,
+    "mtime_ns": 367512395,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t1/n3/g h0/g h0": {
+    "atime": 1566271892,
+    "atime_ns": 88715261,
+    "mode": "0755",
+    "mtime": 1620731301,
+    "mtime_ns": 585119229,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t1/n3/g h0/g h0/é0": {
+    "atime": 1548549436,
+    "atime_ns": 953094679,
+    "mode": "0755",
+    "mtime": 1665959611,
+    "mtime_ns": 295684161,
+    "owner": "0:100",
+    "type": "dir"
+   },
+   "t1/n3/g h0/g h1": {
+    "mode": "0777",
+    "mtime": 1627037861,
+    "mtime_ns": 173688574,
+    "owner": "0:100",
+    "target": "../x",
+    "type": "link"
+   },
+   "t1/n3/n4": {
+    "atime": 1575247728,
+    "atime_ns": 590975743,
+    "mode": "0755",
+    "mtime": 1662006733,
+    "mtime_ns": 98951864,
+    "owner": "0:100",
+    "sha256": "64d7e17a9f7815c0cc334b55d2e27671f4aaa13db71956efa4b913e9ad899fa1",
+    "size": 100,
+    "type": "file"
+   },
+   "t1/n3/x.txt2": {
+    "atime": 1524883682,
+    "atime_ns": 758343046,
+    "mode": "0755",
+    "mtime": 1619781034,
+    "mtime_ns": 527053524,
+    "owner": "1000:1000",
+    "sha256": "9c40bf327c9ce45bde6e8b4dfa91ac05de6589b0a038a8db03f96dd215e9ee33",
+    "size": 70000,
+    "type": "file"
+   },
+   "t1/n3/é3": {
+    "atime": 1533317613,
+    "atime_ns": 334020213,
+    "mode": "0644",
+    "mtime": 1624180758,
+    "mtime_ns": 444331679,
+    "owner": "1000:1000",
+    "sha256": "88aa3e3b1f22c616b1817981215e7d1e75fa32b22233ebb8477f64600a5ace1f",
+    "size": 1,
+    "type": "file"
+   },
+   "t1/n3/ü ber1": {
+    "atime": 1621540076,
+    "atime_ns": 422608602,
+    "mode": "0755",
+    "mtime": 1617871179,
+    "mtime_ns": 848647203,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t1/x.txt0": {
+    "atime": 1507609466,
+    "atime_ns": 959191865,
+    "mode": "0640",
+    "mtime": 1525195240,
+    "mtime_ns": 523832096,
+    "owner": "0:0",
+    "type": "fifo"
+   },
+   "t1/ü ber2": {
+    "atime": 1684075911,
+    "atime_ns": 653710306,
+    "mode": "0750",
+    "mtime": 1550445637,
+    "mtime_ns": 336504472,
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "t1/ü ber2/n0": {
+    "atime": 1556569509,
+    "atime_ns": 470189502,
+    "mode": "0755",
+    "mtime": 1681117190,
+    "mtime_ns": 436598090,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t1/ü ber2/n0/ü ber0": {
+    "atime": 1688379980,
+    "atime_ns": 514651319,
+    "mode": "0600",
+    "mtime": 1573728219,
+    "mtime_ns": 368030611,
+    "owner": "0:0",
+    "sha256": "12c7b37792ad322972a5becc4dafc24a77e629f4a70e22f5b2fe491bdc68fe33",
+    "size": 5000,
+    "type": "file"
+   },
+   "t1/ü ber2/n1": {
+    "atime": 1635748121,
+    "atime_ns": 586524711,
+    "mode": "0600",
+    "mtime": 1607999021,
+    "mtime_ns": 420346539,
+    "owner": "0:0",
+    "sha256": "51ba87446d40b3bd2e1848677fd159c75deaabe2aa6a2bafdf80300efaa484f9",
+    "size": 70000,
+    "type": "file"
+   },
+   "t1/ü ber2/n2": {
+    "atime": 1637127068,
+    "atime_ns": 229024704,
+    "mode": "0750",
+    "mtime": 1615414216,
+    "mtime_ns": 138076944,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t1/ü ber2/n2/g h0": {
+    "atime": 1679503662,
+    "atime_ns": 408177351,
+    "mode": "0444",
+    "mtime": 1675976162,
+    "mtime_ns": 161878435,
+    "owner": "0:0",
+    "sha256": "b00ff61cc0f9247389cfb131bdeafb9a76147a7427dd9a3b7be8d56465060d2c",
+    "size": 5000,
+    "type": "file"
+   },
+   "t1/ü ber2/n2/ü ber1": {
+    "atime": 1507267361,
+    "atime_ns": 38446252,
+    "mode": "0644",
+    "mtime": 1646925299,
+    "mtime_ns": 395795872,
+    "owner": "0:100",
+    "sha256": "c672ba398a2e22687feed111748d585c9c0594cf91d73b2601d0d85e791e344d",
+    "size": 5000,
+    "type": "file"
+   },
+   "t2": {
+    "atime": 1545388036,
+    "atime_ns": 790241758,
+    "mode": "0755",
+    "mtime": 1522782653,
+    "mtime_ns": 387682509,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t2/é0": {
+    "mode": "0777",
+    "mtime": 1656015765,
+    "mtime_ns": 731482525,
+    "owner": "0:0",
+    "target": ".",
+    "type": "link"
+   },
+   "t2/é3": {
+    "atime": 1530311148,
+    "atime_ns": 340679588,
+    "mode": "0640",
+    "mtime": 1577226999,
+    "mtime_ns": 26703185,
+    "owner": "1000:1000",
+    "sha256": "de0cc7db45577323f39b8b6b6f34ca6688debed0aa4d958991f9d755f28765ca",
+    "size": 70000,
+    "type": "file"
+   },
+   "t2/ü ber1": {
+    "atime": 1688731975,
+    "atime_ns": 890737277,
+    "mode": "0444",
+    "mtime": 1581635374,
+    "mtime_ns": 680838554,
+    "owner": "0:0",
+    "sha256": "56496ac26360217b4b06fc1d620ae4c650a439414c06d50ca5a69455071639af",
+    "size": 70000,
+    "type": "file"
+   },
+   "t2/ü ber2": {
+    "atime": 1657024717,
+    "atime_ns": 827212703,
+    "mode": "0640",
+    "mtime": 1631388553,
+    "mtime_ns": 993694092,
+    "owner": "0:100",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "type": "file"
+   },
+   "t3": {
+    "atime": 1599309082,
+    "atime_ns": 983488253,
+    "mode": "0755",
+    "mtime": 1646090420,
+    "mtime_ns": 140040410,
+    "owner": "0:100",
+    "type": "dir"
+   },
+   "t3/g h1": {
+    "atime": 1606605000,
+    "atime_ns": 686194186,
+    "mode": "0700",
+    "mtime": 1647540493,
+    "mtime_ns": 511480364,
+    "owner": "0:100",
+    "type": "dir"
+   },
+   "t3/g h1/g h0": {
+    "mode": "0777",
+    "mtime": 1504065921,
+    "mtime_ns": 720922582,
+    "owner": "1000:1000",
+    "target": ".",
+    "type": "link"
+   },
+   "t3/g h1/n1": {
+    "atime": 1572325012,
+    "atime_ns": 507610469,
+    "mode": "0755",
+    "mtime": 1508324652,
+    "mtime_ns": 884302096,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t3/g h1/n1/é1": {
+    "atime": 1668214618,
+    "atime_ns": 918291478,
+    "mode": "0600",
+    "mtime": 1680399694,
+    "mtime_ns": 468325234,
+    "owner": "0:0",
+    "sha256": "3e151409ace91cb3394fecd59e92b5dc42c0aad29993a1858f2f70a0866a539b",
+    "size": 1,
+    "type": "file"
+   },
+   "t3/g h1/n1/ü ber0": {
+    "atime": 1654863008,
+    "atime_ns": 477408220,
+    "mode": "0700",
+    "mtime": 1606022181,
+    "mtime_ns": 781819308,
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "t3/g h1/é2": {
+    "atime": 1538788372,
+    "atime_ns": 523723280,
+    "mode": "0644",
+    "mtime": 1544534312,
+    "mtime_ns": 296068774,
+    "owner": "0:0",
+    "sha256": "cef0a76700740080e569557e2f810236225467cc679740f31d63f21fa8593a0b",
+    "size": 5000,
+    "type": "file"
+   },
+   "t3/g h2": {
+    "atime": 1524389589,
+    "atime_ns": 14660735,
+    "mode": "0640",
+    "mtime": 1583667077,
+    "mtime_ns": 51542788,
+    "owner": "0:0",
+    "sha256": "a83dd0ccbffe39d071cc317ddf6e97f5c6b1c87af91919271f9fa140b0508c6c",
+    "size": 1,
+    "type": "file"
+   },
+   "t3/g h4": {
+    "atime": 1507667531,
+    "atime_ns": 952590962,
+    "mode": "0444",
+    "mtime": 1624064886,
+    "mtime_ns": 211179663,
+    "owner": "1000:1000",
+    "sha256": "020e42d5df7d860cffde52ffb722030a8106d79ca5e538e0a4fc5396f560be37",
+    "size": 70000,
+    "type": "file"
+   },
+   "t3/é3": {
+    "atime": 1525616743,
+    "atime_ns": 40873597,
+    "mode": "0444",
+    "mtime": 1569967755,
+    "mtime_ns": 771823490,
+    "owner": "0:0",
+    "sha256": "ca441cfc3358cd8194e6452ada86d71cc5b93b07cc0d30874cc1f3864447bd19",
+    "size": 70000,
+    "type": "file"
+   },
+   "t3/ü ber0": {
+    "mode": "0777",
+    "mtime": 1625958597,
+    "mtime_ns": 278479249,
+    "owner": "0:0",
+    "target": ".",
+    "type": "link"
+   },
+   "t4": {
+    "atime": 1606316074,
+    "atime_ns": 514191760,
+    "mode": "0755",
+    "mtime": 1527693420,
+    "mtime_ns": 774400755,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t4/f0": {
+    "atime": 1630769574,
+    "atime_ns": 501543696,
+    "mode": "0644",
+    "mtime": 1659628780,
+    "mtime_ns": 315239052,
+    "owner": "0:0",
+    "sha256": "85660cf12d0b8ec52f98a6f7bb59a89bc3afede0bd1450b748fa77003d3052c5",
+    "size": 5000,
+    "type": "file"
+   },
+   "t4/g h1": {
+    "atime": 1641570345,
+    "atime_ns": 880501519,
+    "mode": "0755",
+    "mtime": 1628292660,
+    "mtime_ns": 232576578,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t4/g h1/n1": {
+    "atime": 1598828546,
+    "atime_ns": 225947609,
+    "mode": "0640",
+    "mtime": 1500106097,
+    "mtime_ns": 677628759,
+    "owner": "0:0",
+    "sha256": "901c9c4b61a87a2f5a21873004c8d694298cfe3c05ce647a92ef0516327839e8",
+    "size": 100,
+    "type": "file"
+   },
+   "t4/g h1/é0": {
+    "atime": 1505134561,
+    "atime_ns": 459620549,
+    "mode": "0640",
+    "mtime": 1547691725,
+    "mtime_ns": 77880203,
+    "owner": "0:0",
+    "sha256": "a84ab549c0d267ed11fad6500b97fb67004e4cd8b3219892ef362f3074b825fc",
+    "size": 70000,
+    "type": "file"
+   },
+   "t4/n2": {
+    "mode": "0777",
+    "mtime": 1637801852,
+    "mtime_ns": 181187857,
+    "owner": "1000:1000",
+    "target": "é dangling",
+    "type": "link"
+   },
+   "t5": {
+    "atime": 1685340413,
+    "atime_ns": 903565516,
+    "mode": "0750",
+    "mtime": 1596243643,
+    "mtime_ns": 853832589,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t5/n0": {
+    "mode": "0777",
+    "mtime": 1542104456,
+    "mtime_ns": 121553981,
+    "owner": "0:0",
+    "target": "/nowhere/at/all",
+    "type": "link"
+   },
+   "t5/n1": {
+    "atime": 1547637585,
+    "atime_ns": 609887946,
+    "mode": "0444",
+    "mtime": 1603474360,
+    "mtime_ns": 133585041,
+    "owner": "0:0",
+    "sha256": "6692d416dc95de884750b2f186940691582156e35ceec29bd211c128e1da19ac",
+    "size": 70000,
+    "type": "file"
+   },
+   "t6": {
+    "atime": 1570228483,
+    "atime_ns": 39538125,
+    "mode": "0750",
+    "mtime": 1630200491,
+    "mtime_ns": 818424092,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t6/g h0": {
+    "atime": 1505875998,
+    "atime_ns": 292807337,
+    "mode": "0640",
+    "mtime": 1600169475,
+    "mtime_ns": 342937748,
+    "owner": "1000:1000",
+    "type": "fifo"
+   },
+   "t6/x.txt1": {
+    "atime": 1683086870,
+    "atime_ns": 101157442,
+    "mode": "0750",
+    "mtime": 1644500207,
+    "mtime_ns": 579015744,
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "t6/x.txt1/.h0": {
+    "mode": "0777",
+    "mtime": 1684063477,
+    "mtime_ns": 94606369,
+    "owner": "0:100",
+    "target": "f0",
+    "type": "link"
+   },
+   "t6/x.txt1/f1": {
+    "atime": 1604606662,
+    "atime_ns": 488978945,
+    "mode": "0755",
+    "mtime": 1564904683,
+    "mtime_ns": 955301291,
+    "owner": "0:0",
+    "sha256": "5200773a9bb4329faf8f27591bf95f55b9ea08e1bf5f8fe862a63edb598719c2",
+    "size": 5000,
+    "type": "file"
+   },
+   "t6/x.txt1/g h2": {
+    "mode": "0777",
+    "mtime": 1624183025,
+    "mtime_ns": 994987128,
+    "owner": "0:0",
+    "target": "/nowhere/at/all",
+    "type": "link"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

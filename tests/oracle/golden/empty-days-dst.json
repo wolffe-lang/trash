@@ -1,0 +1,92 @@
+{
+ "row": "empty-days-dst",
+ "steps": [
+  {
+   "argv": [
+    "trash-empty",
+    "180"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "<in-window-15546600> /tmp/trash-rows/home/y2\n<in-window-15550200> /tmp/trash-rows/home/y1\n<in-window-15553800> /tmp/trash-rows/home/o2\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/o2": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/y1": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/y2": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/o2.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/o2\nDeletionDate=<in-window-15553800>\n",
+    "type": "file"
+   },
+   "Trash/info/y1.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/y1\nDeletionDate=<in-window-15550200>\n",
+    "type": "file"
+   },
+   "Trash/info/y2.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/y2\nDeletionDate=<in-window-15546600>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "Europe/Berlin"
+}

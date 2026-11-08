@@ -1,0 +1,110 @@
+{
+ "row": "restore-other-fs",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/x.txt",
+    "/xdev/trash-rows/t"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/xdev/trash-rows/x.txt"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "No files trashed from current dir ('/tmp/trash-rows/home')\n"
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/xdev/trash-rows/t"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "No files trashed from current dir ('/tmp/trash-rows/home')\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {},
+  "xdev-top/.Trash-0": {
+   "files": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "files/t": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0750",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "files/t/f": {
+    "atime": 1600000001,
+    "atime_ns": 987654321,
+    "mode": "0644",
+    "mtime": 1600000000,
+    "mtime_ns": 123456789,
+    "owner": "0:0",
+    "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+    "size": 2,
+    "type": "file"
+   },
+   "files/t/l": {
+    "mode": "0777",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "target": "f",
+    "type": "link"
+   },
+   "files/x.txt": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0640",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "1000:1000",
+    "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+    "size": 2,
+    "type": "file"
+   },
+   "info": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "info/t.trashinfo": {
+    "atime": "<in-window>",
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=trash-rows/t\nDeletionDate=<in-window>\n",
+    "type": "file"
+   },
+   "info/x.txt.trashinfo": {
+    "atime": "<in-window>",
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=trash-rows/x.txt\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

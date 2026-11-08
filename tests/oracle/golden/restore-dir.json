@@ -1,0 +1,98 @@
+{
+ "row": "restore-dir",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "d"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-restore"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /tmp/trash-rows/home/d\nWhat file to restore [0..0]: "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "d": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0755",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "d/f": {
+    "atime": 1600000001,
+    "atime_ns": 987654321,
+    "mode": "0640",
+    "mtime": 1600000000,
+    "mtime_ns": 123456789,
+    "owner": "0:0",
+    "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+    "size": 2,
+    "type": "file"
+   },
+   "d/lf": {
+    "mode": "0777",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "target": "f",
+    "type": "link"
+   },
+   "d/sub": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0700",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "d/sub/g": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0644",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "sha256": "768c71d785bf6bbbf8c4d6af6582041f2659027140a962cd0c55b11eddfd5e3d",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

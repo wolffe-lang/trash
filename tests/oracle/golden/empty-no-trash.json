@@ -1,0 +1,19 @@
+{
+ "row": "empty-no-trash",
+ "steps": [
+  {
+   "argv": [
+    "trash-empty"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}
