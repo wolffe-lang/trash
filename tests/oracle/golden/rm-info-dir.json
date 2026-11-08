@@ -1,0 +1,53 @@
+{
+ "row": "rm-info-dir",
+ "steps": [
+  {
+   "argv": [
+    "trash-rm",
+    "ok"
+   ],
+   "exit": 1,
+   "stderr": "<traceback redacted: 19 lines>\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "[Errno 21] Is a directory: '/tmp/trash-rows/home/Trash/info/sub.trashinfo'\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 1,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/sub.trashinfo": {
+    "mode": "0700",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}
