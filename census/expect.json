@@ -1,0 +1,479 @@
+{
+ "about": "The census rows: per platform, the observation a probe prints (a regular expression matched whole) and whether the call is present, missing or wrong there. A missing or wrong row names its gap. Written first from the prediction in notes/tb00-the-census.md.",
+ "rows": {
+  "args-bytes@bytes": {
+   "linux": {
+    "status": "present",
+    "want": "count=3 operand=61ff62"
+   },
+   "pax": {
+    "status": "present",
+    "want": "count=3 operand=61ff62"
+   }
+  },
+  "chmod@other": {
+   "linux": {
+    "status": "present",
+    "want": "mode=640"
+   },
+   "pax": {
+    "status": "present",
+    "want": "mode=640"
+   }
+  },
+  "chmod@same": {
+   "linux": {
+    "status": "present",
+    "want": "mode=640"
+   },
+   "pax": {
+    "status": "present",
+    "want": "mode=640"
+   }
+  },
+  "chown-link@other": {
+   "linux": {
+    "status": "present",
+    "want": "asked=4322 link=4322:4322 target=4321"
+   },
+   "pax": {
+    "status": "present",
+    "want": "asked=4322 link=4322:4322 target=4321"
+   }
+  },
+  "chown-link@same": {
+   "linux": {
+    "status": "present",
+    "want": "asked=4322 link=4322:4322 target=4321"
+   },
+   "pax": {
+    "status": "present",
+    "want": "asked=4322 link=4322:4322 target=4321"
+   }
+  },
+  "chown@other": {
+   "linux": {
+    "status": "present",
+    "want": "asked=4321 got=4321:4321"
+   },
+   "pax": {
+    "status": "present",
+    "want": "asked=4321 got=4321:4321"
+   }
+  },
+  "chown@same": {
+   "linux": {
+    "status": "present",
+    "want": "asked=4321 got=4321:4321"
+   },
+   "pax": {
+    "status": "present",
+    "want": "asked=4321 got=4321:4321"
+   }
+  },
+  "clock@now": {
+   "linux": {
+    "status": "present",
+    "want": "unix_s=[0-9]+ plausible=true"
+   },
+   "pax": {
+    "status": "present",
+    "want": "unix_s=[0-9]+ plausible=true"
+   }
+  },
+  "copy@across": {
+   "linux": {
+    "status": "present",
+    "want": "bytes=300000 same=true"
+   },
+   "pax": {
+    "status": "present",
+    "want": "bytes=300000 same=true"
+   }
+  },
+  "create-excl@other": {
+   "linux": {
+    "status": "present",
+    "want": "second:exists mode=600"
+   },
+   "pax": {
+    "status": "present",
+    "want": "second:exists mode=600"
+   }
+  },
+  "create-excl@same": {
+   "linux": {
+    "status": "present",
+    "want": "second:exists mode=600"
+   },
+   "pax": {
+    "status": "present",
+    "want": "second:exists mode=600"
+   }
+  },
+  "cwd@same": {
+   "linux": {
+    "status": "present",
+    "want": "absolute=true path=/.+"
+   },
+   "pax": {
+    "status": "present",
+    "want": "absolute=true path=/.+"
+   }
+  },
+  "local-time@empty": {
+   "linux": {
+    "status": "present",
+    "want": "2023-11-14T22:13:20 offset=0 dst=false abbrev=UTC"
+   },
+   "pax": {
+    "status": "present",
+    "want": "2023-11-14T22:13:20 offset=0 dst=false abbrev=UTC"
+   }
+  },
+  "local-time@named": {
+   "linux": {
+    "status": "present",
+    "want": "2023-11-14T23:13:20 offset=3600 dst=false abbrev=CET"
+   },
+   "pax": {
+    "gap": "pax: no zone data on the image",
+    "status": "wrong",
+    "want": "zone"
+   }
+  },
+  "local-time@rule": {
+   "linux": {
+    "status": "present",
+    "want": "2023-11-14T23:13:20 offset=3600 dst=false abbrev=CET"
+   },
+   "pax": {
+    "status": "present",
+    "want": "2023-11-14T23:13:20 offset=3600 dst=false abbrev=CET"
+   }
+  },
+  "local-time@unset": {
+   "linux": {
+    "status": "present",
+    "want": "2023-11-14T22:13:20 offset=0 dst=false abbrev=UTC"
+   },
+   "pax": {
+    "gap": "pax: no zone data on the image",
+    "status": "wrong",
+    "want": "zone"
+   }
+  },
+  "lstat@other": {
+   "linux": {
+    "status": "present",
+    "want": "kind=3 size=6"
+   },
+   "pax": {
+    "status": "present",
+    "want": "kind=3 size=6"
+   }
+  },
+  "lstat@same": {
+   "linux": {
+    "status": "present",
+    "want": "kind=3 size=6"
+   },
+   "pax": {
+    "status": "present",
+    "want": "kind=3 size=6"
+   }
+  },
+  "mkdir-mode@other": {
+   "linux": {
+    "status": "present",
+    "want": "kind=1 mode=700 again=exists"
+   },
+   "pax": {
+    "status": "present",
+    "want": "kind=1 mode=700 again=exists"
+   }
+  },
+  "mkdir-mode@same": {
+   "linux": {
+    "status": "present",
+    "want": "kind=1 mode=700 again=exists"
+   },
+   "pax": {
+    "status": "present",
+    "want": "kind=1 mode=700 again=exists"
+   }
+  },
+  "name-listed@other": {
+   "linux": {
+    "status": "present",
+    "want": "kind=0 name=78ff79"
+   },
+   "pax": {
+    "status": "present",
+    "want": "kind=0 name=78ff79"
+   }
+  },
+  "name-listed@same": {
+   "linux": {
+    "status": "present",
+    "want": "kind=0 name=78ff79"
+   },
+   "pax": {
+    "status": "present",
+    "want": "kind=0 name=78ff79"
+   }
+  },
+  "name-reachable@other": {
+   "linux": {
+    "gap": "wolf-lang#687",
+    "status": "missing",
+    "want": "no-path:utf8"
+   },
+   "pax": {
+    "gap": "wolf-lang#687",
+    "status": "missing",
+    "want": "no-path:utf8"
+   }
+  },
+  "name-reachable@same": {
+   "linux": {
+    "gap": "wolf-lang#687",
+    "status": "missing",
+    "want": "no-path:utf8"
+   },
+   "pax": {
+    "gap": "wolf-lang#687",
+    "status": "missing",
+    "want": "no-path:utf8"
+   }
+  },
+  "name-sorted@other": {
+   "linux": {
+    "gap": "wolf-lang#687",
+    "status": "missing",
+    "want": "utf8"
+   },
+   "pax": {
+    "gap": "wolf-lang#687",
+    "status": "missing",
+    "want": "utf8"
+   }
+  },
+  "name-sorted@same": {
+   "linux": {
+    "gap": "wolf-lang#687",
+    "status": "missing",
+    "want": "utf8"
+   },
+   "pax": {
+    "gap": "wolf-lang#687",
+    "status": "missing",
+    "want": "utf8"
+   }
+  },
+  "readlink@other": {
+   "linux": {
+    "status": "present",
+    "want": "link=target dangling=nowhere/x"
+   },
+   "pax": {
+    "status": "present",
+    "want": "link=target dangling=nowhere/x"
+   }
+  },
+  "readlink@same": {
+   "linux": {
+    "status": "present",
+    "want": "link=target dangling=nowhere/x"
+   },
+   "pax": {
+    "status": "present",
+    "want": "link=target dangling=nowhere/x"
+   }
+  },
+  "remove@other": {
+   "linux": {
+    "status": "present",
+    "want": "ok target-kept=true left=false"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok target-kept=true left=false"
+   }
+  },
+  "remove@same": {
+   "linux": {
+    "status": "present",
+    "want": "ok target-kept=true left=false"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok target-kept=true left=false"
+   }
+  },
+  "rename-exdev@across": {
+   "linux": {
+    "status": "present",
+    "want": "cross_device errno=18"
+   },
+   "pax": {
+    "status": "present",
+    "want": "cross_device errno=18"
+   }
+  },
+  "rename-missing@across": {
+   "linux": {
+    "status": "present",
+    "want": "not_found errno=2"
+   },
+   "pax": {
+    "status": "present",
+    "want": "not_found errno=2"
+   }
+  },
+  "rename-replaces@across": {
+   "linux": {
+    "gap": "wolf-lang#706",
+    "status": "missing",
+    "want": "r7=new"
+   },
+   "pax": {
+    "gap": "wolf-lang#706",
+    "status": "missing",
+    "want": "r7=new"
+   }
+  },
+  "rename-same@across": {
+   "linux": {
+    "status": "present",
+    "want": "ok"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok"
+   }
+  },
+  "statfs@other": {
+   "linux": {
+    "status": "present",
+    "want": "answered=true fragment=[1-9][0-9]* blocks=[1-9][0-9]* available=[0-9]+ type=[0-9]+"
+   },
+   "pax": {
+    "status": "present",
+    "want": "answered=true fragment=[1-9][0-9]* blocks=[1-9][0-9]* available=[0-9]+ type=[0-9]+"
+   }
+  },
+  "statfs@same": {
+   "linux": {
+    "status": "present",
+    "want": "answered=true fragment=[1-9][0-9]* blocks=[1-9][0-9]* available=[0-9]+ type=[0-9]+"
+   },
+   "pax": {
+    "status": "present",
+    "want": "answered=true fragment=[1-9][0-9]* blocks=[1-9][0-9]* available=[0-9]+ type=[0-9]+"
+   }
+  },
+  "symlink@other": {
+   "linux": {
+    "status": "present",
+    "want": "ok"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok"
+   }
+  },
+  "symlink@same": {
+   "linux": {
+    "status": "present",
+    "want": "ok"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok"
+   }
+  },
+  "times-link@other": {
+   "linux": {
+    "status": "present",
+    "want": "link-mtime=1400000001.6 target-mtime=1600000000"
+   },
+   "pax": {
+    "status": "present",
+    "want": "link-mtime=1400000001.6 target-mtime=1600000000"
+   }
+  },
+  "times-link@same": {
+   "linux": {
+    "status": "present",
+    "want": "link-mtime=1400000001.6 target-mtime=1600000000"
+   },
+   "pax": {
+    "gap": "pax: whole seconds on a small ext2 volume",
+    "status": "wrong",
+    "want": "link-mtime=1400000001.0 target-mtime=1600000000"
+   }
+  },
+  "times@other": {
+   "linux": {
+    "status": "present",
+    "want": "atime=1500000000.123456789 mtime=1600000000.987654321"
+   },
+   "pax": {
+    "status": "present",
+    "want": "atime=1500000000.123456789 mtime=1600000000.987654321"
+   }
+  },
+  "times@same": {
+   "linux": {
+    "status": "present",
+    "want": "atime=1500000000.123456789 mtime=1600000000.987654321"
+   },
+   "pax": {
+    "gap": "pax: whole seconds on a small ext2 volume",
+    "status": "wrong",
+    "want": "atime=1500000000.0 mtime=1600000000.0"
+   }
+  },
+  "walk-at@other": {
+   "linux": {
+    "status": "present",
+    "want": "dirs=2 files=2 links=1 other=0"
+   },
+   "pax": {
+    "status": "present",
+    "want": "dirs=2 files=2 links=1 other=0"
+   }
+  },
+  "walk-at@same": {
+   "linux": {
+    "status": "present",
+    "want": "dirs=2 files=2 links=1 other=0"
+   },
+   "pax": {
+    "status": "present",
+    "want": "dirs=2 files=2 links=1 other=0"
+   }
+  },
+  "walk@other": {
+   "linux": {
+    "status": "present",
+    "want": "dirs=2 files=2 links=1 other=0"
+   },
+   "pax": {
+    "status": "present",
+    "want": "dirs=2 files=2 links=1 other=0"
+   }
+  },
+  "walk@same": {
+   "linux": {
+    "status": "present",
+    "want": "dirs=2 files=2 links=1 other=0"
+   },
+   "pax": {
+    "status": "present",
+    "want": "dirs=2 files=2 links=1 other=0"
+   }
+  }
+ }
+}
