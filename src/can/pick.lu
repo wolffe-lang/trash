@@ -1,0 +1,129 @@
+// can: trash-restore's choices: which items it offers, in what order, and
+// which the answer picks (measured: notes/tb02-the-companions.md).
+
+/// Whether `a` sorts before or with `b`, byte by byte.
+pub fn le_bytes(a: List[byte], b: List[byte]) -> bool {
+    var i = 0
+    while i < a.len && i < b.len {
+        if a[i] != b[i] {
+            return a[i] as int < b[i] as int
+        }
+        i += 1
+    }
+    a.len <= b.len
+}
+
+/// The order of `keys`, sorted stably: a bottom-up merge of indices.
+pub fn order(keys: List[List[byte]]) -> List[int] {
+    var idx = List[int]()
+    var i = 0
+    while i < keys.len {
+        (mut idx).push(i)
+        i += 1
+    }
+    var width = 1
+    while width < idx.len {
+        var out = List[int]()
+        var lo = 0
+        while lo < idx.len {
+            let mid = if lo + width < idx.len then lo + width else idx.len
+            let hi = if lo + 2 * width < idx.len then lo + 2 * width else idx.len
+            var a = lo
+            var b = mid
+            while a < mid || b < hi {
+                if b >= hi || a < mid && le_bytes(keys[idx[a]], keys[idx[b]]) {
+                    (mut out).push(idx[a])
+                    a += 1
+                } else {
+                    (mut out).push(idx[b])
+                    b += 1
+                }
+            }
+            lo = hi
+        }
+        idx = out
+        width = width * 2
+    }
+    idx
+}
+
+/// The sort key of an item: its date then its path, or its path then its
+/// date. An item with no date sorts first (R-tb02-4).
+pub fn sort_key(x_date: str, x_path: List[byte], by_path: bool) -> List[byte] {
+    var k = List[byte]()
+    if by_path {
+        add_bytes(mut k, x_path)
+        (mut k).push(0 as byte)
+        add(mut k, x_date)
+    } else {
+        add(mut k, x_date)
+        (mut k).push(0 as byte)
+        add_bytes(mut k, x_path)
+    }
+    k
+}
+
+/// Whether the original path `p` is `base` or lies under it.
+pub fn from_under(p: List[byte], base: str) -> bool {
+    let b = base.bytes()
+    if base == "/" {
+        return true
+    }
+    if p.len < b.len {
+        return false
+    }
+    var i = 0
+    while i < b.len {
+        if p[i] != b[i] {
+            return false
+        }
+        i += 1
+    }
+    p.len == b.len || p[b.len] as int == 47
+}
+
+/// The answer read as the oracle reads one: pieces split at `,`; a piece
+/// that holds `-` a span (an empty side is an open interval), else an
+/// index as Python's `int()` reads one. (the indices in order, or the
+/// error after `Invalid entry: `).
+pub fn choose(answer: str, last: int) -> (List[int], str) {
+    var picked = List[int]()
+    for piece in answer.split(",") {
+        let dash = piece.find("-") else -1
+        if dash >= 0 {
+            let a = piece[0..dash]
+            let b = piece[dash + 1..]
+            if a.len == 0 || b.len == 0 {
+                return (List[int](), "open interval: {piece}")
+            }
+            let (ok_a, x) = read_int(bytes_of(a))
+            let (ok_b, y) = read_int(bytes_of(b))
+            if !ok_a || !ok_b {
+                return (List[int](), "not an index: {piece}")
+            }
+            // Past the last index, one is enough: the first out of range
+            // is what the answer is refused by.
+            var hi = y
+            if hi > last + 1 {
+                hi = if x > last + 1 then x else last + 1
+            }
+            var k = x
+            while k <= hi {
+                (mut picked).push(k)
+                k += 1
+            }
+        } else {
+            let (ok, n) = read_int(bytes_of(piece))
+            if !ok {
+                return (List[int](), "not an index: {piece}")
+            }
+            (mut picked).push(n)
+        }
+    }
+    for n in picked {
+        if n < 0 || n > last {
+            return (List[int](), "out of range 0..{last}: {n}")
+        }
+    }
+    (picked, "")
+}
