@@ -56,8 +56,15 @@ Scored against the prediction above: as predicted.
   before: 258 oracle rows, the 8 cut rows, the 6 stress rows at 100 rounds
   (seed `20261108`), the unit programs and every selftest. The PAX rows are
   in the record.
-- The plant, `tb03-repro-plant-absolute` (`tools/build.py` hands wolf the
-  entry's absolute path again): red by name at `repro-trash`.
+- The plant, `tb03-repro-ld-plant-absolute` (`tools/build.py` hands wolf
+  the entry's absolute path again): red by name at `repro-trash`.
+- The linker (below, not predicted): `repro-linker`, the first copy built
+  again with an `ld.lld` on `PATH` that refuses to link. Red by name on the
+  old builder (the row applied to `90169ed`, after the five digest rows) and
+  at `25b2c0b` (the row on `030d9a6`, the five digest rows green); green at
+  `9a56ee2`, the static cc's `-fuse-ld=bfd`. In PAX's build image, which has a real
+  `ld.lld`, the row at `9a56ee2` is green with the same five digests as the
+  table below.
 
 The five as the gate builds them (static, stripped; the oracle image's
 toolchain, the pinned wolf 0.2.38), the digests a pin quotes:
@@ -70,22 +77,25 @@ toolchain, the pinned wolf 0.2.38), the digests a pin quotes:
 | `trash-rm` | `5ec1aa88a948bfc1c10db3df5c18ecc10946c0399d08b6e1db990137af2299ff` | 1853976 |
 | `trash-empty` | `e0487877dbc103315383f0c1b447a1a26fb2c83232f4b0159ad3ea7619ace274` | 1866264 |
 
-## What the row does not hold: the linker
+## The linker
 
-The row holds two paths in one image. It does not hold two images. When
+Two paths in one image were the prediction; two images were not. When
 `ld.lld` is on `PATH`, wolf 0.2.38 asks the cc for it (`-fuse-ld=lld`, after
 any argument the cc shim adds; neither `wolf build --help` nor its manual
 says so), and lld's output is not the system linker's. The oracle image has
 no `ld.lld`; PAX's build image (the same Ubuntu 24.04 gcc 13.3 and binutils
-2.42) has LLD 18.1.3. There, at this change, the five are each 7 to 11 KB
-larger, `.comment` names the linker, and no digest is the gate's. With
-`-fuse-ld=bfd` placed after wolf's own arguments, that image's five are byte
-for byte the table above, at all five. That flag is not part of this change
-(R-tb03-14 below).
+2.42) has LLD 18.1.3. There, at `030d9a6`, the five were each 7 to 11 KB
+larger, `.comment` named the linker, and no digest was the gate's. The static
+cc now adds `-fuse-ld=bfd` after wolf's own arguments (the last `-fuse-ld`
+wins), and `repro-linker` holds it: with it, PAX's build image gives the
+table above, byte for byte, at all five (R-tb03-14, implemented as
+recommended).
 
 ## Gaps met
 
-None in trash. The lld choice above is wolf's, made silently; see R-tb03-14.
+None in trash. wolf's choice of lld when one is on `PATH` is not in its help
+or its manual at 0.2.38; the static cc's flag makes it moot here, and it is
+not filed (R-tb03-15).
 
 ## SKIPs
 
@@ -97,10 +107,13 @@ R-tb03-12 (the build's bytes a function of the commit, by this change) and
 R-tb03-13 (PAX's hook's footprint, `cross-cutting`) were ruled A.
 
 - R-tb03-14, the linker. (A) The static cc forces the system linker
-  (`-fuse-ld=bfd` after wolf's arguments), held by a row that builds with
-  an `ld.lld` on `PATH` that refuses to link: the gate's digests are then
-  PAX's builder's. (B) As now: PAX's pin quotes its own builder's digests,
-  and its note names the linker as the reason they are not the gate's.
+  (`-fuse-ld=bfd` after wolf's arguments), held by `repro-linker`: the
+  gate's digests are then PAX's builder's. (B) The relative paths and the
+  absent build-id alone: PAX's pin quotes its own builder's digests, and its
+  note names the linker as the reason they are not the gate's.
+- R-tb03-15, wolf's silent lld. (A) Not filed: the flag makes it moot for
+  trash, and wolf's behaviour is a choice, not a fault. (B) A documentation
+  issue to wolf-lang with the two `.comment` sections as its witness.
 
 The `trash //` divergence (tb01's note) stays a known oracle divergence.
 
@@ -109,7 +122,9 @@ The `trash //` divergence (tb01's note) stays a known oracle divergence.
 - [x] The prediction committed before any change (`c660414`), and scored
   above.
 - [x] The reproducibility row, red by name at all five on the old builder,
-  green with the change.
-- [x] One plant, `tb03-repro-plant-absolute`, red by name at `repro-trash`.
+  green with the change; `repro-linker` red on the old builder and without
+  the flag, green with it.
+- [x] One plant, `tb03-repro-ld-plant-absolute`, red by name at
+  `repro-trash`.
 - [x] The records behind both of a lane host's locks: the Linux gate and the
   PAX rows at the head, and the plant's.
