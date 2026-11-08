@@ -5,6 +5,11 @@
 # and the cross-device rows need, and a small tmpfs at /small, a home volume
 # too small for the item a space row trashes into it.
 #
+# Every write a row can make is capped: the image's root is read-only, and the
+# rows' scratch home (/tmp), /xdev and /small are tmpfs of a fixed size, so a
+# command that copies without end (the oracle does, given a path that begins
+# with two slashes) fails fast on a full tmpfs instead of filling the host.
+#
 #   TRASH_ENGINE   podman or docker (default docker)
 #   TRASH_CPUS     the CPU list taskset gives every step inside (default 0)
 #   TRASH_MEMORY   the container's memory cap (default 12g)
@@ -56,6 +61,7 @@ image=$(cat "$root/target/oracle/image-tag.txt")
 [ "$#" -gt 0 ] || set -- bash tools/gate linux
 mounts=(-v "$root:/work")
 if [ -n "${TRASH_ARCHIVES:-}" ]; then mounts+=(-v "$TRASH_ARCHIVES:/archives:ro" -e TRASH_ARCHIVES=/archives); fi
-exec "$engine" run --rm --memory "$memory" --pids-limit 4096 --security-opt label=disable \
-    --tmpfs /xdev:rw,exec,mode=1777 --tmpfs /small:rw,exec,size=2m,mode=1777 "${mounts[@]}" -w /work -e TRASH_CPUS="$cpus" \
+exec "$engine" run --rm --memory "$memory" --pids-limit 4096 --security-opt label=disable --read-only \
+    --tmpfs /tmp:rw,exec,size=32m,mode=1777 --tmpfs /xdev:rw,exec,size=32m,mode=1777 \
+    --tmpfs /small:rw,exec,size=2m,mode=1777 "${mounts[@]}" -w /work -e TRASH_CPUS="$cpus" \
     "$image" taskset -c "$cpus" "$@"
