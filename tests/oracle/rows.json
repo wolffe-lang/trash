@@ -3905,7 +3905,8 @@
      "run": [
       "trash-list"
      ],
-     "order": "host"
+     "order": "host",
+     "errors": "host"
     }
    ]
   },
@@ -3937,7 +3938,8 @@
      "run": [
       "trash-list"
      ],
-     "order": "host"
+     "order": "host",
+     "errors": "host"
     }
    ]
   },
@@ -8040,12 +8042,14 @@
      "run": [
       "trash-rm",
       "*"
-     ]
+     ],
+     "errors": "host"
     },
     {
      "run": [
       "trash-list"
-     ]
+     ],
+     "errors": "host"
     }
    ]
   },
@@ -8099,7 +8103,8 @@
      "run": [
       "trash-restore"
      ],
-     "stdin": "0\n"
+     "stdin": "0\n",
+     "errors": "host"
     }
    ],
    "diverge": "the oracle shows an unreadable info file as its own exception's repr; here that line is in this repository's words"
