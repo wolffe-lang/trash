@@ -1,9 +1,67 @@
 //! member: false
 //!
-//! trash-rm: the stub T2's rows are held red against first. It refuses
-//! every invocation with one line of its own and touches nothing.
+//! trash-rm — remove from the trash, for good, every item whose original
+//! name matches a pattern, or whose original path does when the pattern
+//! starts with `/`.
+//!
+//! Written from the FreeDesktop.org Trash specification 1.0 and black-box
+//! runs of a pinned trash-cli (`trash-rm`), the oracle whose bytes it is
+//! held to (`tests/oracle/`). Never trash-cli's source, nor any other
+//! trash's. The rules, and the measurement each came from, are in
+//! `notes/tb02-the-companions.md`.
+
+use can
+
+/// The oracle's usage text, its last line in this repository's words
+/// (R-tb02-3).
+fn usage() -> str {
+    "Usage:\n    trash-rm PATTERN\n\nPlease specify PATTERN.\nPATTERN is matched as a shell pattern (*, ?, [...] and [!...]) against each item's original name, or against its whole original path when it starts with '/'.\n"
+}
 
 fn main() -> int {
-    eprint("trash-rm: not written yet")
-    74
+    let w = can.arg_words()
+    if w.len == 0 {
+        eprint_raw(usage())
+        return 8
+    }
+    // As the oracle: the first word is the pattern, whatever it looks like
+    // (`--help` too), and any after it are not read.
+    let pattern = copy w[0]
+    let trash = can.trash_of("trash-rm")
+    if trash.len == 0 {
+        return 74
+    }
+    var status = 0
+    for x in can.scan(trash) {
+        let info = can.info_shown(trash, x)
+        if x.state == 1 {
+            eprint("trash-rm: {can.errno_line(x.errno, info)}")
+            continue
+        }
+        if x.state == 2 {
+            eprint("trash-rm: {info}: unable to parse 'Path'")
+            continue
+        }
+        if x.state == 3 {
+            eprint(
+                "trash-rm: cannot read '{info}': its name is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)",
+            )
+            continue
+        }
+        if !can.takes(pattern, x.path) {
+            continue
+        }
+        let item = "{trash}/files/{x.name}"
+        let why = can.erase(item)
+        if why.len > 0 {
+            eprint("trash-rm: cannot remove '{item}': {why}")
+            status = 1
+            continue
+        }
+        fs_remove(info) else |_| {
+            eprint("trash-rm: {can.errno_line(os_error(), info)}")
+            status = 1
+        }
+    }
+    status
 }
