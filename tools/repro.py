@@ -65,9 +65,10 @@ def cmd_run(a):
     if out.exists():
         shutil.rmtree(out)
     trees = [out / 'a' / 'trash', out / 'elsewhere' / 'deeper' / 'b']
+    wolf = str(Path(a.wolf).resolve()) if os.sep in a.wolf else a.wolf
     for t in trees:
         copy_tree(t)
-        r = subprocess.run([sys.executable, '-I', 'tools/build.py', '--wolf', a.wolf, '--out', 'target/static',
+        r = subprocess.run([sys.executable, '-I', 'tools/build.py', '--wolf', wolf, '--out', 'target/static',
                             '--static'], cwd=t, capture_output=True, text=True)
         print(''.join('  ' + line for line in r.stdout.splitlines(True)), end='')
         if r.returncode != 0:
