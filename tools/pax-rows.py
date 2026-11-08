@@ -10,8 +10,8 @@ The image is the census's (tools/census-pax.py): PAX's console kernel with an
 initramfs holding pelt as /bin/sh, boreutils' printf and mkdir, the zone data
 PAX's distribution carries (UTC) and PAX's own user/fstab, so the ext2 disk a
 copy of HOME.img gives QEMU is mounted at /home. Beside them: the static
-`trash` and `rowtool` (DIR, stripped) and the C fixture `mkname`, which makes
-the bytes that are not UTF-8.
+`trash`, its four companions and `rowtool` (DIR, stripped), and the C fixture
+`mkname`, which makes the bytes that are not UTF-8.
 
 Each row runs in a fresh home on the ext2 disk (/home/rh, HOME) with a second
 store in the in-memory tree (/tmp/rows): `rowtool` makes the fixture, each
@@ -216,6 +216,8 @@ def cmd_run(a):
     inputs, bins = Path(a.inputs), Path(a.bin)
     files = [('/bin/sh', inputs / 'pelt/pelt', 755), ('/bin/printf', inputs / 'bore/printf', 755),
              ('/bin/mkdir', inputs / 'bore/mkdir', 755), ('/bin/trash', bins / 'trash', 755),
+             ('/bin/trash-list', bins / 'trash-list', 755), ('/bin/trash-restore', bins / 'trash-restore', 755),
+             ('/bin/trash-rm', bins / 'trash-rm', 755), ('/bin/trash-empty', bins / 'trash-empty', 755),
              ('/bin/rowtool', bins / 'rowtool', 755), ('/bin/mkname', Path(a.mkname), 755),
              ('/etc/fstab', pax / 'user/fstab', 644)]
     for _, src, _ in files:
@@ -248,6 +250,8 @@ def cmd_run(a):
     print('DISK sha256=%s (a fresh copy)' % census_pax.sha(a.disk))
     print('TRASH sha256=%s ROWTOOL sha256=%s MKNAME sha256=%s' % (census_pax.sha(bins / 'trash'), census_pax.sha(bins / 'rowtool'),
                                                                  census_pax.sha(a.mkname)))
+    print('COMPANIONS %s' % ' '.join('%s sha256=%s' % (c, census_pax.sha(bins / c))
+                                     for c in ('trash-list', 'trash-restore', 'trash-rm', 'trash-empty')))
     print('ISO sha256=%s rows=%d' % (census_pax.sha(iso), len(rows)))
     serial = out / 'rows.serial'
     cmd = [pax / 'tools/qemu-halt', '--firmware', 'bios', '--serial', serial, '--timeout', str(a.timeout),
