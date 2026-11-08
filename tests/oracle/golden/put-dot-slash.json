@@ -7,7 +7,7 @@
     "./"
    ],
    "exit": 74,
-   "stderr": "trash: cannot trash directory './' (from volume '/')\ntrash:  `- failed to trash ./ in /tmp/trash-rows/home/Trash, because failed to move ./ in /tmp/trash-rows/home/Trash/files: [Errno 22] Invalid argument: '.'\ntrash:  `- failed to trash ./ in /.Trash/0, because trash dir cannot be created because its parent does not exists, trash-dir: /.Trash/0, parent: /.Trash\ntrash:  `- failed to trash ./ in /.Trash-0, because failed to move ./ in /.Trash-0/files: [Errno 22] Invalid argument: '.'\n",
+   "stderr": "trash: cannot trash directory './' (from volume '/tmp')\ntrash:  `- failed to trash ./ in /tmp/trash-rows/home/Trash, because failed to move ./ in /tmp/trash-rows/home/Trash/files: [Errno 22] Invalid argument: '.'\ntrash:  `- failed to trash ./ in /tmp/.Trash/0, because trash dir cannot be created because its parent does not exists, trash-dir: /tmp/.Trash/0, parent: /tmp/.Trash\ntrash:  `- failed to trash ./ in /tmp/.Trash-0, because failed to move ./ in /tmp/.Trash-0/files: [Errno 22] Invalid argument: '.'\n",
    "stdout": ""
   },
   {
@@ -70,7 +70,7 @@
     "type": "dir"
    }
   },
-  "root-top/.Trash-0": {
+  "tmp-top/.Trash-0": {
    "files": {
     "mode": "0700",
     "mtime": "<in-window>",

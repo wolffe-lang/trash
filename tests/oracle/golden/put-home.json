@@ -14,7 +14,7 @@
  "tracebacks": 0,
  "trees": {
   "home": {},
-  "root-top/.Trash-0": {
+  "tmp-top/.Trash-0": {
    "files": {
     "mode": "0700",
     "mtime": "<in-window>",
@@ -63,7 +63,7 @@
     "mode": "0600",
     "mtime": "<in-window>",
     "owner": "0:0",
-    "text": "[Trash Info]\nPath=/tmp/trash-rows/home\nDeletionDate=<in-window>\n",
+    "text": "[Trash Info]\nPath=trash-rows/home\nDeletionDate=<in-window>\n",
     "type": "file"
    }
   },

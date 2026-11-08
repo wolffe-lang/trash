@@ -9,7 +9,7 @@
     "/xdev/trash-rows/d"
    ],
    "exit": 74,
-   "stderr": "trash: cannot trash directory '/xdev/trash-rows/d' (from volume '/xdev')\ntrash:  `- failed to trash /xdev/trash-rows/d in /tmp/trash-rows/home/Trash, because trash dir and file to be trashed are not in the same volume, trash-dir volume: /, file volume: /xdev\n",
+   "stderr": "trash: cannot trash directory '/xdev/trash-rows/d' (from volume '/xdev')\ntrash:  `- failed to trash /xdev/trash-rows/d in /tmp/trash-rows/home/Trash, because trash dir and file to be trashed are not in the same volume, trash-dir volume: /tmp, file volume: /xdev\n",
    "stdout": ""
   }
  ],

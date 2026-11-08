@@ -9,7 +9,7 @@
     "/xdev/trash-rows/x.txt"
    ],
    "exit": 74,
-   "stderr": "trash: cannot trash regular file '/xdev/trash-rows/x.txt' (from volume '/xdev')\ntrash:  `- failed to trash /xdev/trash-rows/x.txt in /tmp/trash-rows/home/Trash, because trash dir and file to be trashed are not in the same volume, trash-dir volume: /, file volume: /xdev\n",
+   "stderr": "trash: cannot trash regular file '/xdev/trash-rows/x.txt' (from volume '/xdev')\ntrash:  `- failed to trash /xdev/trash-rows/x.txt in /tmp/trash-rows/home/Trash, because trash dir and file to be trashed are not in the same volume, trash-dir volume: /tmp, file volume: /xdev\n",
    "stdout": ""
   }
  ],

@@ -7,46 +7,13 @@
     "/"
    ],
    "exit": 74,
-   "stderr": "trash: cannot trash directory '/' (from volume '/')\ntrash:  `- failed to trash / in /tmp/trash-rows/home/Trash, because failed to move / in /tmp/trash-rows/home/Trash/files: Cannot move a directory '/' into itself '/tmp/trash-rows/home/Trash/files/_1'.\ntrash:  `- failed to trash / in /.Trash/0, because trash dir cannot be created because its parent does not exists, trash-dir: /.Trash/0, parent: /.Trash\ntrash:  `- failed to trash / in /.Trash-0, because failed to move / in /.Trash-0/files: Cannot move a directory '/' into itself '/.Trash-0/files/_1'.\n",
+   "stderr": "trash: cannot trash directory '/' because deleting it is not allowed\n",
    "stdout": ""
   }
  ],
  "tracebacks": 0,
  "trees": {
-  "home": {
-   "Trash": {
-    "mode": "0700",
-    "mtime": "<in-window>",
-    "owner": "0:0",
-    "type": "dir"
-   },
-   "Trash/files": {
-    "mode": "0700",
-    "mtime": "<in-window>",
-    "owner": "0:0",
-    "type": "dir"
-   },
-   "Trash/info": {
-    "mode": "0700",
-    "mtime": "<in-window>",
-    "owner": "0:0",
-    "type": "dir"
-   }
-  },
-  "root-top/.Trash-0": {
-   "files": {
-    "mode": "0700",
-    "mtime": "<in-window>",
-    "owner": "0:0",
-    "type": "dir"
-   },
-   "info": {
-    "mode": "0700",
-    "mtime": "<in-window>",
-    "owner": "0:0",
-    "type": "dir"
-   }
-  },
+  "home": {},
   "xdev": {}
  },
  "tz": "UTC"
