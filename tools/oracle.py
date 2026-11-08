@@ -121,10 +121,118 @@ def where(path_bytes):
 # ---------------------------------------------------------------- running
 
 
-def make(ops):
+def tree_plan(root, seed):
+    """A tree generated from a seed, as a plan: one dict per entry, parents
+    before children, each with its path (under the fixture's base), kind,
+    mode, owner, times (mtime s, ns, atime s, ns) and, for a file its bytes,
+    for a link its target. Pure: tools/expected.py builds expected captures
+    from the same plan. The top is always a directory."""
+    import random
+    rng = random.Random(seed)
+    plan = []
+    words = ['f', 'g h', 'é', 'x.txt', '.h', 'ü ber', 'n']
+    counts = {'fifo': 0}
+
+    def times():
+        return [rng.randrange(1500000000, 1690000000), rng.randrange(10**9),
+                rng.randrange(1500000000, 1690000000), rng.randrange(10**9)]
+
+    def owner():
+        return rng.choice(['0:0', '0:0', '0:0', '1000:1000', '0:100'])
+
+    def gen(path, depth):
+        plan.append({'path': path, 'kind': 'dir', 'mode': rng.choice([0o755, 0o700, 0o750]), 'owner': owner(),
+                     'times': times()})
+        n = rng.randrange(2, 6) if depth < 2 else rng.randrange(0, 3)
+        for i in range(n):
+            child = '%s/%s%d' % (path, rng.choice(words), i)
+            pick = rng.random()
+            if pick < 0.45:
+                size = rng.choice([0, 1, 100, 5000, 70000])
+                data = bytes(rng.randrange(256) for _ in range(size))
+                plan.append({'path': child, 'kind': 'file', 'mode': rng.choice([0o644, 0o600, 0o755, 0o640, 0o444]),
+                             'owner': owner(), 'times': times(), 'data': data})
+            elif pick < 0.65:
+                target = rng.choice(['../x', '/nowhere/at/all', 'f0', 'é dangling', '.'])
+                plan.append({'path': child, 'kind': 'link', 'mode': 0o777, 'owner': owner(), 'times': times(),
+                             'target': target})
+            elif pick < 0.72 and counts['fifo'] == 0:
+                counts['fifo'] += 1
+                plan.append({'path': child, 'kind': 'fifo', 'mode': 0o640, 'owner': owner(), 'times': times()})
+            elif depth < 3:
+                gen(child, depth + 1)
+            else:
+                plan.append({'path': child, 'kind': 'dir', 'mode': 0o755, 'owner': owner(), 'times': times()})
+    gen(root, 0)
+    return plan
+
+
+def make_plan(plan):
+    """Make a generated tree's entries, then their owners, then their times,
+    each entry before the directory that holds it."""
+    for e in plan:
+        p = where(unescape(e['path']))
+        if e['kind'] == 'dir':
+            os.makedirs(p)
+            os.chmod(p, e['mode'])
+        elif e['kind'] == 'file':
+            with open(p, 'wb') as f:
+                f.write(e['data'])
+            os.chmod(p, e['mode'])
+        elif e['kind'] == 'link':
+            os.symlink(unescape(e['target']), p)
+        elif e['kind'] == 'fifo':
+            os.mkfifo(p, e['mode'])
+            os.chmod(p, e['mode'])
+    for e in plan:
+        uid, gid = (int(x) for x in e['owner'].split(':'))
+        os.lchown(where(unescape(e['path'])), uid, gid)
+    for e in reversed(plan):
+        ms, mns, as_, ans = e['times']
+        os.utime(where(unescape(e['path'])), ns=(as_ * 10**9 + ans, ms * 10**9 + mns), follow_symlinks=False)
+
+
+# The offsets (in seconds from the moment a fixture is made) of the deletion
+# dates a row's `dated` info files carry: the normaliser reads a date that
+# far from the run's window as `<in-window+N>`, by name. Set by run_row.
+OFFSETS = []
+
+
+def local_text(t, tz):
+    return datetime.datetime.fromtimestamp(t, zoneinfo.ZoneInfo(tz)).strftime('%Y-%m-%dT%H:%M:%S')
+
+
+def make(ops, tz='UTC'):
     made, later = [], []
     for op in ops:
         kind = op[0]
+        if kind == 'tree':
+            # ["tree", path, seed]: a generated tree (tree_plan), with its own
+            # modes, owners and times, kept as they are.
+            later.append(('plan', tree_plan(op[1], int(op[2]))))
+            continue
+        if kind == 'dated':
+            # ["dated", name, path, offset]: Trash/info/NAME.trashinfo, its
+            # Path= the given text and its DeletionDate= local time `offset`
+            # seconds from now; Trash/files/NAME a small file, unless the
+            # path is "-" (an info file with no item).
+            name, path, off = op[1], op[2], int(op[3])
+            OFFSETS.append(off)
+            info = where(b'Trash/info/' + unescape(name) + b'.trashinfo')
+            os.makedirs(os.path.dirname(info), exist_ok=True)
+            with open(info, 'wb') as f:
+                f.write(b'[Trash Info]\nPath=' + unescape(path) + b'\nDeletionDate=' +
+                        local_text(int(time.time()) + off, tz).encode() + b'\n')
+            os.chmod(info, 0o600)
+            made.append(info)
+            if len(op) < 5 or op[4] != '-':
+                item = where(b'Trash/files/' + unescape(name))
+                os.makedirs(os.path.dirname(item), exist_ok=True)
+                with open(item, 'wb') as f:
+                    f.write(b'd\n')
+                os.chmod(item, 0o644)
+                made.append(item)
+            continue
         if kind == 'big':
             # ["big", path, bytes]: a file of that many bytes, 0..250 repeated.
             p = where(unescape(op[1]))
@@ -187,7 +295,9 @@ def make(ops):
     for p in sorted(made, key=lambda q: -q.count(b'/')):
         os.utime(p, (FIXTURE_TIME, FIXTURE_TIME), follow_symlinks=False)
     for op in later:
-        if op[0] == 'chown':
+        if op[0] == 'plan':
+            make_plan(op[1])
+        elif op[0] == 'chown':
             os.lchown(op[1], op[2], op[3])
         else:
             _, p, ms, mns, as_, ans = op
@@ -252,37 +362,103 @@ def run_row(row, tool):
     home().mkdir(parents=True)
     XDEV.mkdir(parents=True)
     steps = []
+    OFFSETS.clear()
+    before = None
     start = time.time()
     for step in row['steps']:
         if 'make' in step:
-            make(step['make'])
+            make(step['make'], row.get('tz', 'UTC'))
             continue
+        if row.get('property') == 'round-trip' and before is None:
+            before = {'home': kept_snapshot(bytes(home())), 'xdev': kept_snapshot(bytes(XDEV))}
         argv = [unescape(a) for a in step['run']]
         oracle_guard(row, tool, argv)
         argv[0] = tool_path(tool, argv[0].decode()).encode()
         cwd = where(unescape(step.get('cwd', '')))
-        r = subprocess.run(argv, cwd=cwd, env=env_for(row), input=unescape(step.get('stdin', '')),
-                           capture_output=True, timeout=120)
+        r = run_step(argv, cwd, env_for(row), unescape(step.get('stdin', '')), step.get('tty', False))
         steps.append({'argv': [show(a) for a in [unescape(step['run'][0])] + argv[1:]], 'order': step.get('order', 'kept'),
                       'exit': r.returncode, 'stdout': show(r.stdout), 'stderr': show(r.stderr)})
     end = time.time()
     exact = row.get('times') == 'exact'
     trees = {'home': snapshot(bytes(home()), exact), 'xdev': snapshot(bytes(XDEV), exact)}
+    prop = None
+    if row.get('property') == 'round-trip':
+        prop = round_trip(before, trees) if before is not None else ['no command ran']
     for label, top in TOPS:
         if not top.is_dir():
             continue
         for p in sorted(top.glob('.Trash*')):
             trees[label + '/' + p.name] = snapshot(bytes(p), exact)
     clean()
-    cap = {'row': row['name'], 'tz': row.get('tz', 'UTC'), 'window': [start, end], 'steps': steps, 'trees': trees}
+    cap = {'row': row['name'], 'tz': row.get('tz', 'UTC'), 'window': [start, end], 'steps': steps, 'trees': trees,
+           'offsets': sorted(set(OFFSETS))}
     if row.get('words') == 'own':
         cap['own_words'] = True
+    if prop is not None:
+        cap['property'] = prop
     return cap
 
 
-def snapshot(top, exact=False):
+def run_step(argv, cwd, env, data, tty):
+    """One command. With tty, its standard input is a terminal (a pty's other
+    end), given the bytes as typed and then the end of input (^D twice, so
+    a partial last line is ended too); its output streams stay pipes."""
+    if not tty:
+        return subprocess.run(argv, cwd=cwd, env=env, input=data, capture_output=True, timeout=120)
+    import pty
+    master, slave = pty.openpty()
+    try:
+        os.write(master, data + b'\x04\x04')
+        p = subprocess.Popen(argv, cwd=cwd, env=env, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        os.close(slave)
+        slave = -1
+        out, err = p.communicate(timeout=120)
+        return subprocess.CompletedProcess(argv, p.returncode, out, err)
+    finally:
+        if slave >= 0:
+            os.close(slave)
+        os.close(master)
+
+
+def kept_snapshot(top):
+    """An exact snapshot that leaves every time as it found it: reading a
+    file's bytes and listing a directory move their access times, so each
+    entry's times are put back once the walk is done (links' are not held).
+    The walk reads each entry's record before it reads or lists the entry."""
+    raw = {}
+    snap = snapshot(top, True, raw)
+    for rel in sorted(snap, key=lambda r: -r.count('/')):
+        e = snap[rel]
+        if e['type'] != 'link':
+            os.utime(raw[rel], ns=(e['atime'] * 10**9 + e['atime_ns'], e['mtime'] * 10**9 + e['mtime_ns']),
+                     follow_symlinks=False)
+    return snap
+
+
+def round_trip(before, after):
+    """The round-trip property: every entry outside the trashes is as it was
+    before the first command, field by field (kind, mode, owner, bytes, link
+    target, both times to the nanosecond). Its failures, by entry."""
+    out = []
+    for tname in ('home', 'xdev'):
+        a = {k: v for k, v in before[tname].items() if not k.split('/')[0].startswith(('Trash', '.Trash'))}
+        b = {k: v for k, v in after[tname].items() if not k.split('/')[0].startswith(('Trash', '.Trash'))}
+        for rel in sorted(set(a) | set(b)):
+            if rel not in b:
+                out.append('%s:%s missing' % (tname, rel))
+            elif rel not in a:
+                out.append('%s:%s unexpected' % (tname, rel))
+            elif a[rel] != b[rel]:
+                keys = sorted(k for k in set(a[rel]) | set(b[rel]) if a[rel].get(k) != b[rel].get(k))
+                out.append('%s:%s %s' % (tname, rel, ' '.join('%s want %r got %r' % (k, a[rel].get(k), b[rel].get(k))
+                                                               for k in keys)))
+    return out
+
+
+def snapshot(top, exact=False, raw=None):
     """Every entry under top: what the comparison reads, raw. With exact, the
-    access time and both times' nanoseconds too."""
+    access time and both times' nanoseconds too. `raw`, when given, maps
+    each entry's name as shown to its path's bytes."""
     out = {}
     if not os.path.lexists(top):
         return out
@@ -291,6 +467,8 @@ def snapshot(top, exact=False):
         for name in sorted(dirnames) + sorted(filenames):
             p = os.path.join(dirpath, name)
             rel = show(os.path.relpath(p, top))
+            if raw is not None:
+                raw[rel] = p
             st = os.lstat(p)
             e = {'mode': '%04o' % stat.S_IMODE(st.st_mode), 'mtime': int(st.st_mtime), 'owner': '%d:%d' % (st.st_uid, st.st_gid)}
             if exact:
@@ -328,6 +506,18 @@ def in_window(t, window):
     return window[0] - 2 <= t <= window[1] + 2
 
 
+def named(t, window, offsets):
+    """A time's name: `<in-window>` inside the run's window, `<in-window+N>`
+    N seconds from it for an offset the row's dated fixtures declared, else
+    None (the time is kept as it is)."""
+    if in_window(t, window):
+        return '<in-window>'
+    for off in offsets:
+        if in_window(t - off, window):
+            return '<in-window%+d>' % off
+    return None
+
+
 def local_instant(date, clock, tz):
     try:
         d = datetime.datetime.strptime(date + 'T' + clock, '%Y-%m-%dT%H:%M:%S')
@@ -336,20 +526,20 @@ def local_instant(date, clock, tz):
     return d.replace(tzinfo=zoneinfo.ZoneInfo(tz)).timestamp()
 
 
-def norm_deletion_date(value, window, tz):
+def norm_deletion_date(value, window, tz, offsets=()):
     if not SHAPE_RE.fullmatch(value):
         return '<bad-shape:%s>' % value
     t = local_instant(value[:10], value[11:], tz)
     if t is None:
         return '<bad-shape:%s>' % value
-    return '<in-window>' if in_window(t, window) else '<outside-window:%s>' % value
+    return named(t, window, offsets) or '<outside-window:%s>' % value
 
 
-def norm_info(text, window, tz):
+def norm_info(text, window, tz, offsets=()):
     out = []
     for line in text.split('\n'):
         if line.startswith('DeletionDate='):
-            line = 'DeletionDate=' + norm_deletion_date(line[len('DeletionDate='):], window, tz)
+            line = 'DeletionDate=' + norm_deletion_date(line[len('DeletionDate='):], window, tz, offsets)
         out.append(line)
     return '\n'.join(out)
 
@@ -358,10 +548,10 @@ def norm_sizes(text, window):
     return re.sub(r'\b\d{9,}\b', lambda m: '<in-window>' if in_window(int(m.group(0)), window) else m.group(0), text)
 
 
-def norm_output(text, window, tz):
+def norm_output(text, window, tz, offsets=()):
     def date(m):
         t = local_instant(m.group(1), m.group(2), tz)
-        return '<in-window>' if t is not None and in_window(t, window) else m.group(0)
+        return (named(t, window, offsets) if t is not None else None) or m.group(0)
     return DATE_RE.sub(date, text)
 
 
@@ -384,16 +574,16 @@ def redact(text):
 
 def normalise(cap):
     """The capture as compared: raw times and dates replaced by name, tracebacks gone."""
-    w, tz = cap['window'], cap['tz']
+    w, tz, offs = cap['window'], cap['tz'], cap.get('offsets', [])
     steps, tracebacks = [], 0
     for s in cap['steps']:
         out, n1 = redact(s['stdout'])
         err, n2 = redact(s['stderr'])
         tracebacks += bool(n1) + bool(n2)
-        out = norm_output(out, w, tz)
+        out = norm_output(out, w, tz, offs)
         if s.get('order') == 'host':
             out = host_order(out)
-        err = norm_output(err, w, tz)
+        err = norm_output(err, w, tz, offs)
         if cap.get('own_words'):
             # this repository's --help and --version are in its own words
             out, err = ('<text>' if out else ''), ('<text>' if err else '')
@@ -410,7 +600,7 @@ def normalise(cap):
                 e['atime'] = '<in-window>'
                 e.pop('atime_ns', None)
             if 'text' in e:
-                e['text'] = norm_sizes(e['text'], w) if rel.endswith('directorysizes') else norm_info(e['text'], w, tz)
+                e['text'] = norm_sizes(e['text'], w) if rel.endswith('directorysizes') else norm_info(e['text'], w, tz, offs)
                 if rel.endswith('directorysizes'):
                     # its bytes carry the window's numbers: the text is held instead
                     e.pop('sha256', None)
@@ -421,7 +611,11 @@ def normalise(cap):
                 e.pop('size', None)
             t[rel] = e
         trees[tname] = t
-    return {'row': cap['row'], 'tz': tz, 'steps': steps, 'trees': trees, 'tracebacks': tracebacks}
+    out = {'row': cap['row'], 'tz': tz, 'steps': steps, 'trees': trees, 'tracebacks': tracebacks}
+    if 'property' in cap:
+        # the round-trip property's failures, by entry (none when it held)
+        out['property'] = list(cap['property'])
+    return out
 
 
 # ---------------------------------------------------------------- comparing
@@ -464,6 +658,11 @@ def compare(want, got):
                     diffs.append(('%s:%s:%s' % (tname, rel, k), detail))
     if got.get('tracebacks'):
         diffs.append(('traceback', '%d stream(s) redacted' % got['tracebacks']))
+    if 'property' in want or 'property' in got:
+        if 'property' not in got:
+            diffs.append(('property', 'not checked'))
+        for failure in got.get('property', []):
+            diffs.append(('property', failure))
     return diffs
 
 
@@ -699,6 +898,40 @@ def own_words(base):
     return compare(na, nb) == [] and any(f == 'step1-stdout' for f, _ in compare(na, nc))
 
 
+def offsets_named():
+    """A date a declared offset from the window reads by that offset; an
+    undeclared one is kept."""
+    w = [1794100000.0, 1794100003.0]
+    t = local_text(int(w[0]) - 86460, 'UTC')
+    named_one = norm_deletion_date(t, w, 'UTC', [-86460]) == '<in-window-86460>'
+    kept = norm_deletion_date(t, w, 'UTC', [-86340]) == '<outside-window:%s>' % t
+    listed = norm_output('   0 %s /x\n' % t.replace('T', ' '), w, 'UTC', [-86460]) == '   0 <in-window-86460> /x\n'
+    return named_one and kept and listed
+
+
+def plan_ok():
+    """The generator is a pure function of its seed, and makes every kind."""
+    a, b = tree_plan('t', 7), tree_plan('t', 7)
+    kinds = {e['kind'] for s in range(1, 7) for e in tree_plan('t', s)}
+    return a == b and a != tree_plan('t', 8) and kinds == {'dir', 'file', 'link', 'fifo'}
+
+
+def tty_ok():
+    """A step marked tty reads a terminal, and its input ends."""
+    r = run_step([b'/bin/sh', b'-c', b'[ -t 0 ] && echo tty; cat'], b'/', {'PATH': '/usr/bin:/bin'}, b'y\n', True)
+    return r.returncode == 0 and r.stdout.replace(b'\r', b'') == b'tty\ny\n'
+
+
+def property_seen(base):
+    """A round trip that failed is a difference by name; one that held is none."""
+    import copy
+    held, broken = copy.deepcopy(base), copy.deepcopy(base)
+    held['property'] = []
+    broken['property'] = ['home:t0/f0 mode want 420 got 384']
+    return compare(normalise(held), normalise(held)) == [] and \
+        any(f == 'property' for f, _ in compare(normalise(held), normalise(broken)))
+
+
 def cmd_selftest(a):
     import copy
     fails = 0
@@ -721,6 +954,10 @@ def cmd_selftest(a):
         ('normalise-ns-in-window-dropped', 'mtime_ns' not in normalise(in_window_ns(base))['trees']['home']['Trash'], ''),
         ('own-words', own_words(base), ''),
         ('oracle-guard', guarded(), ''),
+        ('normalise-offset', offsets_named(), ''),
+        ('tree-plan', plan_ok(), ''),
+        ('tty-step', tty_ok(), ''),
+        ('property-seen', property_seen(base), ''),
     ]
     for name, ok, detail in checks:
         if ok:
