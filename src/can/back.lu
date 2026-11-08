@@ -1,0 +1,218 @@
+// can: one item put back where it came from (trash-restore). The restore
+// never replaces (R-TB-2's "never overwrites"), and there is no rename that
+// never replaces yet (wolf-lang#706), so the original path is RESERVED by a
+// creation that fails when the path is taken, never checked and then used:
+//
+// - a file, a link, a fifo: `link(2)` of the trashed item to the original
+//   path (`fs_link`, which never replaces: `exists` when the path is taken),
+//   then the trashed name removed;
+// - a directory: `mkdir(2)` of the original path, an empty private
+//   placeholder (`exists` when taken), then `rename(2)` of the trashed
+//   directory onto it. A rename may replace only an empty directory, so if
+//   another process removes the placeholder and puts something there
+//   between the two calls, the rename fails (`ENOTEMPTY`, `ENOTDIR`) and
+//   nothing is lost; what it can replace is the placeholder, or an empty
+//   directory, which holds nothing;
+// - across file systems, or on one with no hard links (R-tb02-7): `trash`'s
+//   own copy, whose every creation is exclusive (`O_EXCL`, `mkdir`,
+//   `symlink`, `mkfifo`), verified and finished before the trashed item is
+//   removed (R-TB-3).
+//
+// Only once the item is back is its info file removed. The oracle's own
+// check, a refusal of a path that is there (a dangling link included), is
+// made first, so that its message and nothing else answers an occupied path.
+
+/// Whether anything is at `path`, a dangling link included.
+pub fn there(path: str) -> bool {
+    var yes = true
+    let _ = fs_lstat(path) else |_| {
+        yes = false
+        List[int]()
+    }
+    yes
+}
+
+/// Whether `path` resolves to something (a link followed).
+fn resolves(path: str) -> bool {
+    var yes = true
+    let _ = fs_stat(path) else |_| {
+        yes = false
+        List[int]()
+    }
+    yes
+}
+
+/// The directories above an original path made, as the oracle makes them
+/// (Python's `os.makedirs(…, exist_ok=True)`): each missing one with mode
+/// 0777 less the umask, a name that is there and is no directory refused
+/// with the call's own error. "" or the oracle's `[Errno N]` line.
+pub fn make_dirs(dir: str) -> str {
+    if dir == "/" {
+        return ""
+    }
+    let up = parent(dir)
+    if !resolves(up) {
+        let why = make_dirs(up)
+        if why.len > 0 {
+            return why
+        }
+    }
+    var n = 0
+    fs_create_dir_mode(dir, 0o777) else |_| {
+        n = os_error()
+    }
+    if n != 0 && !fs_is_dir(dir) {
+        return errno_line(n, dir)
+    }
+    ""
+}
+
+/// The last component of a path, as the refusal names it.
+fn last(p: str) -> str {
+    base(p)
+}
+
+/// Copy the trashed item `item` back to `dst` on another file system (or
+/// one with no hard links). "" or why not.
+fn copy_back(item: str, rec: List[int], dst: str) -> str {
+    let (free, frag) = free_space(parent(dst))
+    var seen = seen_none()
+    let need = estimate(item, rec, frag, mut seen)
+    if free >= 0 && need > free {
+        return "cannot restore '{dst}': its volume has too little free space to copy it back"
+    }
+    let m = copy_across(item, rec, dst, seen)
+    if m.state == 1 {
+        return "cannot restore '{dst}': {m.why}; it is left in the trash"
+    }
+    if m.state == 2 {
+        return "'{dst}' is restored, but not all of it could be removed from the trash: {m.why}"
+    }
+    ""
+}
+
+/// Put `x` back. `trash` is `$HOME/Trash` as written and `trash_real` its
+/// real path. "" when it is back; otherwise the line that says why not, and
+/// nothing changed (but a parent directory made on the way).
+pub fn restore(trash: str, trash_real: str, x: Info) -> str {
+    let shown_path = shown(x.path)
+    let dst = str_from_utf8(x.path) else |_| {
+        return "trash-restore: cannot restore '{shown_path}': its path is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
+    }
+    if under(dst, trash) || under(dst, trash_real) {
+        return "trash-restore: cannot restore '{dst}': it is inside the trash"
+    }
+    if there(dst) {
+        return "Refusing to overwrite existing file \"{last(dst)}\"."
+    }
+    let item = "{trash}/files/{x.name}"
+    let rec = fs_lstat(item) else |_| {
+        return errno_line(os_error(), item)
+    }
+    let why = make_dirs(parent(dst))
+    if why.len > 0 {
+        return why
+    }
+    var across = false
+    let above = fs_stat(parent(dst)) else |_| {
+        List[int]()
+    }
+    if above.len > 9 && above[9] != rec[9] {
+        across = true
+    }
+    var taken = false
+    var n = 0
+    if !across && rec[0] == 1 {
+        fs_create_dir_mode(dst, 0o700) else |e| match e {
+            exists => {
+                taken = true
+            },
+            denied => {
+                n = os_error()
+            },
+            invalid => {
+                n = os_error()
+            },
+            io => {
+                n = os_error()
+            },
+            not_found => {
+                n = os_error()
+            },
+            unsupported => {
+                n = os_error()
+            },
+        }
+        if taken {
+            return "Refusing to overwrite existing file \"{last(dst)}\"."
+        }
+        if n != 0 {
+            return errno_line(n, dst)
+        }
+        fs_rename(item, dst) else |e| match e {
+            cross_device => {
+                across = true
+            },
+            denied => {
+                n = os_error()
+            },
+            exists => {
+                n = os_error()
+            },
+            io => {
+                n = os_error()
+            },
+            not_found => {
+                n = os_error()
+            },
+        }
+        if across || n != 0 {
+            fs_remove_dir(dst) else |_| {}
+        }
+        if n != 0 {
+            return errno_line(n, dst)
+        }
+    } else if !across {
+        fs_link(item, dst) else |e| match e {
+            exists => {
+                taken = true
+            },
+            cross_device => {
+                across = true
+            },
+            denied => {
+                across = true
+            },
+            not_found => {
+                n = os_error()
+            },
+            io => {
+                n = os_error()
+            },
+        }
+        if taken {
+            return "Refusing to overwrite existing file \"{last(dst)}\"."
+        }
+        if n != 0 {
+            return errno_line(n, dst)
+        }
+        if !across {
+            fs_remove(item) else |_| {
+                let k = os_error()
+                fs_remove(dst) else |_| {}
+                return errno_line(k, item)
+            }
+        }
+    }
+    if across {
+        let why = copy_back(item, rec, dst)
+        if why.len > 0 {
+            return why
+        }
+    }
+    let info = "{trash}/info/{x.name}.trashinfo"
+    fs_remove(info) else |_| {
+        return errno_line(os_error(), info)
+    }
+    ""
+}
