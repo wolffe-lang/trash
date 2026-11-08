@@ -16,7 +16,7 @@ fn main() -> int {
         let got = fs_copy_chunk(src, dst, 65536) else |e| match e {
             eof => { break },
             io => {
-                print("ROW copy@{a[0]} {e} errno={os_error()}")
+                print("ROW copy@{a[0]} io errno={os_error()}")
                 return 0
             },
         }
