@@ -5,7 +5,9 @@
 //! info text, the deletion date, and the argument parser on the shapes the
 //! oracle answered (tests/oracle/golden), and the companions' pure parts:
 //! info files read, dates read and cut, patterns matched, the companions'
-//! command lines and restore's answers. Each check prints `PASS row` or
+//! command lines and restore's answers; and the hardening's: the cut
+//! hook's counters, and which reservations a rerun may take back. Each
+//! check prints `PASS row` or
 //! `FAIL row got … want …`; tests/unit-rows.json lists the rows.
 
 use can
@@ -577,6 +579,42 @@ fn restore_rows(mut t: Tally) {
     check(mut t, "order-by-path", shown_ints(can.order(by_path)), "[1,0]")
 }
 
+fn hardening_rows(mut t: Tally) {
+    check(mut t, "cut-number", "{can.cut_number("12")}", "12")
+    check(mut t, "cut-number-empty", "{can.cut_number("")}", "-1")
+    check(mut t, "cut-number-word", "{can.cut_number("1x")}", "-1")
+    check(mut t, "cut-number-sign", "{can.cut_number("-3")}", "-1")
+    let (n, ms) = can.cut_pause("4:250")
+    check(mut t, "cut-pause", "{n} {ms}", "4 250")
+    let (n2, ms2) = can.cut_pause("4")
+    check(mut t, "cut-pause-no-colon", "{n2} {ms2}", "-1 -1")
+    let (n3, ms3) = can.cut_pause(":5")
+    check(mut t, "cut-pause-no-step", "{n3} {ms3}", "-1 -1")
+    let real = "/h/a.txt"
+    let pending = can.bytes_of(can.copying_text())
+    check(mut t, "stale-empty", "{can.stale_for(List[byte](), real, false)}", "true")
+    check(mut t, "stale-copying", "{can.stale_for(pending, real, false)}", "true")
+    check(mut t, "stale-copying-item", "{can.stale_for(pending, real, true)}", "true")
+    let own = can.bytes_of("[Trash Info]\nPath=/h/a.txt\nDeletionDate=2020-01-01T00:00:00\n")
+    check(mut t, "stale-own-path", "{can.stale_for(own, real, false)}", "true")
+    check(mut t, "stale-own-path-item", "{can.stale_for(own, real, true)}", "false")
+    let encoded = can.bytes_of("[Trash Info]\nPath=/h/a%20b\n")
+    check(mut t, "stale-encoded-path", "{can.stale_for(encoded, "/h/a b", false)}", "true")
+    let other = can.bytes_of("[Trash Info]\nPath=/elsewhere/a.txt\n")
+    check(mut t, "stale-other-path", "{can.stale_for(other, real, false)}", "false")
+    let pathless = can.bytes_of("[Trash Info]\nDeletionDate=2020-01-01T00:00:00\n")
+    check(mut t, "stale-pathless", "{can.stale_for(pathless, real, false)}", "false")
+    check(mut t, "stale-empty-item", "{can.stale_for(List[byte](), real, true)}", "false")
+    let (has_path, _, _) = can.parse_info(pending)
+    check(mut t, "copying-has-no-path", "{has_path}", "false")
+    check(
+        mut t,
+        "same-list",
+        "{can.same_list(can.bytes_of("ab"), can.bytes_of("ab"))} {can.same_list(can.bytes_of("ab"), can.bytes_of("a"))}",
+        "true false",
+    )
+}
+
 fn main() -> int {
     var t = Tally { failed: 0 }
     text_rows(mut t)
@@ -591,5 +629,6 @@ fn main() -> int {
     int_rows(mut t)
     opts_rows(mut t)
     restore_rows(mut t)
+    hardening_rows(mut t)
     if t.failed > 0 then 1 else 0
 }

@@ -181,7 +181,25 @@
    "under-root",
    "order-stable",
    "order-undated-first",
-   "order-by-path"
+   "order-by-path",
+   "cut-number",
+   "cut-number-empty",
+   "cut-number-word",
+   "cut-number-sign",
+   "cut-pause",
+   "cut-pause-no-colon",
+   "cut-pause-no-step",
+   "stale-empty",
+   "stale-copying",
+   "stale-copying-item",
+   "stale-own-path",
+   "stale-own-path-item",
+   "stale-encoded-path",
+   "stale-other-path",
+   "stale-pathless",
+   "stale-empty-item",
+   "copying-has-no-path",
+   "same-list"
   ]
  }
 }
