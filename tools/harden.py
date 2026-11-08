@@ -362,11 +362,15 @@ def round_once(row, tool, d):
         cwd = oracle.where(oracle.unescape(step.get('cwd', '')))
         procs[who] = subprocess.Popen(oracle.as_user(row, argv), cwd=cwd, env=env, stdin=subprocess.PIPE,
                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Each command's input is written whole and closed at its start, so
+        # neither waits on the other's end to be answered.
+        procs[who].stdin.write(oracle.unescape(step.get('stdin', '')))
+        procs[who].stdin.close()
         if n == 0 and d['gap_ms']:
             time.sleep(d['gap_ms'] / 1000)
     results = []
     for who in (0, 1):
-        out, err = procs[who].communicate(oracle.unescape(row['pair'][who].get('stdin', '')), timeout=120)
+        out, err = procs[who].communicate(timeout=120)
         results.append(subprocess.CompletedProcess([], procs[who].returncode, out, err))
     snap = trees()
     oracle.clean()
