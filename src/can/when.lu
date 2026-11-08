@@ -1,0 +1,193 @@
+// can: deletion dates, read and compared as the oracle reads and compares
+// them (measured: notes/tb02-the-companions.md).
+
+use std.time
+
+/// The digits at `i`: at least `least`, at most `most`, as many as there
+/// are. (value, the index after them), or (-1, i) when too few.
+fn number(b: List[byte], i: int, least: int, most: int) -> (int, int) {
+    var n: int = 0
+    var k = 0
+    while k < most && i + k < b.len {
+        let c = b[i + k] as int
+        if c < 48 || c > 57 {
+            break
+        }
+        n = n * 10 + (c - 48)
+        k += 1
+    }
+    if k < least {
+        return (-1, i)
+    }
+    (n, i + k)
+}
+
+fn at(b: List[byte], i: int, c: int) -> bool {
+    i < b.len && b[i] as int == c
+}
+
+fn leap(y: int) -> bool {
+    y % 4 == 0 && (y % 100 != 0 || y % 400 == 0)
+}
+
+/// The days in month `m` of year `y`.
+pub fn month_len(y: int, m: int) -> int {
+    if m == 2 {
+        return if leap(y) then 29 else 28
+    }
+    if m == 4 || m == 6 || m == 9 || m == 11 {
+        return 30
+    }
+    31
+}
+
+/// `n` in at least `w` digits, zeros in front.
+pub fn pad(n: int, w: int) -> str {
+    var s = "{n}"
+    while s.len < w {
+        s = "0" + s
+    }
+    s
+}
+
+fn stamp(y: int, mo: int, d: int, h: int, mi: int, s: int) -> str {
+    "{pad(y, 4)}-{pad(mo, 2)}-{pad(d, 2)}T{pad(h, 2)}:{pad(mi, 2)}:{pad(s, 2)}"
+}
+
+/// A `DeletionDate` read as the oracle reads one, the way `strptime` reads
+/// `%Y-%m-%dT%H:%M:%S`: a year of four digits, each other field one or two
+/// (the day also a space and one digit), `T` in either case, nothing before
+/// or after, and a date that is real. The date zero-padded
+/// (`2020-1-2T3:4:5` is `2020-01-02T03:04:05`), or "" when it is none.
+pub fn read_date(v: List[byte]) -> str {
+    let (y, a) = number(v, 0, 4, 4)
+    if y < 0 || !at(v, a, 45) {
+        return ""
+    }
+    let (mo, b) = number(v, a + 1, 1, 2)
+    if mo < 0 || !at(v, b, 45) {
+        return ""
+    }
+    var c = b + 1
+    var d = -1
+    if at(v, c, 32) {
+        let (dd, cc) = number(v, c + 1, 1, 1)
+        d = dd
+        c = cc
+    } else {
+        let (dd, cc) = number(v, c, 1, 2)
+        d = dd
+        c = cc
+    }
+    if d < 0 || !(at(v, c, 84) || at(v, c, 116)) {
+        return ""
+    }
+    let (h, e) = number(v, c + 1, 1, 2)
+    if h < 0 || !at(v, e, 58) {
+        return ""
+    }
+    let (mi, f) = number(v, e + 1, 1, 2)
+    if mi < 0 || !at(v, f, 58) {
+        return ""
+    }
+    let (s, g) = number(v, f + 1, 1, 2)
+    if s < 0 || g != v.len {
+        return ""
+    }
+    if y < 1 || mo < 1 || mo > 12 || d < 1 || d > month_len(y, mo) || h > 23 || mi > 59 || s > 59 {
+        return ""
+    }
+    stamp(y, mo, d, h, mi, s)
+}
+
+/// A date as a listing shows it: `YYYY-MM-DD hh:mm:ss`, or question marks
+/// when there is none.
+pub fn listed_date(date: str) -> str {
+    if date.len == 0 {
+        return "????-??-?? ??:??:??"
+    }
+    "{date[0..10]} {date[11..]}"
+}
+
+/// Days from 1970-01-01 to a civil date (proleptic Gregorian).
+pub fn days_from_civil(y0: int, m: int, d: int) -> int {
+    let y = if m <= 2 then y0 - 1 else y0
+    let era = (if y >= 0 then y else y - 399) / 400
+    let yoe = y - era * 400
+    let mp = if m > 2 then m - 3 else m + 9
+    let doy = (153 * mp + 2) / 5 + d - 1
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
+    era * 146097 + doe - 719468
+}
+
+/// The civil date `z` days from 1970-01-01: (year, month, day).
+pub fn civil_from_days(z0: int) -> (int, int, int) {
+    let z = z0 + 719468
+    let era = (if z >= 0 then z else z - 146096) / 146097
+    let doe = z - era * 146097
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+    let mp = (5 * doy + 2) / 153
+    let d = doy - (153 * mp + 2) / 5 + 1
+    let m = if mp < 10 then mp + 3 else mp - 9
+    let y = yoe + era * 400 + (if m <= 2 then 1 else 0)
+    (y, m, d)
+}
+
+/// Local wall-clock time at `unix_s`, as seconds counted on the calendar
+/// from 1970-01-01 00:00:00 (UTC when no zone data answers).
+pub fn civil_seconds(unix_s: int) -> int {
+    let l = time.local(unix_s) else |_| {
+        return unix_s
+    }
+    let s = if l.second > 59 then 59 else l.second
+    days_from_civil(l.year, l.month, l.day) * 86400 + l.hour * 3600 + l.minute * 60 + s
+}
+
+/// The cut `trash-empty DAYS` makes, at `unix_s`: the local date and time
+/// DAYS days back on the calendar, at the same time of day (as the oracle
+/// counts them, so a change to summer time moves the cut by the hour). An
+/// item whose deletion date is at or before it goes.
+pub fn cutoff(unix_s: int, days: int) -> str {
+    if days > 3000000 {
+        return "0000-00-00T00:00:00"
+    }
+    if days < -3000000 {
+        return "99999"
+    }
+    let cs = civil_seconds(unix_s) - days * 86400
+    var dd = cs / 86400
+    var rem = cs % 86400
+    if rem < 0 {
+        rem += 86400
+        dd -= 1
+    }
+    let (y, m, d) = civil_from_days(dd)
+    if y < 1 {
+        return "0000-00-00T00:00:00"
+    }
+    if y > 9999 {
+        return "99999"
+    }
+    stamp(y, m, d, rem / 3600, rem / 60 % 60, rem % 60)
+}
+
+/// Whether `a` sorts at or before `b`, byte by byte.
+pub fn at_or_before(a: str, b: str) -> bool {
+    let x = a.bytes()
+    let y = b.bytes()
+    var i = 0
+    while i < x.len && i < y.len {
+        if x[i] != y[i] {
+            return x[i] as int < y[i] as int
+        }
+        i += 1
+    }
+    x.len <= y.len
+}
+
+/// Whether an item with deletion date `date` is older than the cut: a date
+/// that is none is never.
+pub fn older(date: str, cut: str) -> bool {
+    date.len > 0 && at_or_before(date, cut)
+}
