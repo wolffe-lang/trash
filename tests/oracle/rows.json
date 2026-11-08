@@ -1395,11 +1395,12 @@
       "/"
      ]
     }
-   ]
+   ],
+   "diverge": "'/' is refused by name before anything is made; the oracle tries each trash it knows and reports each failure"
   },
   {
    "name": "put-dot-spellings",
-   "about": "operands whose last component is . or .., and ./ itself",
+   "about": "operands whose last component is . or ..",
    "steps": [
     {
      "make": [
@@ -1420,20 +1421,6 @@
       "trash",
       "sub/deeper/.."
      ]
-    },
-    {
-     "run": [
-      "trash",
-      "./"
-     ],
-     "cwd": "sub/deeper"
-    },
-    {
-     "run": [
-      "trash",
-      "deeper/.//"
-     ],
-     "cwd": "sub"
     }
    ]
   },
@@ -1571,7 +1558,9 @@
      ],
      "stdin": ""
     }
-   ]
+   ],
+   "diverge": "the end of input answers no, as rm takes it; the oracle crashes",
+   "oracle": "crashes"
   },
   {
    "name": "put-interactive-missing",
@@ -2129,7 +2118,8 @@
       "/tmp/trash-rows/home"
      ]
     }
-   ]
+   ],
+   "diverge": "a directory that holds the trash is refused by name; the oracle moves the whole home into the root volume's trash"
   },
   {
    "name": "put-mount-point",
@@ -2150,7 +2140,8 @@
       "/xdev"
      ]
     }
-   ]
+   ],
+   "diverge": "a mount point is refused by name; the oracle tries each trash it knows and reports each failure"
   },
   {
    "name": "put-many",
@@ -2651,6 +2642,571 @@
     }
    ],
    "diverge": "a copy that fails part-way removes what it made and its info file and leaves the source whole; the oracle moves the tree within its volume"
+  },
+  {
+   "name": "put-dot-slash",
+   "about": "operands that are . or end in . once their trailing slashes go",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "sub/deeper"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "./"
+     ],
+     "cwd": "sub/deeper"
+    },
+    {
+     "run": [
+      "trash",
+      "deeper/.//"
+     ],
+     "cwd": "sub"
+    },
+    {
+     "run": [
+      "trash",
+      "deeper/../"
+     ],
+     "cwd": "sub"
+    }
+   ],
+   "diverge": "an operand that is . or .., or ends in /. or /.., once its trailing slashes are dropped, is refused by name; the oracle tries to trash ./ and trashes deeper/.// as deeper"
+  },
+  {
+   "name": "put-root-spellings",
+   "about": "the root directory spelled other ways",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "sub"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "//"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/."
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/tmp/../.."
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "../../../../.."
+     ],
+     "cwd": "sub"
+    }
+   ],
+   "diverge": "'/' is refused by name before anything is made; the oracle tries each trash it knows and reports each failure"
+  },
+  {
+   "name": "put-long-name-240",
+   "about": "a 240-byte name",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-name-241",
+   "about": "a 241-byte name",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-name-245",
+   "about": "a 245-byte name, whose info file name is exactly 255 bytes",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-name-246",
+   "about": "a 246-byte name",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-name-255",
+   "about": "a 255-byte name",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-name-ext",
+   "about": "a 250-byte name with an extension",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.txt",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-name-twice",
+   "about": "a 250-byte name trashed three times",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "1\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "3\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-name-utf8",
+   "about": "a name of 125 two-byte characters (250 bytes)",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-name-utf8-short",
+   "about": "a name of 121 two-byte characters (242 bytes)",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-collision-241",
+   "about": "a 241-byte name trashed twice",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "1\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-option-file-exists",
+   "about": "a known flag that is also the name of a file here",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "-v",
+       "v\n"
+      ],
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-v",
+      "a"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-unknown-file-exists",
+   "about": "an unknown flag that is also the name of a file here",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "-x",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-x"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-negative-missing",
+   "about": "a negative number that names nothing",
+   "steps": [
+    {
+     "run": [
+      "trash",
+      "-1"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-negative-after-dashdash",
+   "about": "a file named -1 after --",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "-1",
+       "n\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--",
+      "-1"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-unknown-then-existing",
+   "about": "an unknown flag and an existing file named like a flag",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "-1",
+       "n\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-q",
+      "-1"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-interactive-dangling",
+   "about": "-i on a dangling link and on a link to a file",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "t",
+       "t\n"
+      ],
+      [
+       "link",
+       "nowhere",
+       "dl"
+      ],
+      [
+       "link",
+       "t",
+       "fl"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "dl",
+      "fl"
+     ],
+     "stdin": "n\nn\n"
+    }
+   ]
+  },
+  {
+   "name": "put-interactive-empty-answer",
+   "about": "-i answered with an empty line, then n, then yes with a capital",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ],
+      [
+       "file",
+       "b",
+       "b\n"
+      ],
+      [
+       "file",
+       "c",
+       "c\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "a",
+      "b",
+      "c"
+     ],
+     "stdin": "\nn\nYES\n"
+    }
+   ]
+  },
+  {
+   "name": "put-interactive-special",
+   "about": "-i on a fifo, a socket and a read-only file, each answered no",
+   "steps": [
+    {
+     "make": [
+      [
+       "fifo",
+       "p",
+       "0644"
+      ],
+      [
+       "socket",
+       "s"
+      ],
+      [
+       "file",
+       "ro",
+       "r\n",
+       "0444"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "p",
+      "s",
+      "ro"
+     ],
+     "stdin": "n\nn\nn\n"
+    }
+   ]
+  },
+  {
+   "name": "put-fifo-socket",
+   "about": "a fifo and a socket",
+   "steps": [
+    {
+     "make": [
+      [
+       "fifo",
+       "p",
+       "0644"
+      ],
+      [
+       "socket",
+       "s"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "p",
+      "s"
+     ]
+    }
+   ]
   }
  ]
 }
