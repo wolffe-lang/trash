@@ -22,7 +22,8 @@ fn help() -> str {
     List what is in the trash, ~/Trash: one line per item, the date and time
     it was trashed and the path it was trashed from, in the order the trash's
     directory lists them. An item whose date cannot be read shows question
-    marks for it.
+    marks for it. An item with no info file, and an info file with no item,
+    are named on standard error.
 
     options:
       -h, --help  print this help and exit
@@ -48,12 +49,19 @@ fn main() -> int {
         return 74
     }
     var buf = List[byte]()
+    var named = Map[str, bool]()
+    var no_item = List[str]()
     for x in can.scan(trash) {
         let info = can.info_shown(trash, x)
+        let raw = x.raw[0..x.raw.len - 10]
+        named[can.shown(raw)] = true
         if x.state == 0 {
             can.add(mut buf, "{can.listed_date(x.date)} ")
             can.add_bytes(mut buf, x.path)
             can.add(mut buf, "\n")
+            if !can.there("{trash}/files/{x.name}") {
+                (mut no_item).push(info)
+            }
         } else if x.state == 1 {
             eprint(can.errno_line(x.errno, info))
         } else if x.state == 2 {
@@ -65,5 +73,22 @@ fn main() -> int {
         }
     }
     can.put_out(buf)
+    // The specification's emergency case, an item with no info file, is
+    // named, and so is an info file whose item is not there: what a
+    // trashing or a restore stopped part-way leaves.
+    for info in no_item {
+        eprint("trash-list: '{info}' names an item that is not in the trash")
+    }
+    let entries = fs_read_dir_entries("{trash}/files") else |_| {
+        List[List[byte]]()
+    }
+    for e in entries {
+        let name = can.shown(e[1..])
+        if !(named[name] else false) {
+            eprint(
+                "trash-list: '{trash}/files/{name}' has no info file, so where it came from is not known",
+            )
+        }
+    }
     0
 }
