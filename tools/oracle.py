@@ -221,7 +221,11 @@ def env_for(row):
 # The tops of the two file systems a row touches, where a tool may make a
 # per-volume trash (`$topdir/.Trash-$uid`): the image's root, which holds the
 # scratch home, and the second file system.
-TOPS = (('root-top', Path('/')), ('xdev-top', Path('/xdev')), ('small-top', SMALL))
+TOPS = (('root-top', Path('/')), ('tmp-top', Path('/tmp')), ('xdev-top', Path('/xdev')), ('small-top', SMALL))
+# The largest file system a row may write to (tools/in-container mounts /tmp,
+# /xdev and /small at 32 MiB or less): a command that copies without end
+# fails on a full tmpfs instead of filling the host.
+CAP = 64 * 1024 * 1024
 
 
 def clean():
@@ -485,6 +489,11 @@ def live_guard():
     HOME.parent.mkdir(parents=True, exist_ok=True)
     if os.stat('/xdev').st_dev == os.stat(HOME.parent).st_dev:
         raise SystemExit('FAIL oracle-xdev: /xdev is not a second file system')
+    for top in ('/tmp', '/xdev'):
+        v = os.statvfs(top)
+        if os.stat(top).st_dev == os.stat('/').st_dev or v.f_blocks * v.f_frsize > CAP:
+            raise SystemExit('FAIL oracle-cap: %s is not a file system of its own of at most %d bytes '
+                             '(tools/in-container mounts one)' % (top, CAP))
 
 
 def report(name, diffs, extra=''):
