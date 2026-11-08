@@ -1,0 +1,301 @@
+//! member: false
+//!
+//! The pure parts of `can`, by name: words in messages, paths read
+//! lexically, `Path=`'s encoding, collision names and their shortening, the
+//! info text, the deletion date, and the argument parser on the shapes the
+//! oracle answered (tests/oracle/golden). Each check prints `PASS row` or
+//! `FAIL row got … want …`; tests/unit-rows.json lists the rows.
+
+use can
+
+struct Tally {
+    failed: int,
+}
+
+fn check(mut t: Tally, row: str, got: str, want: str) {
+    if got == want {
+        print("PASS {row}")
+    } else {
+        print("FAIL {row} got [{got}] want [{want}]")
+        t.failed += 1
+    }
+}
+
+fn bytes(xs: List[int]) -> List[byte] {
+    var out = List[byte]()
+    for x in xs {
+        (mut out).push(x as byte)
+    }
+    out
+}
+
+fn text_rows(mut t: Tally) {
+    check(mut t, "shown-utf8", can.shown(can.bytes_of("my file é")), "my file é")
+    check(mut t, "shown-ff", can.shown(bytes([120, 255, 121])), "x\\xffy")
+    check(mut t, "shown-overlong", can.shown(bytes([192, 128])), "\\xc0\\x80")
+    check(mut t, "shown-surrogate", can.shown(bytes([237, 160, 128])), "\\xed\\xa0\\x80")
+    check(mut t, "shown-past-max", can.shown(bytes([244, 144, 128, 128])), "\\xf4\\x90\\x80\\x80")
+    check(mut t, "shown-cut", can.shown(bytes([195])), "\\xc3")
+    check(mut t, "chars", "{can.chars("aéb€")}", "4")
+    check(mut t, "first-chars", can.first_chars("aéb€", 2), "aé")
+    check(mut t, "first-chars-all", can.first_chars("ab", 5), "ab")
+}
+
+fn path_rows(mut t: Tally) {
+    check(mut t, "absolute-relative", can.absolute("/h", "a"), "/h/a")
+    check(mut t, "absolute-dotdot", can.absolute("/h/sub", "../x"), "/h/x")
+    check(mut t, "absolute-dot", can.absolute("/h/sub", "./y"), "/h/sub/y")
+    check(mut t, "absolute-lexical", can.absolute("/h", "lq/../x"), "/h/x")
+    check(mut t, "absolute-slash", can.absolute("/h", "d/"), "/h/d")
+    check(mut t, "absolute-root-dotdot", can.absolute("/", "../.."), "/")
+    check(mut t, "absolute-two-slashes", can.absolute("/h", "//"), "/")
+    check(mut t, "absolute-climb", can.absolute("/h", "/tmp/../.."), "/")
+    check(mut t, "absolute-repeated", can.absolute("/h", "a//b/./c"), "/h/a/b/c")
+    check(mut t, "base", can.base("/h/a.txt"), "a.txt")
+    check(mut t, "parent", can.parent("/h/a.txt"), "/h")
+    check(mut t, "parent-top", can.parent("/a"), "/")
+    check(mut t, "unslashed", can.unslashed("deeper/.//"), "deeper/.")
+    check(mut t, "unslashed-root", can.unslashed("///"), "/")
+    check(mut t, "unslashed-none", can.unslashed("a"), "a")
+    check(mut t, "unslashed-utf8", can.unslashed("ééé"), "ééé")
+    check(mut t, "unslashed-utf8-slash", can.unslashed("é/"), "é")
+    check(mut t, "encode-unreserved", can.encode("/A-Z_a.z~0/9"), "/A-Z_a.z~0/9")
+    check(mut t, "encode-space-utf8", can.encode("/h/my file é.txt"), "/h/my%20file%20%C3%A9.txt")
+    // The oracle's encoding of every ASCII punctuation mark (put-punctuation).
+    check(
+        mut t,
+        "encode-punctuation",
+        can.encode("a%b#c?d+e&f=g;h~i@j!k'l(m)n*o,p$q[r]s{{t}}u^v`w|x\"y<z>_-.:"),
+        "a%25b%23c%3Fd%2Be%26f%3Dg%3Bh~i%40j%21k%27l%28m%29n%2Ao%2Cp%24q%5Br%5Ds%7Bt%7Du%5Ev%60w%7Cx%22y%3Cz%3E_-.%3A",
+    )
+    check(mut t, "encode-control", can.encode("tab\there\nnl"), "tab%09here%0Anl")
+    check(mut t, "under-self", "{can.under("/h/Trash", "/h/Trash")}", "true")
+    check(mut t, "under-inside", "{can.under("/h/Trash/files/a", "/h/Trash")}", "true")
+    check(mut t, "under-sibling", "{can.under("/h/Trashy", "/h/Trash")}", "false")
+}
+
+fn name_rows(mut t: Tally) {
+    check(mut t, "candidate-first", can.candidate("a.txt", 0, false), "a.txt")
+    check(mut t, "candidate-second", can.candidate("a.txt", 1, false), "a.txt_1")
+    check(mut t, "candidate-third", can.candidate(".hidden", 2, false), ".hidden_2")
+    let n246 = "n".repeat(246)
+    check(mut t, "candidate-short", can.candidate(n246, 1, true), "{"n".repeat(234)}_1")
+    check(mut t, "candidate-short-ten", can.candidate(n246, 10, true), "{"n".repeat(233)}_10")
+    check(
+        mut t,
+        "candidate-short-utf8",
+        can.candidate("é".repeat(125), 1, true),
+        "{"é".repeat(113)}_1",
+    )
+    check(mut t, "too-long-245", "{can.too_long("n".repeat(245), 255)}", "false")
+    check(mut t, "too-long-246", "{can.too_long(n246, 255)}", "true")
+    check(mut t, "too-long-utf8", "{can.too_long("é".repeat(123), 255)}", "true")
+    check(
+        mut t,
+        "info-text",
+        can.info_text("/h/a b", "2026-11-08T12:00:00"),
+        "[Trash Info]\nPath=/h/a%20b\nDeletionDate=2026-11-08T12:00:00\n",
+    )
+}
+
+fn date_rows(mut t: Tally) {
+    env_set("TZ", "UTC0") else |_| {}
+    check(mut t, "date-utc", can.deletion_date(1700000000), "2023-11-14T22:13:20")
+    env_set("TZ", "JST-9") else |_| {}
+    check(mut t, "date-east", can.deletion_date(1700000000), "2023-11-15T07:13:20")
+    env_set("TZ", "PST8") else |_| {}
+    check(mut t, "date-west", can.deletion_date(1700000000), "2023-11-14T14:13:20")
+    env_set("TZ", "Nowhere/None") else |_| {}
+    check(mut t, "date-no-zone-is-utc", can.deletion_date(1700000000), "2023-11-14T22:13:20")
+}
+
+fn nothing_exists(w: List[byte]) -> bool {
+    w.len < 0
+}
+
+/// Files named `-v`, `-1` and `--verbose` are there.
+fn some_exist(w: List[byte]) -> bool {
+    let s = str_from_utf8(w) else |_| {
+        return false
+    }
+    s == "-v" || s == "-1" || s == "--verbose"
+}
+
+fn words(line: str) -> List[List[byte]] {
+    var out = List[List[byte]]()
+    if line.len == 0 {
+        return out
+    }
+    for w in line.split(" ") {
+        (mut out).push(can.bytes_of(w))
+    }
+    out
+}
+
+fn parsed(line: str, exists: fn(List[byte]) -> bool) -> str {
+    let a = can.parse(words(line), exists)
+    var ops = ""
+    for o in a.operands {
+        ops += "[{can.shown(o)}]"
+    }
+    "f={a.force} i={a.interactive} v={a.verbose} h={a.help} V={a.version} ops={ops} err={a.error}"
+}
+
+fn arg_rows(mut t: Tally) {
+    let no = nothing_exists
+    let none = "f=false i=false v=false h=false V=false"
+    check(mut t, "args-plain", parsed("a b", no), "{none} ops=[a][b] err=")
+    check(mut t, "args-none", parsed("", no), "{none} ops= err=Please specify the files to trash.")
+    check(
+        mut t,
+        "args-force-none",
+        parsed("-f", no),
+        "f=true i=false v=false h=false V=false ops= err=Please specify the files to trash.",
+    )
+    check(
+        mut t,
+        "args-cluster",
+        parsed("-rfv a", no),
+        "f=true i=false v=true h=false V=false ops=[a] err=",
+    )
+    check(
+        mut t,
+        "args-fi",
+        parsed("-fi a", no),
+        "f=false i=true v=false h=false V=false ops=[a] err=",
+    )
+    check(
+        mut t,
+        "args-if",
+        parsed("-if a", no),
+        "f=true i=false v=false h=false V=false ops=[a] err=",
+    )
+    check(
+        mut t,
+        "args-after",
+        parsed("a -v", no),
+        "f=false i=false v=true h=false V=false ops=[a] err=",
+    )
+    check(mut t, "args-dashdash", parsed("-- -foo -v", no), "{none} ops=[-foo][-v] err=")
+    check(mut t, "args-dash", parsed("-", no), "{none} ops=[-] err=")
+    check(mut t, "args-negative", parsed("-1 -.5", no), "{none} ops=[-1][-.5] err=")
+    check(
+        mut t,
+        "args-unknown",
+        parsed("-x a", no),
+        "{none} ops=[a] err=unrecognized arguments: -x",
+    )
+    check(
+        mut t,
+        "args-unknown-tail",
+        parsed("-vx a", no),
+        "f=false i=false v=true h=false V=false ops=[a] err=unrecognized arguments: -x",
+    )
+    check(
+        mut t,
+        "args-unknown-head",
+        parsed("-xv a", no),
+        "{none} ops=[a] err=unrecognized arguments: -xv",
+    )
+    check(
+        mut t,
+        "args-unknown-middle",
+        parsed("-vxq a", no),
+        "f=false i=false v=true h=false V=false ops=[a] err=unrecognized arguments: -xq",
+    )
+    check(
+        mut t,
+        "args-unknown-two",
+        parsed("--nope -q a", no),
+        "{none} ops=[a] err=unrecognized arguments: --nope -q",
+    )
+    check(
+        mut t,
+        "args-long",
+        parsed("--force --verbose --recursive --directory a", no),
+        "f=true i=false v=true h=false V=false ops=[a] err=",
+    )
+    check(
+        mut t,
+        "args-prefix",
+        parsed("--verb a", no),
+        "f=false i=false v=true h=false V=false ops=[a] err=",
+    )
+    check(
+        mut t,
+        "args-ambiguous",
+        parsed("--v a", no),
+        "{none} ops= err=ambiguous option: --v could match --verbose, --version",
+    )
+    check(
+        mut t,
+        "args-explicit",
+        parsed("--verbose=1 a", no),
+        "{none} ops= err=argument -v/--verbose: ignored explicit argument '1'",
+    )
+    check(
+        mut t,
+        "args-explicit-short",
+        parsed("-v=1 a", no),
+        "{none} ops= err=argument -v/--verbose: ignored explicit argument '1'",
+    )
+    check(
+        mut t,
+        "args-trash-dir",
+        parsed("--trash-dir /t a", no),
+        "{none} ops=[/t][a] err=unrecognized arguments: --trash-dir",
+    )
+    check(
+        mut t,
+        "args-help-wins",
+        parsed("--nope --help a", no),
+        "f=false i=false v=false h=true V=false ops= err=",
+    )
+    check(
+        mut t,
+        "args-help-short",
+        parsed("-x -h", no),
+        "f=false i=false v=false h=true V=false ops= err=",
+    )
+    check(
+        mut t,
+        "args-version",
+        parsed("--version a", no),
+        "f=false i=false v=false h=false V=true ops= err=",
+    )
+    check(
+        mut t,
+        "args-existing-flag",
+        parsed("-v a", some_exist),
+        "{none} ops= err=refusing to treat existing file -v as an option (use './-v' or a '--' separator)",
+    )
+    check(
+        mut t,
+        "args-existing-long",
+        parsed("--verbose a", some_exist),
+        "{none} ops= err=refusing to treat existing file --verbose as an option (use './--verbose' or a '--' separator)",
+    )
+    check(
+        mut t,
+        "args-existing-first",
+        parsed("-q -1", some_exist),
+        "{none} ops= err=refusing to treat existing file -1 as an option (use './-1' or a '--' separator)",
+    )
+    check(
+        mut t,
+        "args-existing-after-dashdash",
+        parsed("-- -1", some_exist),
+        "{none} ops=[-1] err=",
+    )
+    check(mut t, "args-space", parsed("x", no), "{none} ops=[x] err=")
+}
+
+fn main() -> int {
+    var t = Tally { failed: 0 }
+    text_rows(mut t)
+    path_rows(mut t)
+    name_rows(mut t)
+    date_rows(mut t)
+    arg_rows(mut t)
+    if t.failed > 0 then 1 else 0
+}
