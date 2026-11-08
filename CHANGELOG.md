@@ -1,5 +1,25 @@
 ## Unreleased
 
+- Hardening. Every command syncs what it has made before it removes
+  anything, so a power cut part-way loses no file, and a second run finishes
+  what was cut short or refuses by name: `trash` takes back a name it had
+  reserved, a restore cut after its link is completed, `trash-rm` and
+  `trash-empty` carry on. While an item is copied in from another file
+  system its info file says so, so a partial copy is never offered as an
+  item. A command at work on an item holds a lock on its info file, and the
+  others leave that item alone, so `trash` beside `trash-empty` or
+  `trash-rm`, and two restores of one item, lose and duplicate nothing (a
+  failed copy back used to remove the other restore's file). `trash-list`
+  names an item with no info file and an info file with no item. `trash`
+  asks whether the file may be deleted at all before it starts, as
+  trash-cli does; a restore into a directory it may not write is refused
+  with trash-cli's line.
+- Rows that cut each command at each of its durable steps, rows that run two
+  commands at once over rounds drawn from a seed, rows run as an ordinary
+  user (a shared directory, a sticky one, a read-only parent, a file that
+  cannot be read), rows for a trash bigger than its volume, and a witness of
+  what GNU rm does on the same fixtures.
+
 - `trash-list`, `trash-restore`, `trash-rm PATTERN` and `trash-empty [DAYS]`,
   held to trash-cli's commands of the same names: the listing's lines and
   its order, the date read as trash-cli reads it, encoded paths decoded;
