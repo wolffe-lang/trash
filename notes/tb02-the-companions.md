@@ -374,7 +374,7 @@ None. A row that cannot run fails by name.
 ## Recommendations
 
 R-tb02-1 to R-tb02-8 were ruled A (the user's word, about 14:20Z), and each is
-implemented as A.
+implemented as A. R-tb02-9 was ruled A (`cross-cutting`) at the merge.
 
 - R-tb02-1: the options that choose another trash (`--trash-dir`,
   `--trash-dirs`, `--volumes`, `--all-users`), `--print-completion` and
@@ -409,7 +409,7 @@ implemented as A.
   runs (`tools/oracle.py`, `tools/pax-rows.py`) changed, and its new pieces
   (a terminal, dated fixtures, generated trees, listings in a host's order)
   want a run on CI's hosts before the merge. (B) `module`: no path the audit
-  classes as CI, a pin or shared tooling changed.
+  classes as CI, a pin or shared tooling changed. Ruled A.
 
 ## Done-when
 
