@@ -1,0 +1,20 @@
+{
+ "row": "put-root",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash directory '/'\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

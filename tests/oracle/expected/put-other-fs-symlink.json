@@ -1,0 +1,70 @@
+{
+ "row": "put-other-fs-symlink",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/l"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/l": {
+    "mode": "0777",
+    "mtime": 1400000000,
+    "mtime_ns": 11,
+    "owner": "0:0",
+    "target": "t",
+    "type": "link"
+   },
+   "Trash/info": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/l.trashinfo": {
+    "atime": "<in-window>",
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/xdev/trash-rows/l\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {
+   "t": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0644",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "sha256": "fe8edeeb98cc6d3b93cf2d57000254b84bd9eba34b4df7ce4b87db8b937b7703",
+    "size": 2,
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

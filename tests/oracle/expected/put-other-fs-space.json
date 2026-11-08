@@ -1,0 +1,48 @@
+{
+ "row": "put-other-fs-space",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/big"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '/xdev/trash-rows/big': the home volume has too little free space to copy it\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {
+   "big": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "6640185ea20fee3afb14d109f0788b1a3aa7a11373f98338d0a13bf36c711774",
+    "size": 3145728,
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

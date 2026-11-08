@@ -1,0 +1,54 @@
+{
+ "row": "put-root-spellings",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "///"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash directory '///'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "/."
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '.' directory '/.'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "/tmp/../.."
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '..' directory '/tmp/../..'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "../../../../.."
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '..' directory '../../../../..'\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "sub": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

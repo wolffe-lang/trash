@@ -1,0 +1,146 @@
+{
+ "row": "put-other-fs-tree",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/d"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/d": {
+    "atime": 1200000001,
+    "atime_ns": 10,
+    "mode": "0750",
+    "mtime": 1200000000,
+    "mtime_ns": 9,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/d/dangling": {
+    "mode": "0777",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "target": "nowhere",
+    "type": "link"
+   },
+   "Trash/files/d/empty": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0644",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "type": "file"
+   },
+   "Trash/files/d/f": {
+    "atime": 1500000000,
+    "atime_ns": 987654321,
+    "mode": "0640",
+    "mtime": 1600000000,
+    "mtime_ns": 123456789,
+    "owner": "4321:4322",
+    "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/d/p": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0600",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "type": "fifo"
+   },
+   "Trash/files/d/sub": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0755",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/d/sub/ro": {
+    "atime": 1300000001,
+    "atime_ns": 8,
+    "mode": "0500",
+    "mtime": 1300000000,
+    "mtime_ns": 7,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/d/sub/ro/g": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0444",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "sha256": "768c71d785bf6bbbf8c4d6af6582041f2659027140a962cd0c55b11eddfd5e3d",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/d/sub/up": {
+    "mode": "0777",
+    "mtime": 1400000000,
+    "mtime_ns": 5,
+    "owner": "4323:4324",
+    "target": "../f",
+    "type": "link"
+   },
+   "Trash/files/d/x.sh": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0755",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "sha256": "a8076d3d28d21e02012b20eaf7dbf75409a6277134439025f282e368e3305abf",
+    "size": 10,
+    "type": "file"
+   },
+   "Trash/info": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/d.trashinfo": {
+    "atime": "<in-window>",
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/xdev/trash-rows/d\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

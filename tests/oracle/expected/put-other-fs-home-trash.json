@@ -1,0 +1,31 @@
+{
+ "row": "put-other-fs-home-trash",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "--trash-dir",
+    "/tmp/trash-rows/home/Trash",
+    "/xdev/trash-rows/x.txt"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash [OPTION]... FILE...\ntrash: error: unrecognized arguments: --trash-dir\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {
+   "x.txt": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+    "size": 2,
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

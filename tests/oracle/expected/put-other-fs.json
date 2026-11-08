@@ -1,0 +1,54 @@
+{
+ "row": "put-other-fs",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/x.txt"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/x.txt": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/x.txt.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/xdev/trash-rows/x.txt\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

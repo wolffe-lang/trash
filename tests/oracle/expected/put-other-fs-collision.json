@@ -1,0 +1,78 @@
+{
+ "row": "put-other-fs-collision",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "x.txt"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/x.txt"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/x.txt": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "9a3e246041d3c27dc3645f79cb0d1eb41c277965614655d17119ed7498b956ec",
+    "size": 5,
+    "type": "file"
+   },
+   "Trash/files/x.txt_1": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "d58cde948c574c3a757ce8cdb6d03811292baeba67dc8df3469ed731a4eaa2b3",
+    "size": 5,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/x.txt.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/x.txt\nDeletionDate=<in-window>\n",
+    "type": "file"
+   },
+   "Trash/info/x.txt_1.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/xdev/trash-rows/x.txt\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

@@ -1,0 +1,76 @@
+{
+ "row": "put-other-fs-fail-name",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/d"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '/xdev/trash-rows/d': the name of an entry in '/xdev/trash-rows/d' (b\\xffc) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687); it is left where it was\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {
+   "d": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "d/a": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
+    "size": 2,
+    "type": "file"
+   },
+   "d/b\\xffc": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f",
+    "size": 2,
+    "type": "file"
+   },
+   "d/sub": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "d/sub/z": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "c865f6c5ab8d1b0bcd383a5e1e3879d22681c96bf462c269b7581d523fbe70ab",
+    "size": 2,
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

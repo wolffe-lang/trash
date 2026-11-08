@@ -1,0 +1,29 @@
+{
+ "row": "put-home",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/tmp/trash-rows/home"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '/tmp/trash-rows/home': it holds the trash\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "a.txt": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03",
+    "size": 6,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}
