@@ -3995,7 +3995,7 @@
   },
   {
    "name": "list-trash-kin",
-   "about": "trash-list with the options that choose other trashes",
+   "about": "trash-list with the options that choose other trashes (--volumes is left out: what it prints is the host's mounts, in no fixed order)",
    "steps": [
     {
      "run": [
@@ -4008,12 +4008,6 @@
      "run": [
       "trash-list",
       "--trash-dirs"
-     ]
-    },
-    {
-     "run": [
-      "trash-list",
-      "--volumes"
      ]
     },
     {
