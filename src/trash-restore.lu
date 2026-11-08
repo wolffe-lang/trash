@@ -1,9 +1,152 @@
 //! member: false
 //!
-//! trash-restore: the stub T2's rows are held red against first. It refuses
-//! every invocation with one line of its own and touches nothing.
+//! trash-restore — put items in the trash back where they came from: those
+//! trashed from the working directory or under it, or from PATH or under
+//! it, chosen by number.
+//!
+//! Written from the FreeDesktop.org Trash specification 1.0 and black-box
+//! runs of a pinned trash-cli (`trash-restore`), the oracle whose bytes it
+//! is held to (`tests/oracle/`). Never trash-cli's source, nor any other
+//! trash's. A restore never replaces what is at the original path: how the
+//! path is reserved is `can.restore`'s, and the rules, with the measurement
+//! each came from, are in `notes/tb02-the-companions.md`.
+
+use can
+
+fn usage() -> str {
+    "usage: trash-restore [-h] [--sort {{date,path,none}}] [--version] [path]\n"
+}
+
+fn help() -> str {
+    """
+    usage: trash-restore [-h] [--sort {{date,path,none}}] [--version] [path]
+
+    Put items in the trash, ~/Trash, back where they came from. The items
+    trashed from PATH or from under it (the working directory when PATH is
+    not given) are listed with numbers, and the answer chooses: a number, a
+    list of them (0,2), a span (0-3), or nothing to restore none. An item is
+    never put back over anything at its path; a directory that is missing
+    above it is made.
+
+    options:
+      -h, --help            print this help and exit
+      --sort {{date,path,none}}
+                            list by the date of trashing (the default), by
+                            path, or in the order the trash lists them
+      --version             print the version and exit
+    """
+}
 
 fn main() -> int {
-    eprint("trash-restore: not written yet")
-    74
+    let l = can.read_args(can.arg_words(), can.restore_opts(), 1)
+    if l.help {
+        print_raw(help())
+        return 0
+    }
+    if l.version {
+        print_raw(can.version_of("trash-restore"))
+        return 0
+    }
+    if l.error.len > 0 {
+        return can.usage_error(usage(), "trash-restore", l.error)
+    }
+    let trash = can.trash_of("trash-restore")
+    if trash.len == 0 {
+        return 74
+    }
+    let trash_real = can.real_trash(trash)
+    let cwd = os_cwd() else |_| {
+        eprint("trash-restore: cannot read the working directory: {can.reason()}")
+        return 74
+    }
+    var base = cwd
+    if l.operands.len == 1 {
+        let w = l.operands[0]
+        let given = str_from_utf8(w) else |_| {
+            eprint(
+                "trash-restore: cannot restore from '{can.shown(w)}': its path is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)",
+            )
+            return 1
+        }
+        base = can.absolute(cwd, given)
+    }
+    if base == trash || base == trash_real {
+        eprint("trash-restore: cannot restore from '{base}': it is the trash itself")
+        return 1
+    }
+    if can.under(base, trash) || can.under(base, trash_real) {
+        eprint("trash-restore: cannot restore from '{base}': it is inside the trash")
+        return 1
+    }
+    let all = can.scan(trash)
+    var items = List[int]()
+    var i = 0
+    while i < all.len {
+        let info = can.info_shown(trash, all[i])
+        let state = all[i].state
+        if state == 1 {
+            eprint(
+                "Unreadable trashinfo file: {info}, because {can.errno_line(all[i].errno, info)}",
+            )
+        } else if state == 2 {
+            eprint("Non parsable trashinfo file: {info}, because Unable to parse Path")
+        } else if state == 3 {
+            eprint(
+                "Unreadable trashinfo file: {info}, because its name is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)",
+            )
+        } else if can.from_under(all[i].path, base) {
+            (mut items).push(i)
+        }
+        i += 1
+    }
+    if items.len == 0 {
+        print("No files trashed from current dir ({can.py_quote(cwd)})")
+        return 0
+    }
+    var shown_order = copy items
+    if l.sort != "none" {
+        var keys = List[List[byte]]()
+        for k in items {
+            (mut keys).push(can.sort_key(all[k].date, all[k].path, l.sort == "path"))
+        }
+        shown_order = List[int]()
+        for j in can.order(keys) {
+            (mut shown_order).push(items[j])
+        }
+    }
+    var buf = List[byte]()
+    var n = 0
+    for k in shown_order {
+        var num = "{n}"
+        while num.len < 4 {
+            num = " " + num
+        }
+        can.add(mut buf, "{num} {can.listed_date(all[k].date)} ")
+        can.add_bytes(mut buf, all[k].path)
+        can.add(mut buf, "\n")
+        n += 1
+    }
+    can.add(mut buf, "What file to restore [0..{n - 1}]: ")
+    can.put_out(buf)
+    let answer = read_line() else |_| {
+        eprint("")
+        return 1
+    }
+    if answer.len == 0 {
+        print("No files were restored")
+        return 0
+    }
+    let (picked, bad) = can.choose(answer, n - 1)
+    if bad.len > 0 {
+        eprint("Invalid entry: {bad}")
+        return 1
+    }
+    for p in picked {
+        let why = can.restore(trash, trash_real, all[shown_order[p]])
+        if why.len > 0 {
+            eprint(why)
+            return 1
+        }
+    }
+    0
 }
