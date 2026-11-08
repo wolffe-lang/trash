@@ -1,5 +1,5 @@
 {
- "about": "The census rows: per platform, the observation a probe prints (a regular expression matched whole) and whether the call is present, missing or wrong there. A missing or wrong row names its gap. Written first from the prediction in notes/tb00-the-census.md.",
+ "about": "The census rows: per platform, the observation a probe prints (a regular expression matched whole) and whether the call is present, missing or wrong there. A missing or wrong row names its gap. First written from the prediction in notes/tb00-the-census.md; the rows the first takes contradicted were moved to the measurement, and the note says which.",
  "rows": {
   "access@other": {
    "linux": {
@@ -36,9 +36,11 @@
     "status": "present",
     "want": "count=3 operand=61ff62"
    },
+   "note": "the shell route: $(printf) of a byte that is not UTF-8. PAX's shell, pelt, turns it into ? (pelt#20); the program itself receives such bytes whole (args-bytes@exec)",
    "pax": {
-    "status": "present",
-    "want": "count=3 operand=61ff62"
+    "gap": "pelt#20",
+    "status": "wrong",
+    "want": "count=3 operand=613f62"
    }
   },
   "chmod@other": {
@@ -177,8 +179,8 @@
     "want": "2023-11-14T23:13:20 offset=3600 dst=false abbrev=CET"
    },
    "pax": {
-    "gap": "pax: no zone data on the image",
-    "status": "wrong",
+    "gap": "the image carries the UTC zone alone, by design",
+    "status": "missing",
     "want": "zone"
    }
   },
@@ -197,10 +199,10 @@
     "status": "present",
     "want": "2023-11-14T22:13:20 offset=0 dst=false abbrev=UTC"
    },
+   "note": "PAX: /etc/localtime is the UTC zone the distribution carries",
    "pax": {
-    "gap": "pax: no zone data on the image",
-    "status": "wrong",
-    "want": "zone"
+    "status": "present",
+    "want": "2023-11-14T22:13:20 offset=0 dst=false abbrev=UTC"
    }
   },
   "lstat@other": {
@@ -281,6 +283,7 @@
     "status": "missing",
     "want": "no-path:utf8"
    },
+   "note": "a name that is not UTF-8 is listed as bytes, and no path call can take it (wolf-lang#687)",
    "pax": {
     "gap": "wolf-lang#687",
     "status": "missing",
@@ -427,6 +430,7 @@
     "status": "missing",
     "want": "r7=new"
    },
+   "note": "every rename replaces; a restore that must never overwrite links instead, for a file (hardlink@across), and for a directory it can only check first (wolf-lang#706)",
    "pax": {
     "gap": "wolf-lang#706",
     "status": "missing",
@@ -519,9 +523,8 @@
     "want": "link-mtime=1400000001.6 target-mtime=1600000000"
    },
    "pax": {
-    "gap": "pax: whole seconds on a small ext2 volume",
-    "status": "wrong",
-    "want": "link-mtime=1400000001.0 target-mtime=1600000000"
+    "status": "present",
+    "want": "link-mtime=1400000001.6 target-mtime=1600000000"
    }
   },
   "times@other": {
@@ -539,10 +542,10 @@
     "status": "present",
     "want": "atime=1500000000.123456789 mtime=1600000000.987654321"
    },
+   "note": "PAX: the ext2 home disk has 256-byte inodes, so nanoseconds are kept there too",
    "pax": {
-    "gap": "pax: whole seconds on a small ext2 volume",
-    "status": "wrong",
-    "want": "atime=1500000000.0 mtime=1600000000.0"
+    "status": "present",
+    "want": "atime=1500000000.123456789 mtime=1600000000.987654321"
    }
   },
   "walk-at@other": {
