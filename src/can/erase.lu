@@ -1,0 +1,110 @@
+// can: an item removed from the trash for good (trash-rm, trash-empty).
+// Walked by held directory (`fs_open_at` with the no-follow bit), so a link
+// inside the item is removed as a link and a directory swapped for a link
+// cannot carry a removal out of the trash. A directory this process may not
+// write is made writable through its handle before it is emptied. A name
+// inside the item that is not UTF-8 cannot be named to be removed
+// (wolf-lang#687): a survey finds one before anything is removed, and the
+// whole item is left.
+
+/// The first name under the directory `path` that is not UTF-8, as a
+/// message names it ("" when there is none).
+fn unreachable(path: str) -> str {
+    let entries = fs_read_dir_entries(path) else |_| {
+        return ""
+    }
+    for e in entries {
+        let raw = e[1..]
+        let name = str_from_utf8(raw) else |_| {
+            return "the name of an entry in '{path}' ({shown(raw)}) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
+        }
+        let child = "{path}/{name}"
+        let rec = fs_lstat(child) else |_| {
+            continue
+        }
+        if rec[0] == 1 {
+            let why = unreachable(child)
+            if why.len > 0 {
+                return why
+            }
+        }
+    }
+    ""
+}
+
+/// The held directory `fd` (named `path`) emptied.
+fn empty_dir(fd: int, path: str) -> str {
+    let entries = fs_read_dir_entries_at(fd) else |_| {
+        return "cannot list '{path}': {reason()}"
+    }
+    for e in entries {
+        let raw = e[1..]
+        let name = str_from_utf8(raw) else |_| {
+            return "the name of an entry in '{path}' ({shown(raw)}) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
+        }
+        let child = "{path}/{name}"
+        var kind = e[0] as int
+        var rec = List[int]()
+        if kind == 2 || kind == 1 {
+            rec = fs_lstat_at(fd, name) else |_| {
+                return "cannot read '{child}': {reason()}"
+            }
+            kind = rec[0]
+        }
+        if kind == 1 {
+            let sub = fs_open_at(fd, name, 32 + 16, 0) else |_| {
+                return "cannot open '{child}': {reason()}"
+            }
+            if rec[4] / 64 % 8 != 7 {
+                fs_set_mode_fd(sub, 0o700) else |_| {}
+            }
+            let why = empty_dir(sub, child)
+            fs_close(sub) else |_| {}
+            if why.len > 0 {
+                return why
+            }
+            fs_remove_dir_at(fd, name) else |_| {
+                return "cannot remove '{child}': {reason()}"
+            }
+        } else {
+            fs_remove_at(fd, name) else |_| {
+                return "cannot remove '{child}': {reason()}"
+            }
+        }
+    }
+    ""
+}
+
+/// Remove `path` and everything in it. "" when it is gone, or was never
+/// there; otherwise why it is not, the item left whole when nothing had
+/// been removed yet.
+pub fn erase(path: str) -> str {
+    let rec = fs_lstat(path) else |_| {
+        return ""
+    }
+    if rec[0] != 1 {
+        fs_remove(path) else |_| {
+            return "cannot remove '{path}': {reason()}"
+        }
+        return ""
+    }
+    let bad = unreachable(path)
+    if bad.len > 0 {
+        return "{bad}; it is left in the trash"
+    }
+    let fd = fs_open_mode(path, 32 + 16) else |_| {
+        return "cannot open '{path}': {reason()}"
+    }
+    if rec[4] / 64 % 8 != 7 {
+        fs_set_mode_fd(fd, 0o700) else |_| {}
+    }
+    let why = empty_dir(fd, path)
+    fs_close(fd) else |_| {}
+    if why.len > 0 {
+        return why
+    }
+    fs_remove_dir(path) else |_| {
+        return "cannot remove '{path}': {reason()}"
+    }
+    ""
+}
