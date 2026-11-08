@@ -16,28 +16,41 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 engine=${TRASH_ENGINE:-docker}
 cpus=${TRASH_CPUS:-0}
 memory=${TRASH_MEMORY:-12g}
-key=$(cat "$root/ci/oracle.Containerfile" "$root/ci/apt-snapshot" "$root/ci/packages.txt" \
-    "$root/ci/build-requirements.txt" "$root/ci/oracle-sdist.txt" "$root/ci/oracle-requirements.txt" \
-    "$root/ci/oracle-wheel.txt" | sha256sum | cut -c1-20)
-image="trash-oracle:$key"
-if ! "$engine" image inspect "$image" > /dev/null 2>&1; then
-    "$engine" build --build-arg "BUILD_CPUS=$cpus" -f "$root/ci/oracle.Containerfile" -t "$image" "$root"
-fi
 mkdir -p "$root/target/oracle"
-"$engine" image inspect "$image" --format '{{.Id}}' > "$root/target/oracle/image-id.txt"
-echo "image $image $(cat "$root/target/oracle/image-id.txt")"
-for f in oracle-packages.txt oracle-manifest.txt; do
-    "$engine" run --rm --network none --memory "$memory" "$image" taskset -c "$cpus" cat "/opt/$f" > "$root/target/oracle/$f"
-done
-if [ "${TRASH_BOOTSTRAP:-0}" = 1 ]; then
-    cp "$root/target/oracle/oracle-packages.txt" "$root/ci/packages.lock"
-    cp "$root/target/oracle/oracle-manifest.txt" "$root/ci/oracle-manifest.lock"
-    echo 'PASS oracle-bootstrap: ci/packages.lock and ci/oracle-manifest.lock written from the image'
-    exit 0
-fi
-diff -u "$root/ci/packages.lock" "$root/target/oracle/oracle-packages.txt"
-diff -u "$root/ci/oracle-manifest.lock" "$root/target/oracle/oracle-manifest.txt"
-echo 'PASS oracle-image-pins: the package closure and the oracle manifest are the committed ones'
+image_step() {
+    key=$(cat "$root/ci/oracle.Containerfile" "$root/ci/apt-snapshot" "$root/ci/packages.txt" \
+        "$root/ci/build-requirements.txt" "$root/ci/oracle-sdist.txt" "$root/ci/oracle-requirements.txt" \
+        "$root/ci/oracle-wheel.txt" | sha256sum | cut -c1-20)
+    image="trash-oracle:$key"
+    if ! "$engine" image inspect "$image" > /dev/null 2>&1; then
+        "$engine" build --build-arg "BUILD_CPUS=$cpus" -f "$root/ci/oracle.Containerfile" -t "$image" "$root" || return
+    fi
+    "$engine" image inspect "$image" --format '{{.Id}}' > "$root/target/oracle/image-id.txt" || return
+    echo "image $image $(cat "$root/target/oracle/image-id.txt")"
+    echo "$image" > "$root/target/oracle/image-tag.txt"
+    for f in oracle-packages.txt oracle-manifest.txt; do
+        "$engine" run --rm --network none --memory "$memory" "$image" taskset -c "$cpus" cat "/opt/$f" > "$root/target/oracle/$f" || return
+    done
+    if [ "${TRASH_BOOTSTRAP:-0}" = 1 ]; then
+        cp "$root/target/oracle/oracle-packages.txt" "$root/ci/packages.lock"
+        cp "$root/target/oracle/oracle-manifest.txt" "$root/ci/oracle-manifest.lock"
+        echo 'PASS oracle-bootstrap: ci/packages.lock and ci/oracle-manifest.lock written from the image'
+        return
+    fi
+    diff -u "$root/ci/packages.lock" "$root/target/oracle/oracle-packages.txt" || { echo 'FAIL oracle-image-pins the package closure differs from ci/packages.lock'; return 1; }
+    diff -u "$root/ci/oracle-manifest.lock" "$root/target/oracle/oracle-manifest.txt" || { echo 'FAIL oracle-image-pins the oracle manifest differs from ci/oracle-manifest.lock'; return 1; }
+    echo 'PASS oracle-image-pins: the package closure and the oracle manifest are the committed ones'
+}
+# The image is a step of the record like any other: START, its output
+# indented (a failure's FAIL lines at column 0), END with its exit.
+start=$SECONDS rc=0
+printf 'START oracle-image\n'
+image_step > "$root/target/oracle/image.log" 2>&1 || rc=$?
+if [ "$rc" -eq 0 ]; then sed 's/^/  /' "$root/target/oracle/image.log"; else awk '/^FAIL / {print; next} {print "  " $0}' "$root/target/oracle/image.log"; fi
+printf 'END oracle-image exit=%s secs=%s\n' "$rc" "$((SECONDS-start))"
+[ "$rc" -eq 0 ] || exit "$rc"
+[ "${TRASH_BOOTSTRAP:-0}" != 1 ] || exit 0
+image=$(cat "$root/target/oracle/image-tag.txt")
 [ "${TRASH_PREPARE_ONLY:-0}" != 1 ] || exit 0
 [ "$#" -gt 0 ] || set -- bash tools/gate linux
 mounts=(-v "$root:/work")
