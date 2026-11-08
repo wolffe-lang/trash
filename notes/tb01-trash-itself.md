@@ -145,3 +145,174 @@ the source whole; `DeletionDate` is UTC, the zone the image carries.
   before the info file's exclusive create, so the second trashing of
   `a.txt` replaces `files/a.txt` and `put-collision` goes red by name
   (`files/a.txt_1` missing).
+
+## The oracle, measured on T1's rows
+
+75 rows joined tb00's 43 (118 in all), each recorded on trash-cli 0.26.9.29 as
+a golden (`tests/oracle/golden/`). tb00's goldens are unchanged, but for
+three of its diverging rows that read a volume trash, re-recorded when the
+scratch home moved to a file system of its own (below).
+
+**Prediction against result.**
+
+| row | predicted | measured |
+|---|---|---|
+| `-R`; `-f` on a present file; `-f` with no operand | trashed silently; the usage error, exit 2 | held |
+| `--help`, `--version` | text on standard output, exit 0 | held (`--help` also wins over an unknown option met before it) |
+| `/` | exit 74, a line naming `'/'` | held, in the oracle's long form (each trash it knows, each failure) |
+| `sub/.`, `sub/..` | like `.` and `..` | **wrong**: `cannot trash '.' directory 'sub/.'`, a message of its own; and `./` and `deeper/.//` are not refused at all (the first fails to move, the second trashes `deeper`) |
+| `-i` kinds | `directory`, `symbolic link`, `regular empty file` | held; a fifo or a socket is an `entry` |
+| `-i` answers | `Y` and `yes` yes, ` y` no | held; an empty line is no |
+| `-fi`, `-if` | both flags hold | **wrong**: the last wins, as in rm |
+| long flags, `--verb`, `--v`, `-vx` | as the short ones; ambiguous; refused | held; `-xv` names `-xv`, `-vxq` names `-xq`, `--verbose=1` is `ignored explicit argument '1'` |
+| an option after an operand | it holds | held |
+| a name holding `'` | plain quotes | held |
+| a file named `-1` | an operand | **wrong**: `refusing to treat existing file -1 as an option (use './-1' or a '--' separator)`, exit 2, for any word before `--` that looks like an option and names something there; a missing `-1` is an operand |
+| `d/` | `d` trashed | held |
+| `ld/x`, `ld -> d` | `Path=` keeps `ld` | **wrong**: `Path=` is the parent's real path (`…/d/x`); and `lq/../x` is read lexically before anything is done, so it trashes `./x`, not the `x` the host would reach |
+| an item in `files/` with no info file | its rename replaces it | **wrong**: the new item is `a.txt_1` |
+| an info file with no item | `a.txt_1` | held |
+| a 250-byte name | refused | **wrong**: shortened. A try whose info file name would pass 255 bytes is skipped, and every later try keeps the name as long, in code points, as the original: `NAME[:len-len(suffix)-10] + suffix`. `NAME_1` is still tried whole first (a 244-byte name's second trashing is `…_2`) |
+| the home, which holds the trash | refused | **wrong**: trash-cli moves the whole home into the volume trash at its top |
+| the mount point of `/xdev` | refused | held, in the long form |
+| `-i` at the end of input | (not predicted) | trash-cli crashes (exit 1, a redacted traceback) |
+| `-i` on a dangling link | (not predicted) | no question is asked, and the link is trashed |
+
+**A path that begins with two slashes.** Given `trash //`, trash-cli copies
+the whole root file system into its trash. Python keeps exactly two leading
+slashes as they are, so the oracle's guard against moving `/` into itself does
+not see `/`, the move fails, and its fallback copies the tree. `/` and `///` are
+refused. It was seen once in the oracle's scratch container, and stopped
+before anything was removed. Since then the harness refuses to hand the oracle
+any path that begins with exactly two slashes (`oracle-guard`, with a selftest
+row of its own), and every write a row can make is capped: the container's
+root is read-only, and the scratch home (`/tmp`), `/xdev` and `/small` are tmpfs
+of 32, 32 and 2 MiB, which `tools/oracle.py` checks before it runs the oracle.
+The move put the home on its own volume. Nine diverging rows' goldens changed,
+each by that alone: the volume trash is `/tmp/.Trash-0` with relative paths,
+the refusal of `/` is the short `because deleting it is not allowed`, and
+`--trash-dir` names `/tmp` as the trash's volume. The other 109 goldens are
+unchanged byte for byte.
+
+## What T1 does
+
+- **Layout.** `src/trash.lu` is the command; `src/can/` is the module T2 will
+  share: `text.lu` (words as messages show them), `paths.lu` (lexical paths,
+  `Path=`'s encoding), `names.lu` (collision names, the info text, the
+  deletion date), `args.lu` (the parser), `put.lu` (one operand), `copy.lu`
+  (across file systems).
+- **One operand, in order.**
+  1. A name that is not UTF-8 is refused by name (`wolf-lang#687`).
+  2. The oracle's refusals by spelling (`.`, `..`, `X/.`, `X/..`), then the
+     same once trailing slashes go (`./`, `deeper/.//`).
+  3. `lstat` of the operand as given: missing is `cannot trash non existent`
+     (silent under `-f`).
+  4. The operand read lexically against the working directory; `/` refused.
+  5. The trash's real path against the operand's (its parent resolved): the
+     trash itself, anything inside it, and a directory that holds it refused.
+  6. A directory on another device than its parent (a mount point) refused.
+  7. `-i`: the question, when the path resolves (not for a dangling link).
+  8. `~/Trash`, `files/`, `info/` made `0700` if missing.
+  9. The name reserved: `info/NAME.trashinfo` created with `O_EXCL`
+     (`0600`), tries named as the oracle names them; a name whose item is
+     already in `files/` is given back and the next one tried.
+  10. The three lines written, then `rename(2)` into `files/`. A failure
+      other than `EXDEV` removes the info file and reports the operand.
+  11. On `EXDEV`: the tree surveyed (its size, rounded to the home volume's
+      fragment, against `fs_statfs`'s available bytes, and every entry's
+      record kept as it was read), then four passes: copy (private modes),
+      verify (kinds, bytes, link targets, the names in every directory),
+      finish (owner, then mode, read back, then atime and mtime to the
+      nanosecond, inner entries first), and only then the source removed by
+      held directory, only what was copied. A failure before the last pass
+      removes the copy and the info file; the source is whole.
+- **What the copy cannot do, by name:** a socket or a device; a name or a
+  link target that is not UTF-8 (`wolf-lang#687`). Hard links inside a tree
+  are copied as separate files. When the host refuses an owner, the set-id
+  bits go with it, as `cp -p` drops them. Every byte is read twice, by the
+  verification. Nothing is synced (a power cut is T3's).
+- **No rename that never replaces** (`wolf-lang#706`): the reservation of the
+  info file, and the check of `files/` under it, keep two runs off one name.
+
+## The rows
+
+- **Oracle rows** (`tests/oracle/rows.json`, 118): 86 compared with trash-cli
+  and 20 diverging, held to `tests/oracle/expected/` (written by hand in
+  `tools/expected.py` before the program); 12 left out by name, each needing
+  a T2 command.
+- **Unit rows** (`src/can_test.lu`, 76, listed in `tests/unit-rows.json`):
+  the module's pure parts, including the parser on every shape the oracle
+  answered.
+- **PAX rows** (`tests/pax/rows.json`, 14, `tools/pax-rows.py`): one boot of
+  PAX's console kernel under KVM, the home on its ext2 disk and the second
+  store its in-memory `/tmp`, through pelt; `rowtool` (a static wolf
+  program) makes each fixture and prints what the harness needs to build the
+  oracle harness's capture, normalised and compared by the same code, held
+  to `tests/pax/expected/`.
+
+**Red first.**
+- The stub (`f146503`) against the compared and diverging rows: 106 of 106 red,
+  at `c29c3fa` and again at `b1ea07f` with the scratch home capped.
+- The first program (`6c0fdf6`): 102 of 106. Red by name were
+  `put-long-name-utf8`, `put-long-name-utf8-short` and `put-long-collision-utf8`
+  (a trap: a trailing slash looked for by slicing the last byte of `é`, fixed
+  in `061372d`), and `put-other-fs-tree` (two directories' access times, lost
+  to the survey's listing, fixed in `f63b1da`).
+- The PAX rows against the stub, built static from `f146503`: 14 of 14 red at
+  `400b6d2`. With the program: 9 of 14, the five reds a name that is not UTF-8
+  left behind by an earlier row, since no wolf call can remove it (the C
+  fixture removes it since `2729d7d`); then 14 of 14 at `0df3a87`.
+
+## Where the oracle and rm part, and what T1 follows
+
+The oracle's bytes win where it fixes them; elsewhere, rm and boreutils'
+`rm`.
+
+- Followed from the oracle: the last of `-f` and `-i` wins (as rm too);
+  `-i` asks nothing of a dangling link (R-tb01-1); `..` is read lexically
+  and `Path=` takes the parent's real path (R-tb01-2); an option-shaped
+  word that names a file is refused; long names are shortened.
+- Followed from rm, where the oracle has no answer: the end of input under
+  `-i` is a no, exit 0 (the oracle crashes; R-tb01-5).
+- Refused here, where the oracle does something else (R-tb01-3): `/` in every
+  spelling, `./` and the like, the trash and what is in it, a directory that
+  holds the trash, a mount point.
+- Not taken (R-tb01-4): `--trash-dir` and `--print-completion`, refused as
+  unrecognised options.
+- In this program's own words (R-tb01-6): `--help` and `--version`.
+
+## Gaps met
+
+| gap | filed | what T1 does |
+|---|---|---|
+| A path that is not UTF-8 cannot be named | wolf-lang#687 | refuses such an operand by name; a copy across file systems meeting one inside a tree, or as a link's target, fails by name and leaves the source whole |
+| Every rename replaces | wolf-lang#706 | the exclusive create of the info file reserves the name, and `files/` is checked under it |
+| A `copy` of a map's list value is not yet compiled at 0.2.38 ("cannot compile this yet") | not filed (R-tb01-8) | the survey's records live in a list behind a name-to-index map |
+| A non-UTF-8 name cannot be removed by wolf | wolf-lang#687 | the PAX rows remove theirs with the C fixture |
+
+## SKIPs
+
+None. A row that cannot run fails by name; the 12 rows that need T2's
+commands are listed as `OUT` by name and counted apart.
+
+## Recommendations
+
+R-tb01-1 to R-tb01-7 were each ruled A, as recommended, and are
+implemented.
+
+- R-tb01-1: `-i` matches the oracle and asks nothing of a dangling link.
+- R-tb01-2: operands are read lexically; `Path=` is the parent's real path.
+- R-tb01-3: `/` in every spelling, `./` and its kin, the trash and anything in
+  it, a directory holding it, and a mount point are refused by name.
+- R-tb01-4: `--trash-dir` and `--print-completion` are unrecognised options.
+- R-tb01-5: the end of input under `-i` is a no, exit 0.
+- R-tb01-6: `--help` and `--version` in this program's own words, compared by
+  exit status and stream.
+- R-tb01-7: an entry the copy cannot make is found at copy time; the partial
+  copy is removed and the source left whole.
+- R-tb01-8 (open): file the 0.2.38 refusal of `copy` on a map's list value
+  upstream with its four-line witness. (A) File it as a wolf-lang issue,
+  recommended; (B) leave the workaround's comment as the only record.
+- R-tb01-9 (open): the footprint. (A) `cross-cutting`, recommended:
+  `tools/in-container`, which CI runs, changed its mounts. (B) `module`: no
+  path the audit classes as CI changed.
