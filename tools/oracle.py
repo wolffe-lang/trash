@@ -675,10 +675,14 @@ def compare(want, got):
     if got.get('tracebacks'):
         diffs.append(('traceback', '%d stream(s) redacted' % got['tracebacks']))
     if 'property' in want or 'property' in got:
+        # the round trip's failures, held as a list: a run fails where the
+        # capture it is held to held, and is seen to hold where it failed
         if 'property' not in got:
             diffs.append(('property', 'not checked'))
-        for failure in got.get('property', []):
-            diffs.append(('property', failure))
+        else:
+            a, b = want.get('property', []), got['property']
+            diffs.extend(('property', failure) for failure in b if failure not in a)
+            diffs.extend(('property', 'held where it failed: ' + failure) for failure in a if failure not in b)
     return diffs
 
 
@@ -939,13 +943,15 @@ def tty_ok():
 
 
 def property_seen(base):
-    """A round trip that failed is a difference by name; one that held is none."""
+    """A round trip that failed is a difference by name; one that held is
+    none; the same failures twice are none."""
     import copy
     held, broken = copy.deepcopy(base), copy.deepcopy(base)
     held['property'] = []
     broken['property'] = ['home:t0/f0 mode want 420 got 384']
-    return compare(normalise(held), normalise(held)) == [] and \
-        any(f == 'property' for f, _ in compare(normalise(held), normalise(broken)))
+    nh, nb = normalise(held), normalise(broken)
+    return compare(nh, nh) == [] and compare(nb, nb) == [] and \
+        any(f == 'property' for f, _ in compare(nh, nb)) and any(f == 'property' for f, _ in compare(nb, nh))
 
 
 def cmd_selftest(a):
