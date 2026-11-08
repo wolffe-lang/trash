@@ -32,7 +32,15 @@ fn main() -> int {
         return 74
     }
     var status = 0
-    for x in can.scan(trash) {
+    // The matches go in the order of their names, each under its info
+    // file's hold; one another command holds is left, as if this ran first.
+    let all = can.scan(trash)
+    var keys = List[List[byte]]()
+    for x in all {
+        (mut keys).push(copy x.raw)
+    }
+    for k in can.order(keys) {
+        let x = copy all[k]
         let info = can.info_shown(trash, x)
         if x.state == 1 {
             eprint("trash-rm: {can.errno_line(x.errno, info)}")
@@ -51,9 +59,14 @@ fn main() -> int {
         if !can.takes(pattern, x.path) {
             continue
         }
+        let h = can.hold(info)
+        if h.state == 2 || h.state == 3 {
+            continue
+        }
         let item = "{trash}/files/{x.name}"
         let why = can.erase(item)
         if why.len > 0 {
+            can.release(h)
             eprint("trash-rm: cannot remove '{item}': {why}")
             status = 1
             continue
@@ -63,6 +76,7 @@ fn main() -> int {
             eprint("trash-rm: {can.errno_line(os_error(), info)}")
             status = 1
         }
+        can.release(h)
     }
     status
 }
