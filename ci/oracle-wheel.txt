@@ -1,0 +1,3 @@
+# The wheel built in the image from the pinned source archive. The build is
+# reproducible (SOURCE_DATE_EPOCH fixed): two builds gave these bytes.
+trash-cli==0.26.9.29 --hash=sha256:a8a01b99a6f4ac105347f38df0fe426af4ba3876b12ae0d06213a7231f9b014d

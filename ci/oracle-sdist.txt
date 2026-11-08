@@ -1,0 +1,3 @@
+# The oracle's source archive on PyPI, by its published digest. It is built
+# into a wheel and never read.
+trash-cli==0.26.9.29 --hash=sha256:2ca3300fd9f3b0334cb3f576a3ec95ced8593cc729df4332608d69a28eb50fb0

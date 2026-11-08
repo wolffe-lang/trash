@@ -1,0 +1,11 @@
+# The oracle image's packages, from the Ubuntu archive snapshot in
+# ci/apt-snapshot. ci/packages.lock is the whole closure they resolve to;
+# tools/in-container refuses an image whose closure differs from it.
+binutils
+ca-certificates
+curl
+gcc
+libc6-dev
+python3
+python3-venv
+tzdata

@@ -1,0 +1,13 @@
+{
+ "files": [
+  {
+   "filename": "trash_cli-0.26.9.29.tar.gz",
+   "packagetype": "sdist",
+   "sha256": "2ca3300fd9f3b0334cb3f576a3ec95ced8593cc729df4332608d69a28eb50fb0",
+   "size": 66968,
+   "upload_time": "2026-09-29T06:35:14.078440Z"
+  }
+ ],
+ "name": "trash-cli",
+ "version": "0.26.9.29"
+}
