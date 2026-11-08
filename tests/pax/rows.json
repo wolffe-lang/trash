@@ -1,5 +1,5 @@
 {
- "about": "PAX's rows (tools/pax-rows.py): each runs on PAX under KVM, the home on PAX's ext2 home disk (/home/rh) and the second store PAX's in-memory /tmp (@tmp/ is /tmp/rows). Paths in make steps are relative to the home; 'name' makes an empty file whose name is the given hex bytes (the C fixture); an 'exec' step runs trash with its last argument as bytes.",
+ "about": "PAX's rows (tools/pax-rows.py): each runs on PAX under KVM, the home on PAX's ext2 home disk (/home/rh) and the second store PAX's in-memory /tmp (@tmp/ is /tmp/rows). Paths in make steps are relative to the home; 'name' makes an empty file whose name is the given hex bytes (the C fixture); an 'exec' step runs trash with its last argument as bytes. The companions run as trash does, each command with its standard input from the row.",
  "rows": [
   {
    "name": "pax-put-file",
@@ -561,6 +561,320 @@
       "trash",
       "/tmp/rows/d"
      ]
+    }
+   ]
+  },
+  {
+   "name": "pax-list",
+   "about": "trash-list on PAX: two items trashed and one a fixture wrote, its path encoded",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ],
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "file",
+       "Trash/info/old.trashinfo",
+       "[Trash Info]\nPath=/home/rh/old%20one\nDeletionDate=2020-01-02T03:04:05\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/old",
+       "o\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt",
+      "d"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ],
+     "order": "host"
+    }
+   ]
+  },
+  {
+   "name": "pax-restore",
+   "about": "trash-restore on PAX: a file, a directory and a link back by path, then a taken path refused",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ],
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "link",
+       "a.txt",
+       "l"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt",
+      "d",
+      "l"
+     ]
+    },
+    {
+     "run": [
+      "trash-restore",
+      "/home/rh/a.txt"
+     ],
+     "stdin": "0\n"
+    },
+    {
+     "run": [
+      "trash-restore",
+      "/home/rh/d"
+     ],
+     "stdin": "0\n"
+    },
+    {
+     "run": [
+      "trash-restore",
+      "/home/rh/l"
+     ],
+     "stdin": "0\n"
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "new\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore",
+      "/home/rh/a.txt"
+     ],
+     "stdin": "0\n"
+    }
+   ]
+  },
+  {
+   "name": "pax-rm",
+   "about": "trash-rm on PAX: a pattern, then the listing",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ],
+      [
+       "file",
+       "b.txt",
+       "b\n"
+      ],
+      [
+       "file",
+       "c.log",
+       "c\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt",
+      "b.txt",
+      "c.log"
+     ]
+    },
+    {
+     "run": [
+      "trash-rm",
+      "*.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-empty",
+   "about": "trash-empty on PAX: DAYS keeps what is new, then everything goes",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ],
+      [
+       "file",
+       "Trash/info/old.trashinfo",
+       "[Trash Info]\nPath=/home/rh/old\nDeletionDate=2020-01-02T03:04:05\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/old",
+       "o\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-empty",
+      "1"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    },
+    {
+     "run": [
+      "trash-empty"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-roundtrip",
+   "about": "a tree in /tmp and a tree in the ext2 home, trashed and restored: they come back as they were, times to the nanosecond (the first by copy both ways, the second by rename)",
+   "times": "exact",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "@tmp/t",
+       "0750"
+      ],
+      [
+       "file",
+       "@tmp/t/f",
+       "f\n",
+       "0640"
+      ],
+      [
+       "dir",
+       "@tmp/t/sub"
+      ],
+      [
+       "file",
+       "@tmp/t/sub/g",
+       "g\n"
+      ],
+      [
+       "link",
+       "f",
+       "@tmp/t/l"
+      ],
+      [
+       "dir",
+       "h",
+       "0700"
+      ],
+      [
+       "file",
+       "h/x",
+       "x\n",
+       "0600"
+      ],
+      [
+       "link",
+       "../h",
+       "h/up"
+      ],
+      [
+       "times",
+       "@tmp/t/f",
+       1600000000,
+       123456789,
+       1600000001,
+       987654321
+      ],
+      [
+       "times",
+       "h/x",
+       1500000000,
+       5,
+       1500000002,
+       7
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/tmp/rows/t",
+      "h"
+     ]
+    },
+    {
+     "run": [
+      "trash-restore",
+      "/tmp/rows/t"
+     ],
+     "stdin": "0\n"
+    },
+    {
+     "run": [
+      "trash-restore",
+      "/home/rh/h"
+     ],
+     "stdin": "0\n"
     }
    ]
   }
