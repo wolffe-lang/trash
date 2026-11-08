@@ -1,0 +1,28 @@
+{
+ "row": "pax-put-not-utf8",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "--",
+    "x\\xffy"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash 'x\\xffy': its name is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "x\\xffy": {
+    "mode": "?",
+    "mtime": 0,
+    "owner": "?",
+    "type": "unreachable"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

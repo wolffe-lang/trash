@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""The expected captures of the rows where this repository departs from the
-oracle by design (`"diverge"` in tests/oracle/rows.json), stated by hand.
+"""The expected captures of the rows with no oracle, stated by hand: the rows
+where this repository departs from the oracle by design (`"diverge"` in
+tests/oracle/rows.json), and every PAX row (tests/pax/rows.json).
 
-  expected.py write   (re)writes tests/oracle/expected/ROW.json from the
-                      statements below
+  expected.py write   (re)writes tests/oracle/expected/ROW.json and
+                      tests/pax/expected/ROW.json from the statements below
   expected.py check   fails by name when a file there differs from them, or
-                      when a diverging row has no statement or a statement no row
+                      when a row has no statement or a statement no row
 
 Each capture is what `tools/oracle.py compare` holds the candidate to: every
 command's exit status and streams, and the trees the row leaves, in the
@@ -20,6 +21,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'tests/oracle/expected'
+OUT_PAX = ROOT / 'tests/pax/expected'
 FIX = 1700000000
 W = '<in-window>'
 H = '/tmp/trash-rows/home'
@@ -191,6 +193,89 @@ def statements():
     return s
 
 
+PH = '/home/rh'
+PX = '/tmp/rows'
+
+
+def pax_statements():
+    """PAX's rows: the home on PAX's ext2 disk, the second store its in-memory
+    /tmp. The same program, so the same captures as on Linux where the rows
+    agree, at PAX's paths."""
+    s = {}
+    s['pax-put-file'] = cap('pax-put-file', [step(['trash', 'a.txt'])],
+                            {**trash_dirs(), 'Trash/files/a.txt': f('hello\n'), 'Trash/info/a.txt.trashinfo': info(PH + '/a.txt')})
+    s['pax-put-dir'] = cap('pax-put-dir', [step(['trash', 'd'])], {
+        **trash_dirs(), 'Trash/files/d': d(), 'Trash/files/d/f': f('f\n'), 'Trash/files/d/lf': link('f'),
+        'Trash/files/d/sub': d(), 'Trash/files/d/sub/g': f('g\n'), 'Trash/info/d.trashinfo': info(PH + '/d')})
+    s['pax-put-links'] = cap('pax-put-links', [step(['trash', 'l', 'dl'])], {
+        **trash_dirs(), 'Trash/files/l': link('a.txt'), 'Trash/files/dl': link('nowhere/x'),
+        'Trash/info/l.trashinfo': info(PH + '/l'), 'Trash/info/dl.trashinfo': info(PH + '/dl'), 'a.txt': f('hello\n')})
+    s['pax-put-collision'] = cap('pax-put-collision', [step(['trash', 'a.txt'])] * 3, {
+        **trash_dirs(), 'Trash/files/a.txt': f('1\n'), 'Trash/files/a.txt_1': f('2\n'), 'Trash/files/a.txt_2': f('3\n'),
+        'Trash/info/a.txt.trashinfo': info(PH + '/a.txt'), 'Trash/info/a.txt_1.trashinfo': info(PH + '/a.txt'),
+        'Trash/info/a.txt_2.trashinfo': info(PH + '/a.txt')})
+    s['pax-put-names'] = cap('pax-put-names', [step(['trash', 'my file é.txt', 'a.tar.gz'])], {
+        **trash_dirs(), 'Trash/files/my file é.txt': f('x\n'), 'Trash/files/a.tar.gz': f('z\n'),
+        'Trash/info/my file é.txt.trashinfo': info(PH + '/my%20file%20%C3%A9.txt'),
+        'Trash/info/a.tar.gz.trashinfo': info(PH + '/a.tar.gz')})
+    n250, n238 = 'n' * 250, 'n' * 238 + '_1'
+    s['pax-put-long-name'] = cap('pax-put-long-name', [step(['trash', n250])], {
+        **trash_dirs(), 'Trash/files/' + n238: f('l\n'), 'Trash/info/%s.trashinfo' % n238: info(PH + '/' + n250)})
+    s['pax-put-refusals'] = cap('pax-put-refusals', [
+        step(['trash', '.'], 74, stderr="trash: cannot trash directory '.'\n"),
+        step(['trash', '..'], 74, stderr="trash: cannot trash directory '..'\n"),
+        step(['trash', '/'], 74, stderr="trash: cannot trash directory '/'\n"),
+        step(['trash', 'nope'], 74, stderr="trash: cannot trash non existent 'nope'\n"),
+        step(['trash', '-f', 'nope']),
+        step(['trash', 'a']),
+        step(['trash', 'Trash/files/a'], 74, stderr="trash: cannot trash 'Trash/files/a': it is inside the trash\n"),
+        step(['trash', 'Trash'], 74, stderr="trash: cannot trash 'Trash': it is the trash itself\n"),
+    ], {**trash_dirs(), 'Trash/files/a': f('a\n'), 'Trash/info/a.trashinfo': info(PH + '/a'), 'sub': d(mtime=W),
+        'sub/deeper': d()})
+    s['pax-put-flags'] = cap('pax-put-flags', [
+        step(['trash', '-v', 'a', 'd'], stderr="trash: 'a' trashed in ~/Trash\ntrash: 'd' trashed in ~/Trash\n"),
+        step(['trash', '-i', 'b', 'c'], stdout="trash: trash regular file 'b'? trash: trash regular file 'c'? "),
+        step(['trash'], 2, stderr=USAGE + 'trash: error: Please specify the files to trash.\n'),
+        step(['trash', '-x', 'c'], 2, stderr=USAGE + 'trash: error: unrecognized arguments: -x\n'),
+    ], {**trash_dirs(), 'Trash/files/a': f('a\n'), 'Trash/files/b': f('b\n'), 'Trash/files/d': d(),
+        'Trash/info/a.trashinfo': info(PH + '/a'), 'Trash/info/b.trashinfo': info(PH + '/b'),
+        'Trash/info/d.trashinfo': info(PH + '/d'), 'c': f('c\n')})
+    unreachable = {'type': 'unreachable', 'mode': '?', 'mtime': 0, 'owner': '?'}
+    s['pax-put-not-utf8'] = cap('pax-put-not-utf8', [
+        step(['trash', '--', 'x\\xffy'], 74, stderr="trash: cannot trash 'x\\xffy': %s\n" % NOT_UTF8),
+    ], {'x\\xffy': unreachable})
+    s['pax-tmp-file'] = cap('pax-tmp-file', [step(['trash', PX + '/x.txt'])],
+                            {**trash_dirs(), 'Trash/files/x.txt': f('x\n'), 'Trash/info/x.txt.trashinfo': info(PX + '/x.txt')})
+    z = {'mtime_ns': 0, 'atime': FIX, 'atime_ns': 0}
+    s['pax-tmp-tree'] = cap('pax-tmp-tree', [step(['trash', PX + '/d'])], {
+        **trash_dirs(**EXACT_W),
+        'Trash/files/d': d('0750', 1200000000, mtime_ns=9, atime=1200000001, atime_ns=10),
+        'Trash/files/d/dangling': link('nowhere', mtime_ns=0),
+        'Trash/files/d/empty': f('', **z),
+        'Trash/files/d/f': f('f\n', '0640', 1600000000, '4321:4322', mtime_ns=123456789, atime=1500000000, atime_ns=987654321),
+        'Trash/files/d/sub': d(**z),
+        'Trash/files/d/sub/ro': d('0500', 1300000000, mtime_ns=7, atime=1300000001, atime_ns=8),
+        'Trash/files/d/sub/ro/g': f('g\n', '0444', **z),
+        'Trash/files/d/sub/up': link('../f', 1400000000, '4323:4324', mtime_ns=5),
+        'Trash/files/d/x.sh': f('#!/bin/sh\n', '0755', **z),
+        'Trash/info/d.trashinfo': info(PX + '/d', **EXACT_W),
+    })
+    s['pax-tmp-collision'] = cap('pax-tmp-collision', [
+        step(['trash', 'x.txt']), step(['trash', '-v', PX + '/x.txt'], stderr="trash: '%s/x.txt' trashed in ~/Trash\n" % PX),
+    ], {**trash_dirs(), 'Trash/files/x.txt': f('home\n'), 'Trash/files/x.txt_1': f('tmp\n'),
+        'Trash/info/x.txt.trashinfo': info(PH + '/x.txt'), 'Trash/info/x.txt_1.trashinfo': info(PX + '/x.txt')})
+    s['pax-tmp-space'] = cap('pax-tmp-space', [
+        step(['trash', PX + '/big'], 74,
+             stderr="trash: cannot trash '%s/big': the home volume has too little free space to copy it\n" % PX),
+    ], trash_dirs(), {'big': f(big(41943040))})
+    s['pax-tmp-fail-name'] = cap('pax-tmp-fail-name', [
+        step(['trash', PX + '/d'], 74,
+             stderr="trash: cannot trash '%s/d': the name of an entry in '%s/d' (b\\xffc) is not UTF-8, and wolf cannot "
+                    "name such a path yet (wolf-lang#687); %s\n" % (PX, PX, LEFT)),
+    ], trash_dirs(), {'d': d(), 'd/a': f('a\n'), 'd/b\\xffc': unreachable, 'd/sub': d(), 'd/sub/z': f('z\n')})
+    return s
+
+
 def rendered(c):
     return json.dumps(c, indent=1, sort_keys=True, ensure_ascii=False) + '\n'
 
@@ -200,35 +285,42 @@ def diverging():
     return {r['name'] for r in rows if r.get('diverge')}
 
 
+def pax_rows():
+    return {r['name'] for r in json.loads((ROOT / 'tests/pax/rows.json').read_text())['rows']}
+
+
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else 'check'
-    s = statements()
     bad = 0
-    want = diverging()
-    for name in sorted(want - set(s)):
-        print('FAIL expected-%s a diverging row with no statement' % name)
-        bad += 1
-    for name in sorted(set(s) - want):
-        print('FAIL expected-%s a statement with no diverging row' % name)
-        bad += 1
-    if mode == 'write':
-        OUT.mkdir(parents=True, exist_ok=True)
+    total = 0
+    for s, want, out in ((statements(), diverging(), OUT), (pax_statements(), pax_rows(), OUT_PAX)):
+        rel = out.relative_to(ROOT)
+        total += len(s)
+        for name in sorted(want - set(s)):
+            print('FAIL expected-%s a row with no statement' % name)
+            bad += 1
+        for name in sorted(set(s) - want):
+            print('FAIL expected-%s a statement with no row' % name)
+            bad += 1
+        if mode == 'write':
+            out.mkdir(parents=True, exist_ok=True)
+            for name, c in sorted(s.items()):
+                (out / (name + '.json')).write_text(rendered(c))
+                print('WROTE %s/%s.json' % (rel, name))
+            continue
         for name, c in sorted(s.items()):
-            (OUT / (name + '.json')).write_text(rendered(c))
-            print('WROTE %s' % name)
-        return 1 if bad else 0
-    for name, c in sorted(s.items()):
-        path = OUT / (name + '.json')
-        if not path.exists() or path.read_text() != rendered(c):
-            print('FAIL expected-%s tests/oracle/expected/%s.json differs from its statement' % (name, name))
-            bad += 1
-        else:
-            print('PASS expected-%s' % name)
-    for p in sorted(OUT.glob('*.json')):
-        if p.stem not in s:
-            print('FAIL expected-%s a file with no statement' % p.stem)
-            bad += 1
-    print('SUMMARY expected rows=%d failed=%d' % (len(s), bad))
+            path = out / (name + '.json')
+            if not path.exists() or path.read_text() != rendered(c):
+                print('FAIL expected-%s %s/%s.json differs from its statement' % (name, rel, name))
+                bad += 1
+            else:
+                print('PASS expected-%s' % name)
+        for p in sorted(out.glob('*.json')):
+            if p.stem not in s:
+                print('FAIL expected-%s a file with no statement' % p.stem)
+                bad += 1
+    if mode != 'write':
+        print('SUMMARY expected rows=%d failed=%d' % (total, bad))
     return 1 if bad else 0
 
 

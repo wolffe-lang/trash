@@ -1,0 +1,79 @@
+{
+ "row": "pax-tmp-collision",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "x.txt"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "-v",
+    "/tmp/rows/x.txt"
+   ],
+   "exit": 0,
+   "stderr": "trash: '/tmp/rows/x.txt' trashed in ~/Trash\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/x.txt": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "9a3e246041d3c27dc3645f79cb0d1eb41c277965614655d17119ed7498b956ec",
+    "size": 5,
+    "type": "file"
+   },
+   "Trash/files/x.txt_1": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "613306d0912cda4c64f06418e3ffa91ef73ea6e19bc2527211a551b6fa23790f",
+    "size": 4,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/x.txt.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/home/rh/x.txt\nDeletionDate=<in-window>\n",
+    "type": "file"
+   },
+   "Trash/info/x.txt_1.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/rows/x.txt\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

@@ -1,0 +1,48 @@
+{
+ "row": "pax-tmp-space",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/tmp/rows/big"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '/tmp/rows/big': the home volume has too little free space to copy it\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {
+   "big": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "dc5fc440d501096930d3c3e247bbf9143d87920347cc3d91bad999eb38233f65",
+    "size": 41943040,
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}
