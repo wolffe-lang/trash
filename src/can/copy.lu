@@ -1,0 +1,440 @@
+// can: an item copied into the home trash from another file system,
+// verified, finished, and only then its source removed (R-TB-3).
+//
+// Four passes, so that no pass undoes another and nothing is lost:
+//
+// 1. copy: the tree's shape and bytes, each file and directory made private
+//    (0o600, 0o700) so that this program can write and read it;
+// 2. verify: every copied entry against its source: kind, bytes, link
+//    target, and the names in every directory;
+// 3. finish: owner, then mode (the host clears set-id bits when an owner
+//    changes, so the mode comes after it), then both times to the
+//    nanosecond, each entry after everything inside it, from the source's
+//    record as it was read before the copy read the source;
+// 4. remove the source, walked by held directory (`fs_open_at` with the
+//    no-follow bit), so a directory swapped for a link cannot redirect a
+//    removal, and only what was copied is removed.
+//
+// A pass that fails before the fourth removes the copy and leaves the
+// source whole. Hard links inside a tree are copied as separate files.
+
+/// One copied entry: its source, its copy, and the source's record as it
+/// was read before any pass read the source.
+struct Copied {
+    src: str,
+    dst: str,
+    rec: List[int],
+}
+
+/// The host's words for the last failed call.
+pub fn reason() -> str {
+    let n = os_error()
+    if n == 0 then "the call failed before the host was asked" else os_error_text(n)
+}
+
+/// Bytes `n` takes in units of `frag`, rounded up.
+fn rounded(n: int, frag: int) -> int {
+    if frag <= 0 then n else (n + frag - 1) / frag * frag
+}
+
+/// What the copy of the tree at `path` will take on a volume whose unit is
+/// `frag`: each file and link rounded up to the unit, a unit per
+/// directory. What cannot be read or named is counted as nothing; the copy
+/// itself refuses it.
+pub fn estimate(path: str, rec: List[int], frag: int) -> int {
+    let kind = rec[0]
+    if kind != 1 {
+        return rounded(rec[1], frag)
+    }
+    var total: int = frag
+    let entries = fs_read_dir_entries(path) else |_| {
+        return total
+    }
+    for e in entries {
+        let name = str_from_utf8(e[1..]) else |_| {
+            continue
+        }
+        let child = "{path}/{name}"
+        let crec = fs_lstat(child) else |_| {
+            continue
+        }
+        total += estimate(child, crec, frag)
+    }
+    total
+}
+
+/// The free bytes of the file system that holds `dir`, for a process that
+/// is not privileged, and its unit; -1 when the host does not answer.
+pub fn free_space(dir: str) -> (int, int) {
+    let w = fs_statfs(dir) else |_| {
+        return (-1, 0)
+    }
+    let have = w[0]
+    if have / 4 % 2 == 0 || have / 32 % 2 == 0 {
+        return (-1, 0)
+    }
+    (w[5] * w[2], w[2])
+}
+
+/// Pass 1 for one entry and everything inside it. An empty answer is
+/// success; any other is why it failed.
+fn copy_entry(src: str, dst: str, rec: List[int], mut done: List[Copied]) -> str {
+    let kind = rec[0]
+    if kind == 0 {
+        let why = copy_file(src, dst)
+        if why.len > 0 {
+            return why
+        }
+    } else if kind == 1 {
+        fs_create_dir_mode(dst, 0o700) else |_| {
+            return "cannot make '{dst}': {reason()}"
+        }
+        let entries = fs_read_dir_entries(src) else |_| {
+            return "cannot list '{src}': {reason()}"
+        }
+        for e in entries {
+            let raw = e[1..]
+            let name = str_from_utf8(raw) else |_| {
+                return "the name of an entry in '{src}' ({shown(raw)}) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
+            }
+            let child = "{src}/{name}"
+            let crec = fs_lstat(child) else |_| {
+                return "cannot read '{child}': {reason()}"
+            }
+            let why = copy_entry(child, "{dst}/{name}", crec, mut done)
+            if why.len > 0 {
+                return why
+            }
+        }
+    } else if kind == 3 {
+        let target = fs_read_link(src) else |_| {
+            return "cannot read the link '{src}': {reason()}"
+        }
+        let t = str_from_utf8(target) else |_| {
+            return "the link '{src}' names a path that is not UTF-8 ({shown(target)}), and wolf cannot make such a link yet (wolf-lang#687)"
+        }
+        fs_symlink(t, dst) else |_| {
+            return "cannot make the link '{dst}': {reason()}"
+        }
+    } else if kind == 4 {
+        fs_mkfifo(dst, 0o600) else |_| {
+            return "cannot make the fifo '{dst}': {reason()}"
+        }
+    } else if kind == 5 {
+        return "'{src}' is a socket, which cannot be copied to the home volume"
+    } else if kind == 6 || kind == 7 {
+        return "'{src}' is a device, which cannot be copied to the home volume"
+    } else {
+        return "'{src}' is of a kind that cannot be copied to the home volume"
+    }
+    (mut done).push(Copied { src: src, dst: dst, rec: copy rec })
+    ""
+}
+
+/// A regular file's bytes, by the host's own copy, into a new private file.
+fn copy_file(src: str, dst: str) -> str {
+    let from = fs_open_mode(src, 16) else |_| {
+        return "cannot open '{src}': {reason()}"
+    }
+    let to = fs_open_perm(dst, 4, 0o600) else |_| {
+        let why = "cannot make '{dst}': {reason()}"
+        fs_close(from) else |_| {}
+        return why
+    }
+    var why = ""
+    var more = true
+    while more {
+        let _ = fs_copy_chunk(from, to, 1048576) else |e| match e {
+            eof => {
+                more = false
+                0
+            },
+            io => {
+                why = "cannot copy '{src}': {reason()}"
+                more = false
+                0
+            },
+        }
+    }
+    fs_close(from) else |_| {}
+    fs_close(to) else |_| {
+        if why.len == 0 {
+            why = "cannot write '{dst}': {reason()}"
+        }
+    }
+    why
+}
+
+/// Whether two regular files hold the same bytes, read a chunk at a time.
+fn same_bytes(a: str, b: str) -> bool {
+    let fa = fs_open_mode(a, 16) else |_| {
+        return false
+    }
+    let fb = fs_open_mode(b, 16) else |_| {
+        fs_close(fa) else |_| {}
+        return false
+    }
+    var same = true
+    var done = false
+    while same && !done {
+        region chunk {
+            var ended = 0
+            let x = fs_read_chunk(fa, 65536) else |e| match e {
+                eof => {
+                    ended += 1
+                    List[byte]()
+                },
+                io => {
+                    same = false
+                    List[byte]()
+                },
+            }
+            let y = fs_read_chunk(fb, 65536) else |e| match e {
+                eof => {
+                    ended += 1
+                    List[byte]()
+                },
+                io => {
+                    same = false
+                    List[byte]()
+                },
+            }
+            if x.len != y.len {
+                same = false
+            } else if ended > 0 {
+                done = true
+            } else {
+                var i = 0
+                while i < x.len {
+                    if x[i] != y[i] {
+                        same = false
+                        break
+                    }
+                    i += 1
+                }
+            }
+        }
+    }
+    fs_close(fa) else |_| {}
+    fs_close(fb) else |_| {}
+    same
+}
+
+/// The names in a directory, as their bytes in text.
+fn names(dir: str) -> Map[str, bool] ! {io} {
+    let entries = fs_read_dir_entries(dir) else |_| {
+        return io
+    }
+    var out = Map[str, bool]()
+    for e in entries {
+        out[shown(e[1..])] = true
+    }
+    out
+}
+
+/// How many names a directory holds.
+fn count(dir: str) -> int {
+    let entries = fs_read_dir_entries(dir) else |_| {
+        return -1
+    }
+    entries.len
+}
+
+/// Pass 2: each copy against its source.
+fn verify(done: List[Copied]) -> str {
+    for c in done {
+        let got = fs_lstat(c.dst) else |_| {
+            return "cannot read the copy '{c.dst}': {reason()}"
+        }
+        let kind = c.rec[0]
+        if got[0] != kind {
+            return "the copy of '{c.src}' is of another kind"
+        }
+        if kind == 0 {
+            if got[1] != c.rec[1] || !same_bytes(c.src, c.dst) {
+                return "the copy of '{c.src}' does not hold its bytes"
+            }
+        } else if kind == 3 {
+            let a = fs_read_link(c.src) else |_| {
+                return "cannot read the link '{c.src}': {reason()}"
+            }
+            let b = fs_read_link(c.dst) else |_| {
+                return "cannot read the link '{c.dst}': {reason()}"
+            }
+            if shown(a) != shown(b) {
+                return "the copy of the link '{c.src}' names another path"
+            }
+        } else if kind == 1 {
+            let theirs = names(c.dst) else |_| {
+                return "cannot list '{c.dst}': {reason()}"
+            }
+            let entries = fs_read_dir_entries(c.src) else |_| {
+                return "cannot list '{c.src}': {reason()}"
+            }
+            if entries.len != count(c.dst) {
+                return "the copy of '{c.src}' holds other entries"
+            }
+            for e in entries {
+                if !(theirs[shown(e[1..])] else false) {
+                    return "the copy of '{c.src}' holds other entries"
+                }
+            }
+        }
+    }
+    ""
+}
+
+/// Pass 3: owner where the host permits, then mode, then times; inner
+/// entries first, since `done` lists each directory after its entries. A
+/// mode is read back and must be the one set; an owner the host refuses is
+/// let go (the specification: it SHOULD NOT fail a trashing), and then the
+/// set-id bits go with it, as `cp -p` drops them.
+fn finish(done: List[Copied]) -> str {
+    for c in done {
+        let r = c.rec
+        let kind = r[0]
+        var mode = r[4]
+        fs_set_owner(c.dst, r[6], r[7], false) else |_| {
+            fs_set_owner(c.dst, -1, r[7], false) else |_| {}
+            mode = mode - mode / 1024 % 4 * 1024
+        }
+        if kind != 3 {
+            fs_set_mode(c.dst, mode) else |_| {
+                return "cannot set the mode of '{c.dst}': {reason()}"
+            }
+            let got = fs_lstat(c.dst) else |_| {
+                return "cannot read the copy '{c.dst}': {reason()}"
+            }
+            if got[4] != mode {
+                return "the copy of '{c.src}' did not take its mode"
+            }
+        }
+        fs_set_times(c.dst, r[12], r[13], r[14], r[15], false) else |_| {
+            return "cannot set the times of '{c.dst}': {reason()}"
+        }
+    }
+    ""
+}
+
+/// Remove `path` and everything under it, a copy that is given up. Only
+/// this program's own copy inside the trash is ever passed here.
+pub fn remove_copy(path: str) {
+    let rec = fs_lstat(path) else |_| {
+        return
+    }
+    if rec[0] == 1 {
+        let entries = fs_read_dir_entries(path) else |_| {
+            List[List[byte]]()
+        }
+        for e in entries {
+            let name = str_from_utf8(e[1..]) else |_| {
+                continue
+            }
+            remove_copy("{path}/{name}")
+        }
+        fs_set_mode(path, 0o700) else |_| {}
+        fs_remove_dir(path) else |_| {}
+    } else {
+        fs_remove(path) else |_| {}
+    }
+}
+
+/// Pass 4 for the entries of the held directory `fd` (named `path`): each
+/// one that was copied, then the directory is left empty. An entry that was
+/// not copied (it appeared while the copy ran) is left, and so is its
+/// directory.
+fn empty_held(fd: int, path: str, copied: Map[str, bool]) -> str {
+    let entries = fs_read_dir_entries_at(fd) else |_| {
+        return "cannot list '{path}': {reason()}"
+    }
+    for e in entries {
+        let raw = e[1..]
+        let name = str_from_utf8(raw) else |_| {
+            return "the name of an entry in '{path}' ({shown(raw)}) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
+        }
+        let child = "{path}/{name}"
+        if !(copied[child] else false) {
+            return "'{child}' appeared while it was copied, and is left"
+        }
+        var kind = e[0] as int
+        if kind == 2 {
+            let w = fs_lstat_at(fd, name) else |_| {
+                return "cannot read '{child}': {reason()}"
+            }
+            kind = w[0]
+        }
+        if kind == 1 {
+            let sub = fs_open_at(fd, name, 32 + 16, 0) else |_| {
+                return "cannot open '{child}': {reason()}"
+            }
+            let why = empty_held(sub, child, copied)
+            fs_close(sub) else |_| {}
+            if why.len > 0 {
+                return why
+            }
+            fs_remove_dir_at(fd, name) else |_| {
+                return "cannot remove '{child}': {reason()}"
+            }
+        } else {
+            fs_remove_at(fd, name) else |_| {
+                return "cannot remove '{child}': {reason()}"
+            }
+        }
+    }
+    ""
+}
+
+/// Pass 4: the source, now that its copy is whole.
+fn remove_source(path: str, rec: List[int], done: List[Copied]) -> str {
+    if rec[0] != 1 {
+        fs_remove(path) else |_| {
+            return "cannot remove '{path}': {reason()}"
+        }
+        return ""
+    }
+    var copied = Map[str, bool]()
+    for c in done {
+        copied[c.src] = true
+    }
+    let fd = fs_open_mode(path, 32 + 16) else |_| {
+        return "cannot open '{path}': {reason()}"
+    }
+    let why = empty_held(fd, path, copied)
+    fs_close(fd) else |_| {}
+    if why.len > 0 {
+        return why
+    }
+    fs_remove_dir(path) else |_| {
+        return "cannot remove '{path}': {reason()}"
+    }
+    ""
+}
+
+/// How a copy across file systems ended.
+pub struct Moved {
+    /// 0 trashed; 1 refused or failed, the source whole and the copy gone;
+    /// 2 trashed, but the source could not all be removed.
+    state: int,
+    why: str,
+}
+
+/// Passes 1 to 4 for the item at `src` (its record `rec`) into `dst`.
+pub fn copy_across(src: str, rec: List[int], dst: str) -> Moved {
+    var done = List[Copied]()
+    var why = copy_entry(src, dst, rec, mut done)
+    if why.len == 0 {
+        why = verify(done)
+    }
+    if why.len == 0 {
+        why = finish(done)
+    }
+    if why.len > 0 {
+        remove_copy(dst)
+        return Moved { state: 1, why: why }
+    }
+    let left = remove_source(src, rec, done)
+    if left.len > 0 {
+        return Moved { state: 2, why: left }
+    }
+    Moved { state: 0, why: "" }
+}
