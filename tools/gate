@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# tools/gate [unit|linux]: the repository's gate. Every step prints START and
+# END NAME exit=N; the first nonzero step stops it (set -e), and its exit is the
+# gate's.
+#   unit   what needs no toolchain and no oracle: the pins, the harnesses' own
+#          tests, the census expectations.
+#   linux  everything, inside the oracle image (tools/in-container runs it): the
+#          toolchain by digest, the formatter, the census built and run on Linux
+#          and held to census/expect.json, the static census for PAX, and the
+#          oracle's rows.
+set -euo pipefail
+root=$(cd "$(dirname "$0")/.." && pwd)
+cd "$root"
+mode=${1:-unit}
+case "$mode" in unit|linux) ;; *) echo "FAIL gate-mode: $mode"; exit 2 ;; esac
+rm -rf target/gate target/home target/tmp
+mkdir -p target/gate target/home target/tmp
+export HOME="$root/target/home"
+export XDG_CACHE_HOME="$HOME/cache"
+export TMPDIR="$root/target/tmp"
+export LC_ALL=C.UTF-8 TERM=dumb
+unset TZ
+source "$root/tools/gate-steps.sh"
+step pin-metadata python3 -I tools/check-pins.py
+step census-selftest python3 -I tools/census.py selftest
+[ "$mode" != unit ] || exit 0
+[ -f /opt/oracle-manifest.txt ] || { echo 'FAIL gate-linux-outside-the-image: run it through tools/in-container'; exit 2; }
+stage=$root/.wolf-bin
+fetch=(python3 -I tools/fetch-toolchain.py --out "$stage")
+if [ -n "${TRASH_ARCHIVES:-}" ]; then fetch+=(--archive-dir "$TRASH_ARCHIVES"); fi
+step toolchain "${fetch[@]}"
+wolf=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["tools"]["wolf"]["root"]+"/wolf")' "$stage/manifest.json")
+step wolf-fmt "$wolf" fmt --check census
+rm -rf target/census target/census-bin target/census-static /xdev/census
+step census-build python3 -I tools/census.py build --wolf "$wolf" --out target/census-bin
+step census-linux python3 -I tools/census.py run --bin target/census-bin --same target/census/same \
+    --other /xdev/census --out target/census/linux.json
+step census-linux-verdict python3 -I tools/census.py verdict --record target/census/linux.json --platform linux
+step census-static python3 -I tools/census.py build --wolf "$wolf" --out target/census-static --static
