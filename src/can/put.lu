@@ -131,19 +131,101 @@ struct Reserved {
     why: str,
 }
 
-/// Reserve a name for an item named `base`: create its info file with
-/// `O_EXCL`, trying `base`, `base_1`, `base_2`, … until one is created. A
+/// The text an info file holds while its item is copied in from another
+/// file system: no `Path=`, so no command offers the partial copy as an
+/// item, and `trash` knows the reservation for one of its own.
+pub fn copying_text() -> str {
+    "[Trash Info]\n# being copied into the trash\n"
+}
+
+/// Whether two byte lists are the same.
+pub fn same_list(a: List[byte], b: List[byte]) -> bool {
+    if a.len != b.len {
+        return false
+    }
+    var i = 0
+    while i < a.len {
+        if a[i] != b[i] {
+            return false
+        }
+        i += 1
+    }
+    true
+}
+
+/// Whether the info file `text` is a reservation that a `trash` stopped in
+/// its course left, for an item named `real`: empty (stopped before its
+/// text), "being copied" (stopped while copying), or naming `real` itself.
+/// `item` says whether the item is in `files/`. A "being copied"
+/// reservation's item is its partial copy, whose source was never touched.
+pub fn stale_for(text: List[byte], real: str, item: bool) -> bool {
+    let pending = same_list(text, bytes_of(copying_text()))
+    if item {
+        return pending
+    }
+    if text.len == 0 || pending {
+        return true
+    }
+    let (has_path, p, _) = parse_info(text)
+    has_path && same_list(p, bytes_of(real))
+}
+
+/// Take back the info file at `path` (for the name `name`) when it is a
+/// stale reservation for `real`: no command holds it, and `stale_for` says
+/// so. True when the name may be tried again. Never where the host keeps
+/// no locks, since a live reservation could not be told from a dead one.
+fn take_back(c: Ctx, path: str, name: str, real: str) -> bool {
+    let h = hold(path)
+    if h.state == 3 {
+        return true
+    }
+    if h.state != 0 {
+        release(h)
+        return false
+    }
+    let text = read_all(h.fd)
+    let item = "{c.trash}/files/{name}"
+    var there = true
+    let _ = fs_lstat(item) else |_| {
+        there = false
+        List[int]()
+    }
+    if !stale_for(text, real, there) || !still(h, path) {
+        release(h)
+        return false
+    }
+    if there {
+        let why = erase(item)
+        if why.len > 0 {
+            release(h)
+            return false
+        }
+    }
+    step("take back {path}")
+    fs_remove(path) else |_| {
+        release(h)
+        return false
+    }
+    release(h)
+    true
+}
+
+/// Reserve a name for an item named `base` (whose real path is `real`):
+/// create its info file with `O_EXCL`, trying `base`, `base_1`, `base_2`, …
+/// until one is created, and hold it (`hold.lu`) until the item is in. A
 /// name whose item is already in `files/` (an item with no info file) is
 /// given back and the next tried, so a rename never replaces an earlier
-/// item. A try whose info file name is too long makes every later try a
+/// item; a stale reservation in the way is taken back and its name tried
+/// again. A try whose info file name is too long makes every later try a
 /// short one (`names.candidate`). No rename that never replaces exists yet
 /// (wolf-lang#706): the reservation is what keeps two runs, or a desktop's
 /// trash, off one name, as the specification asks.
-fn reserve(c: Ctx, base: str) -> Reserved {
+fn reserve(c: Ctx, base: str, real: str) -> Reserved {
     let info = "{c.trash}/info"
     let longest = name_max(info)
     var short = false
     var i = 0
+    var again = 0
     while i < 1000000 {
         let name = candidate(base, i, short)
         if too_long(name, longest) {
@@ -187,22 +269,71 @@ fn reserve(c: Ctx, base: str) -> Reserved {
         if why.len > 0 {
             return Reserved { name: "", fd: -1, why: "cannot make its info file '{path}': {why}" }
         }
-        if !taken {
-            var occupied = true
-            let _ = fs_lstat("{c.trash}/files/{name}") else |_| {
-                occupied = false
-                List[int]()
+        if taken {
+            if again < 8 && take_back(c, path, name, real) {
+                again += 1
+            } else {
+                i += 1
             }
-            if !occupied {
-                return Reserved { name: name, fd: fd, why: "" }
-            }
-            fs_close(fd) else |_| {}
-            step("give back {path}")
-            fs_remove(path) else |_| {}
+            continue
         }
+        if lock_fd(fd) >= 2 {
+            // Another command had the fresh reservation's lock first, or
+            // removed it: the name is not this run's.
+            fs_close(fd) else |_| {}
+            i += 1
+            continue
+        }
+        var occupied = true
+        let _ = fs_lstat("{c.trash}/files/{name}") else |_| {
+            occupied = false
+            List[int]()
+        }
+        if !occupied {
+            return Reserved { name: name, fd: fd, why: "" }
+        }
+        step("give back {path}")
+        fs_remove(path) else |_| {}
+        fs_close(fd) else |_| {}
         i += 1
     }
     Reserved { name: "", fd: -1, why: "no free name is left for it in the trash" }
+}
+
+/// Write `text` over the whole of the open info file `fd` (named `info`),
+/// then sync it.
+fn rewrite(fd: int, info: str, text: str, what: str) -> str {
+    step(what)
+    var why = ""
+    fs_truncate(fd, 0) else |_| {
+        why = reason()
+    }
+    if why.len == 0 {
+        let _ = fs_seek(fd, 0, 0) else |_| {
+            why = reason()
+            0
+        }
+    }
+    if why.len == 0 {
+        fs_write_chunk(fd, bytes_of(text)) else |_| {
+            why = reason()
+        }
+    }
+    if why.len > 0 {
+        return why
+    }
+    step("sync {info}")
+    fs_sync(fd) else |_| {
+        return reason()
+    }
+    ""
+}
+
+/// Give up a reservation: its info file removed, then its hold let go.
+fn give_up(fd: int, info: str) {
+    step("remove {info}")
+    fs_remove(info) else |_| {}
+    fs_close(fd) else |_| {}
 }
 
 /// Put one operand (`word`, as it was given) in the trash. True when it
@@ -267,6 +398,22 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
             return true
         }
     }
+    // The specification (section 9): whether this user may delete it at
+    // all is asked before the trashing starts, as the oracle asks it.
+    var allowed = true
+    fs_access(dir, 2) else |e| match e {
+        denied => {
+            allowed = false
+        },
+        invalid => {},
+        io => {},
+        not_found => {},
+        unsupported => {},
+    }
+    if !allowed {
+        say("cannot trash {kind_words(rec)} '{op}' because deleting it is not allowed")
+        return true
+    }
     if c.interactive {
         var follows = true
         let _ = fs_stat(path) else |_| {
@@ -287,11 +434,12 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
             return true
         }
     }
-    let r = reserve(c, base(path))
+    let r = reserve(c, base(path), real)
     if r.why.len > 0 {
         say("cannot trash '{op}': {r.why}")
         return true
     }
+    // The reservation is held (r.fd) from here until the item is in.
     let info = "{c.trash}/info/{r.name}.trashinfo"
     let text = info_text(real, deletion_date(time_unix_ms() / 1000))
     var why = ""
@@ -299,14 +447,20 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
     fs_write_chunk(r.fd, bytes_of(text)) else |_| {
         why = reason()
     }
-    fs_close(r.fd) else |_| {
-        if why.len == 0 {
+    if why.len == 0 {
+        step("sync {info}")
+        fs_sync(r.fd) else |_| {
+            why = reason()
+        }
+    }
+    if why.len == 0 {
+        step("sync {c.trash}/info")
+        fs_sync_dir("{c.trash}/info") else |_| {
             why = reason()
         }
     }
     if why.len > 0 {
-        step("remove {info}")
-        fs_remove(info) else |_| {}
+        give_up(r.fd, info)
         say("cannot trash '{op}': cannot write its info file: {why}")
         return true
     }
@@ -331,8 +485,7 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
         },
     }
     if why.len > 0 {
-        step("remove {info}")
-        fs_remove(info) else |_| {}
+        give_up(r.fd, info)
         say("cannot trash '{op}': {why}")
         return true
     }
@@ -341,24 +494,43 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
         var seen = seen_none()
         let need = estimate(path, rec, frag, mut seen)
         if free >= 0 && need > free {
-            step("remove {info}")
-            fs_remove(info) else |_| {}
+            give_up(r.fd, info)
             say("cannot trash '{op}': the home volume has too little free space to copy it")
             return true
         }
-        let m = copy_across(path, rec, dst, seen)
+        // While the copy is made the info file says so, with no `Path=`:
+        // a cut leaves no partial copy that any command offers as an item.
+        why = rewrite(r.fd, info, copying_text(), "mark {info} copying")
+        if why.len > 0 {
+            give_up(r.fd, info)
+            say("cannot trash '{op}': cannot write its info file: {why}; it is left where it was")
+            return true
+        }
+        let m = copy_in(path, rec, dst, seen)
         if m.state == 1 {
-            step("remove {info}")
-            fs_remove(info) else |_| {}
+            give_up(r.fd, info)
             say("cannot trash '{op}': {m.why}; it is left where it was")
             return true
         }
-        if m.state == 2 {
+        // The copy is whole and on the disk: the info file is written
+        // whole again, and only then is the source removed.
+        why = rewrite(r.fd, info, text, "write {info}")
+        if why.len > 0 {
+            remove_made(m)
+            give_up(r.fd, info)
+            say("cannot trash '{op}': cannot write its info file: {why}; it is left where it was")
+            return true
+        }
+        let left = remove_copied(path, rec, m)
+        fs_close(r.fd) else |_| {}
+        if left.len > 0 {
             say(
-                "'{op}' is in the trash, but not all of it could be removed from where it was: {m.why}",
+                "'{op}' is in the trash, but not all of it could be removed from where it was: {left}",
             )
             return true
         }
+    } else {
+        fs_close(r.fd) else |_| {}
     }
     if c.verbose {
         say("'{op}' trashed in ~/Trash")
