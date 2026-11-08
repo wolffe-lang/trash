@@ -1,0 +1,69 @@
+// can: what the companions share at their edges: the trash's place, the
+// words they print, and the bytes they write.
+
+/// `$HOME/Trash`, or "" once PROG has said on standard error why there is
+/// none: HOME is not an absolute path.
+pub fn trash_of(prog: str) -> str {
+    let home = env_get("HOME") else ""
+    if !home.starts_with("/") {
+        eprint("{prog}: HOME is not set to an absolute path, so there is no ~/Trash")
+        return ""
+    }
+    let h = unslashed(home)
+    if h == "/" then "/Trash" else "{h}/Trash"
+}
+
+/// The real path of the trash (or of where it would be).
+pub fn real_trash(trash: str) -> str {
+    var real = fs_realpath(trash) else ""
+    if real.len == 0 {
+        let home = parent(trash)
+        let h = fs_realpath(home) else home
+        real = if h == "/" then "/Trash" else "{h}/Trash"
+    }
+    real
+}
+
+/// The words after the program's name, as bytes.
+pub fn arg_words() -> List[List[byte]] {
+    let argv = env_args_bytes()
+    var out = List[List[byte]]()
+    var i = 1
+    while i < argv.len {
+        (mut out).push(copy argv[i])
+        i += 1
+    }
+    out
+}
+
+/// Bytes onto standard output, as they are.
+pub fn put_out(b: List[byte]) {
+    if b.len > 0 {
+        fs_write_chunk(1, b) else |_| {}
+    }
+}
+
+/// `s`'s bytes added to `buf`.
+pub fn add(mut buf: List[byte], s: str) {
+    for x in s.bytes() {
+        (mut buf).push(x)
+    }
+}
+
+/// `b` added to `buf`.
+pub fn add_bytes(mut buf: List[byte], b: List[byte]) {
+    for x in b {
+        (mut buf).push(x)
+    }
+}
+
+/// The version line every companion prints, in this repository's words.
+pub fn version_of(prog: str) -> str {
+    "{prog} (wolffe-lang trash) 0.1.0-dev\n"
+}
+
+/// A line that starts with `y` or `Y` is a yes; any other answer, and the
+/// end of input, are a no.
+pub fn yes(line: str) -> bool {
+    line.starts_with("y") || line.starts_with("Y")
+}
