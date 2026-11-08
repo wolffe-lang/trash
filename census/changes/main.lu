@@ -1,0 +1,46 @@
+//! census: chmod, chown and setting times, of a file and of a symbolic link
+//! itself (the copy across file systems needs all six). Arguments: LABEL DIR.
+
+fn oct(n: int) -> str {
+    if n < 8 then "{n}" else "{oct(n / 8)}{n % 8}"
+}
+
+/// Word `i` of the path's record (following a final link, or not); -1 when
+/// the record cannot be read.
+fn word(p: str, follow: bool, i: int) -> int {
+    let w = (if follow then fs_stat(p) else fs_lstat(p)) else |_| { return -1 }
+    w.get(i) else -1
+}
+
+fn main() -> int {
+    let a = env_args()
+    let (d, l) = (a[1], a[0])
+    let f = "{d}/file"
+    let k = "{d}/link"
+    fs_write_text(f, "x") else |e| { print("ROW chmod@{l} setup:{e}") }
+    fs_symlink("file", k) else |e| { print("ROW chown-link@{l} setup:{e}") }
+    fs_set_mode(f, 0o640) else |e| { print("ROW chmod@{l} {e} errno={os_error()}") }
+    print("ROW chmod@{l} mode={oct(word(f, true, 4))}")
+    let root = (os_uid() else 1) == 0
+    let uid = if root then 4321 else word(f, true, 6)
+    fs_set_owner(f, uid, uid, true) else |e| { print("ROW chown@{l} {e} errno={os_error()}") }
+    print("ROW chown@{l} asked={uid} got={word(f, true, 6)}:{word(f, true, 7)}")
+    let v = if root then uid + 1 else uid
+    fs_set_owner(k, v, v, false) else |e| { print("ROW chown-link@{l} {e} errno={os_error()}") }
+    print(
+        "ROW chown-link@{l} asked={v} link={word(k, false, 6)}:{word(k, false, 7)} target={word(f, true, 6)}",
+    )
+    fs_set_times(f, 1500000000, 123456789, 1600000000, 987654321, true) else |e| {
+        print("ROW times@{l} {e} errno={os_error()}")
+    }
+    print(
+        "ROW times@{l} atime={word(f, true, 12)}.{word(f, true, 13)} mtime={word(f, true, 14)}.{word(f, true, 15)}",
+    )
+    fs_set_times(k, 1400000000, 5, 1400000001, 6, false) else |e| {
+        print("ROW times-link@{l} {e} errno={os_error()}")
+    }
+    print(
+        "ROW times-link@{l} link-mtime={word(k, false, 14)}.{word(k, false, 15)} target-mtime={word(f, true, 14)}",
+    )
+    0
+}

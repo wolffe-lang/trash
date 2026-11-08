@@ -1,0 +1,41 @@
+//! census: a name that is not UTF-8 (made by the caller: DIR/nu holds one
+//! file, `x`, byte 0xff, `y`). It is listed as bytes; can any path call
+//! reach it? Arguments: LABEL DIR.
+
+fn hex(b: List[byte]) -> str {
+    var s = ""
+    for x in b {
+        let n = x as int
+        let digits = "0123456789abcdef"
+        s += digits[n / 16..n / 16 + 1]
+        s += digits[n % 16..n % 16 + 1]
+    }
+    s
+}
+
+fn main() -> int {
+    let a = env_args()
+    let (d, l) = ("{a[1]}/nu", a[0])
+    let es = fs_read_dir_entries(d) else |e| {
+        print("ROW name-listed@{l} {e} errno={os_error()}")
+        return 0
+    }
+    for e in es { print("ROW name-listed@{l} kind={e[0] as int} name={hex(e[1..])}") }
+    var sorted = "listed"
+    fs_read_dir(d) else |e| {
+        sorted = "{e}"
+        List[str]()
+    }
+    print("ROW name-sorted@{l} {sorted}")
+    if es.len == 0 {
+        print("ROW name-reachable@{l} nothing-listed")
+        return 0
+    }
+    let first = es[0]
+    let name = str_from_utf8(first[1..]) else |e| {
+        print("ROW name-reachable@{l} no-path:{e}")
+        return 0
+    }
+    print("ROW name-reachable@{l} path={name}")
+    0
+}

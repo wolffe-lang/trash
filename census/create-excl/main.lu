@@ -1,0 +1,29 @@
+//! census: an exclusive create (O_EXCL) with a mode, twice; the second must
+//! answer `exists`, and the first file keeps the mode it was made with.
+//! Arguments: LABEL DIR.
+
+fn oct(n: int) -> str {
+    if n < 8 then "{n}" else "{oct(n / 8)}{n % 8}"
+}
+
+fn mode_of(p: str) -> str {
+    let w = fs_stat(p) else |e| { return "{e}" }
+    oct(w.get(4) else 0)
+}
+
+fn main() -> int {
+    let a = env_args()
+    let p = "{a[1]}/excl"
+    let fd = fs_open_perm(p, 4, 0o600) else |e| {
+        print("ROW create-excl@{a[0]} first:{e} errno={os_error()}")
+        return 0
+    }
+    fs_close(fd) else |_| {}
+    let again = fs_open_perm(p, 4, 0o600) else |e| {
+        print("ROW create-excl@{a[0]} second:{e} mode={mode_of(p)}")
+        return 0
+    }
+    fs_close(again) else |_| {}
+    print("ROW create-excl@{a[0]} second:opened mode={mode_of(p)}")
+    0
+}

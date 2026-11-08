@@ -1,0 +1,30 @@
+//! census: a copy the host makes (`fs_copy_chunk`) from OTHER to SAME, two
+//! file systems, as the trash's copy fallback does. Arguments: LABEL SAME OTHER.
+
+fn main() -> int {
+    let a = env_args()
+    var big = List[byte]()
+    for i in 0..300000 { (mut big).push((i % 251) as byte) }
+    fs_write_bytes("{a[2]}/c1", big) else |e| { print("ROW copy@{a[0]} setup:{e}") }
+    let src = fs_open("{a[2]}/c1") else |e| { print("ROW copy@{a[0]} open:{e}"); return 0 }
+    let dst = fs_open_perm("{a[1]}/c2", 4, 0o644) else |e| {
+        print("ROW copy@{a[0]} create:{e}")
+        return 0
+    }
+    var n: int = 0
+    loop {
+        let got = fs_copy_chunk(src, dst, 65536) else |e| match e {
+            eof => { break },
+            io => {
+                print("ROW copy@{a[0]} {e} errno={os_error()}")
+                return 0
+            },
+        }
+        n += got
+    }
+    fs_close(src) else |_| {}
+    fs_close(dst) else |_| {}
+    let same = (fs_read_bytes("{a[1]}/c2") else List[byte]()) == big
+    print("ROW copy@{a[0]} bytes={n} same={same}")
+    0
+}

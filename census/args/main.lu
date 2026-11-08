@@ -1,0 +1,20 @@
+//! census: arguments as bytes (`env_args_bytes`, argv[0] first), so an
+//! operand that is not UTF-8 reaches the program. Arguments: LABEL OPERAND.
+
+fn hex(b: List[byte]) -> str {
+    var s = ""
+    let digits = "0123456789abcdef"
+    for x in b {
+        let n = x as int
+        s += digits[n / 16..n / 16 + 1]
+        s += digits[n % 16..n % 16 + 1]
+    }
+    s
+}
+
+fn main() -> int {
+    let v = env_args_bytes()
+    let label = str_from_utf8(v[1]) else "?"
+    print("ROW args-bytes@{label} count={v.len} operand={hex(v[2])}")
+    0
+}

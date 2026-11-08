@@ -1,0 +1,9 @@
+//! census: the wall clock (`time_unix_ms`), the instant `DeletionDate`
+//! stamps. Arguments: LABEL.
+
+fn main() -> int {
+    let a = env_args()
+    let ms = time_unix_ms()
+    print("ROW clock@{a[0]} unix_s={ms / 1000} plausible={ms > 1700000000000}")
+    0
+}

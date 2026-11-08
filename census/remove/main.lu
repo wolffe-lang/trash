@@ -1,0 +1,17 @@
+//! census: removal of a file, of a symbolic link (never its target) and of
+//! an empty directory. Arguments: LABEL DIR.
+
+fn main() -> int {
+    let a = env_args()
+    let d = a[1]
+    fs_write_text("{d}/gone", "x") else |e| { print("ROW remove@{a[0]} setup:{e}") }
+    fs_symlink("gone", "{d}/gone-link") else |e| { print("ROW remove@{a[0]} setup:{e}") }
+    fs_create_dir("{d}/gone-dir") else |e| { print("ROW remove@{a[0]} setup:{e}") }
+    var r = "ok"
+    fs_remove("{d}/gone-link") else |e| { r = "link:{e}" }
+    let kept = fs_exists("{d}/gone")
+    fs_remove("{d}/gone") else |e| { r = "{r} file:{e}" }
+    fs_remove_dir("{d}/gone-dir") else |e| { r = "{r} dir:{e}" }
+    print("ROW remove@{a[0]} {r} target-kept={kept} left={fs_exists("{d}/gone")}")
+    0
+}

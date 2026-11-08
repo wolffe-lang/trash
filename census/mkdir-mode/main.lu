@@ -1,0 +1,23 @@
+//! census: mkdir with a mode (`0o700`, the trash's own directories), then
+//! again over it. Arguments: LABEL DIR.
+
+fn oct(n: int) -> str {
+    if n < 8 then "{n}" else "{oct(n / 8)}{n % 8}"
+}
+
+fn main() -> int {
+    let a = env_args()
+    let p = "{a[1]}/md"
+    fs_create_dir_mode(p, 0o700) else |e| {
+        print("ROW mkdir-mode@{a[0]} {e} errno={os_error()}")
+        return 0
+    }
+    let w = fs_stat(p) else |e| {
+        print("ROW mkdir-mode@{a[0]} stat:{e}")
+        return 0
+    }
+    var again = "made"
+    fs_create_dir_mode(p, 0o700) else |e| { again = "{e}" }
+    print("ROW mkdir-mode@{a[0]} kind={w.get(0) else -1} mode={oct(w.get(4) else 0)} again={again}")
+    0
+}

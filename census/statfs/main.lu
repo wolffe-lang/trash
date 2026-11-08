@@ -1,0 +1,17 @@
+//! census: the free space of the file system that holds DIR (`fs_statfs`'s
+//! words: 0 have, 2 fragment size, 3 blocks, 5 available, 10 type).
+//! Arguments: LABEL DIR.
+
+fn main() -> int {
+    let a = env_args()
+    let w = fs_statfs(a[1]) else |e| {
+        print("ROW statfs@{a[0]} {e} errno={os_error()}")
+        return 0
+    }
+    let have = w[0]
+    let answered = have / 4 % 2 == 1 && have / 32 % 2 == 1
+    print(
+        "ROW statfs@{a[0]} answered={answered} fragment={w[2]} blocks={w[3]} available={w[5]} type={w[10]}",
+    )
+    0
+}

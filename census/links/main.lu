@@ -1,0 +1,31 @@
+//! census: symlink, lstat and readlink — a link to a file and a dangling one.
+//! Arguments: LABEL DIR.
+
+fn show(b: List[byte]) -> str {
+    str_from_utf8(b) else "<{b.len} bytes, not UTF-8>"
+}
+
+fn main() -> int {
+    let a = env_args()
+    let (d, l) = (a[1], a[0])
+    fs_write_text("{d}/target", "1234567") else |e| { print("ROW symlink@{l} setup:{e}") }
+    var made = "ok"
+    fs_symlink("target", "{d}/link") else |e| { made = "{e} errno={os_error()}" }
+    fs_symlink("nowhere/x", "{d}/dangling") else |e| { made = "{made} dangling:{e}" }
+    print("ROW symlink@{l} {made}")
+    let w = fs_lstat("{d}/link") else |e| {
+        print("ROW lstat@{l} {e} errno={os_error()}")
+        List[int]()
+    }
+    if w.len > 1 { print("ROW lstat@{l} kind={w.get(0) else -1} size={w.get(1) else -1}") }
+    let t = fs_read_link("{d}/link") else |e| {
+        print("ROW readlink@{l} {e} errno={os_error()}")
+        List[byte]()
+    }
+    let u = fs_read_link("{d}/dangling") else |e| {
+        print("ROW readlink@{l} dangling:{e}")
+        List[byte]()
+    }
+    print("ROW readlink@{l} link={show(t)} dangling={show(u)}")
+    0
+}

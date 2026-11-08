@@ -1,0 +1,12 @@
+//! census: the working directory, which an absolute `Path=` starts from.
+//! Arguments: LABEL.
+
+fn main() -> int {
+    let a = env_args()
+    let d = os_cwd() else |e| {
+        print("ROW cwd@{a[0]} {e} errno={os_error()}")
+        return 0
+    }
+    print("ROW cwd@{a[0]} absolute={d.starts_with("/")} path={d}")
+    0
+}

@@ -1,0 +1,17 @@
+//! census: the local time with its offset, as `DeletionDate` wants it
+//! (std.time.local, then `%Y-%m-%dT%H:%M:%S`). The caller sets TZ, or not.
+//! Arguments: LABEL UNIX_SECONDS.
+
+use std.time
+
+fn main() -> int {
+    let a = env_args()
+    let s = a[1].to_int() else 0
+    let l = time.local(s) else |e| {
+        print("ROW local-time@{a[0]} {e}")
+        return 0
+    }
+    let text = time.format(l, "%Y-%m-%dT%H:%M:%S") else "format-refused"
+    print("ROW local-time@{a[0]} {text} offset={l.offset_s} dst={l.is_dst} abbrev={l.abbrev}")
+    0
+}

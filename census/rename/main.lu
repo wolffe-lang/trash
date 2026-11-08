@@ -1,0 +1,28 @@
+//! census: rename within a file system, across two (EXDEV told apart), of a
+//! missing file, and over an existing one (it replaces: no call refuses to).
+//! Arguments: LABEL SAME OTHER, two directories on different file systems.
+
+fn main() -> int {
+    let a = env_args()
+    let (same, other) = (a[1], a[2])
+    fs_write_text("{same}/r1", "one") else |e| { print("ROW rename-same@{a[0]} setup:{e}") }
+    fs_rename("{same}/r1", "{same}/r2") else |e| {
+        print("ROW rename-same@{a[0]} {e} errno={os_error()}")
+    }
+    if fs_exists("{same}/r2") { print("ROW rename-same@{a[0]} ok") }
+    fs_write_text("{other}/r3", "three") else |e| { print("ROW rename-exdev@{a[0]} setup:{e}") }
+    fs_rename("{other}/r3", "{same}/r4") else |e| {
+        print("ROW rename-exdev@{a[0]} {e} errno={os_error()}")
+    }
+    if fs_exists("{same}/r4") { print("ROW rename-exdev@{a[0]} ok") }
+    fs_rename("{same}/none", "{same}/r5") else |e| {
+        print("ROW rename-missing@{a[0]} {e} errno={os_error()}")
+    }
+    fs_write_text("{same}/r6", "new") else |e| { print("ROW rename-replaces@{a[0]} setup:{e}") }
+    fs_write_text("{same}/r7", "old") else |e| { print("ROW rename-replaces@{a[0]} setup:{e}") }
+    fs_rename("{same}/r6", "{same}/r7") else |e| {
+        print("ROW rename-replaces@{a[0]} {e} errno={os_error()}")
+    }
+    print("ROW rename-replaces@{a[0]} r7={fs_read_text("{same}/r7") else "?"}")
+    0
+}
