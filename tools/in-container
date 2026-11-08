@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # tools/in-container [CMD...]: build the oracle image from ci/oracle.Containerfile,
 # hold it to its pins, then run CMD (default: tools/gate linux) inside it with the
-# repository at /work and a tmpfs at /xdev, the second file system the census
-# and the cross-device rows need.
+# repository at /work, a tmpfs at /xdev, the second file system the census
+# and the cross-device rows need, and a small tmpfs at /small, a home volume
+# too small for the item a space row trashes into it.
 #
 #   TRASH_ENGINE   podman or docker (default docker)
 #   TRASH_CPUS     the CPU list taskset gives every step inside (default 0)
@@ -56,5 +57,5 @@ image=$(cat "$root/target/oracle/image-tag.txt")
 mounts=(-v "$root:/work")
 if [ -n "${TRASH_ARCHIVES:-}" ]; then mounts+=(-v "$TRASH_ARCHIVES:/archives:ro" -e TRASH_ARCHIVES=/archives); fi
 exec "$engine" run --rm --memory "$memory" --pids-limit 4096 --security-opt label=disable \
-    --tmpfs /xdev:rw,exec,mode=1777 "${mounts[@]}" -w /work -e TRASH_CPUS="$cpus" \
+    --tmpfs /xdev:rw,exec,mode=1777 --tmpfs /small:rw,exec,size=2m,mode=1777 "${mounts[@]}" -w /work -e TRASH_CPUS="$cpus" \
     "$image" taskset -c "$cpus" "$@"
