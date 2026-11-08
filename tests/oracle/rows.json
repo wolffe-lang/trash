@@ -3977,7 +3977,8 @@
       "-x"
      ]
     }
-   ]
+   ],
+   "diverge": "the usage line names only the options this command takes"
   },
   {
    "name": "list-extra",
@@ -3989,7 +3990,8 @@
       "extra"
      ]
     }
-   ]
+   ],
+   "diverge": "the usage line names only the options this command takes"
   },
   {
    "name": "list-trash-kin",
@@ -4027,7 +4029,8 @@
       "bash"
      ]
     }
-   ]
+   ],
+   "diverge": "this trash is always ~/Trash, so the options that choose another are not taken"
   },
   {
    "name": "restore-index-many",
@@ -4194,7 +4197,9 @@
      ],
      "stdin": "0\n"
     }
-   ]
+   ],
+   "diverge": "the oracle crashes on --sort none; here it is the order the host lists the trash in",
+   "oracle": "crashes"
   },
   {
    "name": "restore-sort-bad",
@@ -4223,7 +4228,8 @@
      ],
      "stdin": "0\n"
     }
-   ]
+   ],
+   "diverge": "the usage line names only the options this command takes"
   },
   {
    "name": "restore-by-path-file",
@@ -5223,7 +5229,9 @@
      ],
      "stdin": "0\n"
     }
-   ]
+   ],
+   "diverge": "the oracle crashes on an item with no deletion date; here it sorts before every dated one",
+   "oracle": "crashes"
   },
   {
    "name": "restore-overwrite",
@@ -5260,7 +5268,8 @@
      ],
      "stdin": "0\n"
     }
-   ]
+   ],
+   "diverge": "a restore never overwrites, so --overwrite is not taken"
   },
   {
    "name": "restore-help",
@@ -5353,7 +5362,8 @@
      "stdin": "0\n"
     }
    ],
-   "times": "exact"
+   "times": "exact",
+   "diverge": "the oracle trashes into the other volume's trash; here the item was copied into ~/Trash and is copied back"
   },
   {
    "name": "restore-other-fs-occupied",
@@ -5390,7 +5400,8 @@
      ],
      "stdin": "0\n"
     }
-   ]
+   ],
+   "diverge": "the oracle trashes into the other volume's trash; here the copy back refuses an occupied path"
   },
   {
    "name": "restore-into-trash",
@@ -5428,7 +5439,8 @@
      ],
      "stdin": "0\n"
     }
-   ]
+   ],
+   "diverge": "a restore into the trash itself is refused by name"
   },
   {
    "name": "restore-trash-given",
@@ -5456,7 +5468,8 @@
      ],
      "stdin": "0\n"
     }
-   ]
+   ],
+   "diverge": "the trash itself, given as the path to restore from, is refused by name"
   },
   {
    "name": "rm-collision",
@@ -5946,7 +5959,8 @@
       "trash-list"
      ]
     }
-   ]
+   ],
+   "diverge": "the usage text's last line is in this repository's own words"
   },
   {
    "name": "rm-two-args",
@@ -6276,7 +6290,8 @@
       "trash-list"
      ]
     }
-   ]
+   ],
+   "diverge": "the usage line names only the options this command takes"
   },
   {
    "name": "empty-days-negative",
@@ -6342,7 +6357,8 @@
       "trash-list"
      ]
     }
-   ]
+   ],
+   "diverge": "the usage line names only the options this command takes"
   },
   {
    "name": "empty-f",
@@ -6464,7 +6480,9 @@
       "trash-list"
      ]
     }
-   ]
+   ],
+   "diverge": "the oracle crashes at the end of input under -i; here it is a no, as trash -i takes it",
+   "oracle": "crashes"
   },
   {
    "name": "empty-tty-yes",
@@ -6881,7 +6899,8 @@
      ],
      "stdin": ""
     }
-   ]
+   ],
+   "diverge": "this trash is always ~/Trash, so the options that choose another are not taken"
   },
   {
    "name": "empty-help",
@@ -6944,7 +6963,8 @@
      ],
      "stdin": ""
     }
-   ]
+   ],
+   "diverge": "a tree holding a name that is not UTF-8 cannot be removed by wolf yet (wolf-lang#687): left whole, by name"
   },
   {
    "name": "roundtrip-home",
@@ -7134,7 +7154,958 @@
     }
    ],
    "times": "exact",
-   "property": "round-trip"
+   "property": "round-trip",
+   "diverge": "the oracle trashes into the other volume's trash and its restore does not find it there; here both ways copy"
+  },
+  {
+   "name": "restore-input-open-end",
+   "about": "trash-restore of three answered with a span with no end, 1-",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "1-\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-bad-piece",
+   "about": "trash-restore of three answered with a list with a word in it",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "1,x\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-list-out",
+   "about": "trash-restore of three answered with a list with an index past the last",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0,5\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-span-out",
+   "about": "trash-restore of three answered with a span past the last",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0-5\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-repeat",
+   "about": "trash-restore of three answered with an index twice",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0,0\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-plus",
+   "about": "trash-restore of three answered with an index with a plus sign",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "+1\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-blank",
+   "about": "trash-restore of three answered with spaces alone",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "   \n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-dash",
+   "about": "trash-restore of three answered with a dash alone",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "-\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-list-reversed",
+   "about": "trash-restore of three answered with a list in reverse, 2,0",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "2,0\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-list-spaces",
+   "about": "trash-restore of three answered with a list with spaces, 0 , 2",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0 , 2\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-span-list",
+   "about": "trash-restore of three answered with a span and an index, 0-1,2",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0-1,2\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-input-empty-piece",
+   "about": "trash-restore of three answered with a list with an empty piece",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0,,2\n"
+    }
+   ]
+  },
+  {
+   "name": "restore-not-utf8",
+   "about": "trash-restore of an item whose original path is not UTF-8",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/x.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/x%FFy\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/x",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0\n"
+    }
+   ],
+   "diverge": "a path that is not UTF-8 cannot be named by wolf yet (wolf-lang#687): refused by name"
+  },
+  {
+   "name": "list-not-utf8-info",
+   "about": "trash-list over an info file whose name is not UTF-8",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/x\\xffy.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/xy\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/x\\xffy",
+       "x\n"
+      ],
+      [
+       "file",
+       "Trash/info/ok.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/ok\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/ok",
+       "ok\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ],
+     "order": "host"
+    }
+   ],
+   "diverge": "an info file whose name is not UTF-8 cannot be opened by wolf yet (wolf-lang#687): named and skipped"
+  },
+  {
+   "name": "empty-days-dst",
+   "about": "trash-empty 180 in a zone with summer time, over items 180 days old and 90 or 30 minutes either side",
+   "steps": [
+    {
+     "make": [
+      [
+       "dated",
+       "o1",
+       "/tmp/trash-rows/home/o1",
+       -15557400
+      ],
+      [
+       "dated",
+       "o2",
+       "/tmp/trash-rows/home/o2",
+       -15553800
+      ],
+      [
+       "dated",
+       "y1",
+       "/tmp/trash-rows/home/y1",
+       -15550200
+      ],
+      [
+       "dated",
+       "y2",
+       "/tmp/trash-rows/home/y2",
+       -15546600
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-empty",
+      "180"
+     ],
+     "stdin": ""
+    },
+    {
+     "run": [
+      "trash-list"
+     ],
+     "order": "host"
+    }
+   ],
+   "tz": "Europe/Berlin"
+  },
+  {
+   "name": "empty-info-shapes",
+   "about": "trash-empty over info/ holding other names: a file not named .trashinfo, a directory, an empty info file, and one with no Path=",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/notinfo.txt",
+       "n\n",
+       "0600"
+      ],
+      [
+       "dir",
+       "Trash/info/sub.trashinfo",
+       "0700"
+      ],
+      [
+       "file",
+       "Trash/info/sub.trashinfo/f",
+       "f\n"
+      ],
+      [
+       "file",
+       "Trash/info/empty.trashinfo",
+       "",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/empty",
+       "empty\n"
+      ],
+      [
+       "file",
+       "Trash/info/nopath.trashinfo",
+       "[Trash Info]\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/nopath",
+       "nopath\n"
+      ],
+      [
+       "file",
+       "Trash/info/ok.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/ok\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/ok",
+       "ok\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-empty",
+      "--dry-run"
+     ],
+     "stdin": "",
+     "order": "host"
+    },
+    {
+     "run": [
+      "trash-empty"
+     ],
+     "stdin": ""
+    }
+   ]
+  },
+  {
+   "name": "empty-info-shapes-days",
+   "about": "trash-empty 1 over the same",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/notinfo.txt",
+       "n\n",
+       "0600"
+      ],
+      [
+       "dir",
+       "Trash/info/sub.trashinfo",
+       "0700"
+      ],
+      [
+       "file",
+       "Trash/info/sub.trashinfo/f",
+       "f\n"
+      ],
+      [
+       "file",
+       "Trash/info/empty.trashinfo",
+       "",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/empty",
+       "empty\n"
+      ],
+      [
+       "file",
+       "Trash/info/nopath.trashinfo",
+       "[Trash Info]\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/nopath",
+       "nopath\n"
+      ],
+      [
+       "file",
+       "Trash/info/ok.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/ok\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/ok",
+       "ok\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-empty",
+      "1"
+     ],
+     "stdin": ""
+    }
+   ]
+  },
+  {
+   "name": "rm-info-shapes",
+   "about": "trash-rm over info files with no Path= and an empty one",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/empty.trashinfo",
+       "",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/empty",
+       "empty\n"
+      ],
+      [
+       "file",
+       "Trash/info/nopath.trashinfo",
+       "[Trash Info]\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/nopath",
+       "nopath\n"
+      ],
+      [
+       "file",
+       "Trash/info/ok.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/ok\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/ok",
+       "ok\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-rm",
+      "*"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "restore-info-shapes",
+   "about": "trash-restore over info files with no Path=, an empty one and a directory",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/empty.trashinfo",
+       "",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/empty",
+       "empty\n"
+      ],
+      [
+       "file",
+       "Trash/info/nopath.trashinfo",
+       "[Trash Info]\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/nopath",
+       "nopath\n"
+      ],
+      [
+       "dir",
+       "Trash/info/sub.trashinfo",
+       "0700"
+      ],
+      [
+       "file",
+       "Trash/info/ok.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/ok\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/ok",
+       "ok\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0\n"
+    }
+   ]
   }
  ]
 }
