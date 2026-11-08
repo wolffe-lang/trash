@@ -5,8 +5,10 @@
  *
  *   mkname file DIR HEX          creates DIR/NAME, NAME's bytes given in hex
  *   mkname exec PROG LABEL HEX   runs PROG with the arguments LABEL and the bytes
+ *   mkname rm DIR HEX            removes DIR/NAME (trash's PAX rows clean up with it:
+ *                                no wolf call can name it, wolf-lang#687)
  *
- * Exit 0, or 1 with a line on standard error. Calls: open(2), execv(2).
+ * Exit 0, or 1 with a line on standard error. Calls: open(2), execv(2), unlink(2).
  */
 #include <fcntl.h>
 #include <stdio.h>
@@ -37,12 +39,20 @@ int main(int argc, char **argv) {
         close(fd);
         return 0;
     }
+    if (argc == 4 && strcmp(argv[1], "rm") == 0) {
+        char *name = unhex(argv[3]);
+        size_t len = strlen(argv[2]) + 1 + strlen(name) + 1;
+        char *path = malloc(len);
+        snprintf(path, len, "%s/%s", argv[2], name);
+        if (unlink(path) != 0) { perror("mkname: unlink"); return 1; }
+        return 0;
+    }
     if (argc == 5 && strcmp(argv[1], "exec") == 0) {
         char *args[] = {argv[2], argv[3], unhex(argv[4]), NULL};
         execv(argv[2], args);
         perror("mkname: execv");
         return 1;
     }
-    fprintf(stderr, "usage: mkname file DIR HEX | mkname exec PROG LABEL HEX\n");
+    fprintf(stderr, "usage: mkname file DIR HEX | mkname exec PROG LABEL HEX | mkname rm DIR HEX\n");
     return 1;
 }
