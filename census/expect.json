@@ -1,7 +1,17 @@
 {
  "about": "The census rows: per platform, the observation a probe prints (a regular expression matched whole) and whether the call is present, missing or wrong there. A missing or wrong row names its gap. Written first from the prediction in notes/tb00-the-census.md.",
  "rows": {
-  "args-bytes@bytes": {
+  "args-bytes@exec": {
+   "linux": {
+    "status": "present",
+    "want": "count=3 operand=61ff62"
+   },
+   "pax": {
+    "status": "present",
+    "want": "count=3 operand=61ff62"
+   }
+  },
+  "args-bytes@shell": {
    "linux": {
     "status": "present",
     "want": "count=3 operand=61ff62"

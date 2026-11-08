@@ -73,6 +73,16 @@ def cmd_build(a):
             (out / 'stripped').mkdir(exist_ok=True)
             subprocess.run(['strip', '-o', str(out / 'stripped' / name), str(exe)], check=True)
         print('PASS census-build-%s%s' % (name, ' static' if a.static else ''))
+    # The one C fixture (census/fixture/mkname.c), built the same way.
+    cc = [shutil.which('cc') or 'cc', '-O2'] + (['-static'] if a.static else [])
+    r = subprocess.run(cc + ['-o', str(out / 'mkname'), str(ROOT / 'census/fixture/mkname.c')], capture_output=True, text=True)
+    if r.returncode != 0:
+        print('FAIL census-build-mkname exit=%d %s' % (r.returncode, r.stderr[-400:]))
+        bad += 1
+    else:
+        if a.static:
+            subprocess.run(['strip', '-o', str(out / 'stripped' / 'mkname'), str(out / 'mkname')], check=True)
+        print('PASS census-build-mkname%s' % (' static' if a.static else ''))
     return 1 if bad else 0
 
 

@@ -6,7 +6,8 @@
 # `EXIT program@store status` line after each run, so a trap or a crash is a
 # fact of the record and never a missing row. The same script runs under bash
 # and dash on Linux and under pelt on PAX: POSIX shell only, and no tool but
-# printf and mkdir.
+# printf, mkdir and the census's own fixture, mkname, which makes the bytes
+# that are not UTF-8 (a shell's own route for them is a row of its own).
 bin=$1 same=$2 other=$3
 
 run() { # program label args...
@@ -25,7 +26,7 @@ for store in same other; do
     run links "$store" "$d/links"
     run changes "$store" "$d/changes"
     run walk "$store" "$d/walk"
-    printf '' > "$d/names/nu/$(printf 'x\377y')"
+    "$bin/mkname" file "$d/names/nu" 78ff79
     run names "$store" "$d/names"
     run statfs "$store" "$d"
     run remove "$store" "$d/remove"
@@ -34,7 +35,9 @@ mkdir -p "$same/rename" "$other/rename" "$same/copy" "$other/copy"
 run rename across "$same/rename" "$other/rename"
 run copy across "$same/copy" "$other/copy"
 run clock now
-run args bytes "$(printf 'a\377b')"
+"$bin/mkname" exec "$bin/args" exec 61ff62
+printf 'EXIT args@exec %s\n' "$?"
+run args shell "$(printf 'a\377b')"
 (cd "$same" && run cwd same)
 (unset TZ; run local-time unset 1700000000)
 (TZ=; export TZ; run local-time empty 1700000000)
