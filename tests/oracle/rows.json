@@ -7997,7 +7997,9 @@
      ],
      "stdin": ""
     }
-   ]
+   ],
+   "diverge": "the oracle crashes on an info file it cannot parse under DAYS; here such an item is kept, as one with no date is",
+   "oracle": "crashes"
   },
   {
    "name": "rm-info-shapes",
@@ -8104,6 +8106,136 @@
       "trash-restore"
      ],
      "stdin": "0\n"
+    }
+   ],
+   "diverge": "the oracle shows an unreadable info file as its own exception's repr; here that line is in this repository's words"
+  },
+  {
+   "name": "restore-input-repeat-more",
+   "about": "trash-restore of three answered with an index twice and then another",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/p0.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p0\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p0",
+       "p0\n"
+      ],
+      [
+       "file",
+       "Trash/info/p1.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p1\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p1",
+       "p1\n"
+      ],
+      [
+       "file",
+       "Trash/info/p2.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/p2\nDeletionDate=2022-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/p2",
+       "p2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0,0,1\n"
+    }
+   ]
+  },
+  {
+   "name": "empty-orphans-dry-run",
+   "about": "trash-empty --dry-run over both kinds of orphan",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/gone.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/gone\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/noinfo",
+       "n\n"
+      ],
+      [
+       "file",
+       "Trash/info/ok.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/ok\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/ok",
+       "ok\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-empty",
+      "--dry-run"
+     ],
+     "stdin": "",
+     "order": "host"
+    }
+   ]
+  },
+  {
+   "name": "empty-orphans-v",
+   "about": "trash-empty -v over both kinds of orphan",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/gone.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/gone\nDeletionDate=2020-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/noinfo",
+       "n\n"
+      ],
+      [
+       "file",
+       "Trash/info/ok.trashinfo",
+       "[Trash Info]\nPath=/tmp/trash-rows/home/ok\nDeletionDate=2021-01-01T00:00:00\n",
+       "0600"
+      ],
+      [
+       "file",
+       "Trash/files/ok",
+       "ok\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-empty",
+      "-v"
+     ],
+     "stdin": "",
+     "order": "host"
     }
    ]
   }
