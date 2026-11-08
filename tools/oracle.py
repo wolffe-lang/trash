@@ -49,6 +49,12 @@ without moving a time, before its first command, and every entry outside the
 trashes must be as it was after its last: a failure is a difference named
 `property`, held on every run of the row, the oracle's included.
 
+A row may name `"user": [UID, GID]`: its home and the second file system's
+scratch directory are that user's, every entry a fixture makes is given to
+it unless the fixture chowns it to another, and every command runs as it
+(`setpriv`, every supplementary group dropped), so the host's permission
+checks apply as they do to anyone but root.
+
 A row may also name `"home": "small"`: its scratch home is on a small tmpfs
 (/small, mounted by tools/in-container), so a copy into the home trash can
 be refused for space. A row marked `"times": "exact"` records every entry's
@@ -341,6 +347,33 @@ def env_for(row):
             'LC_ALL': 'C.UTF-8', 'PATH': '/usr/bin:/bin'}
 
 
+SETPRIV = '/usr/bin/setpriv'
+
+
+def as_user(row, argv):
+    """A command line run as the row's user, when it names one."""
+    if not row.get('user'):
+        return argv
+    uid, gid = row['user']
+    return [SETPRIV.encode(), b'--reuid=%d' % uid, b'--regid=%d' % gid, b'--clear-groups', b'--'] + argv
+
+
+def own_fixture(row):
+    """A user row's fixture is the user's: every entry under the home and the
+    second file system's scratch directory still owned by root is given to
+    the row's user (an entry the fixture chowned elsewhere keeps its owner)."""
+    if not row.get('user'):
+        return
+    uid, gid = row['user']
+    for top in (bytes(home()), bytes(XDEV)):
+        os.lchown(top, uid, gid)
+        for dirpath, dirnames, filenames in os.walk(top):
+            for name in dirnames + filenames:
+                p = os.path.join(dirpath, name)
+                if os.lstat(p).st_uid == 0:
+                    os.lchown(p, uid, gid)
+
+
 # The tops of the two file systems a row touches, where a tool may make a
 # per-volume trash (`$topdir/.Trash-$uid`): the image's root, which holds the
 # scratch home, and the second file system.
@@ -378,9 +411,11 @@ def run_row(row, tool):
     OFFSETS.clear()
     before = None
     start = time.time()
+    own_fixture(row)
     for step in row['steps']:
         if 'make' in step:
             make(step['make'], row.get('tz', 'UTC'))
+            own_fixture(row)
             continue
         if row.get('property') == 'round-trip' and before is None:
             before = {'home': kept_snapshot(bytes(home())), 'xdev': kept_snapshot(bytes(XDEV))}
@@ -388,7 +423,7 @@ def run_row(row, tool):
         oracle_guard(row, tool, argv)
         argv[0] = tool_path(tool, argv[0].decode()).encode()
         cwd = where(unescape(step.get('cwd', '')))
-        r = run_step(argv, cwd, env_for(row), unescape(step.get('stdin', '')), step.get('tty', False))
+        r = run_step(as_user(row, argv), cwd, env_for(row), unescape(step.get('stdin', '')), step.get('tty', False))
         steps.append({'argv': [show(a) for a in [unescape(step['run'][0])] + argv[1:]], 'order': step.get('order', 'kept'),
                       'errors': step.get('errors', 'kept'), 'exit': r.returncode, 'stdout': show(r.stdout),
                       'stderr': show(r.stderr)})
@@ -980,6 +1015,9 @@ def cmd_selftest(a):
         ('tree-plan', plan_ok(), ''),
         ('tty-step', tty_ok(), ''),
         ('property-seen', property_seen(base), ''),
+        ('as-user', as_user({'user': [1000, 1000]}, [b'trash', b'a']) ==
+         [SETPRIV.encode(), b'--reuid=1000', b'--regid=1000', b'--clear-groups', b'--', b'trash', b'a'] and
+         as_user({}, [b'trash']) == [b'trash'], ''),
     ]
     for name, ok, detail in checks:
         if ok:
