@@ -227,7 +227,9 @@ unit and PAX row is unchanged and stays green.
 - **Syncs**: the info file and `info/` before the move; the copy before the
   source goes; a restored path's directory before the trashed name goes.
 - **`trash-restore`**: a restore cut after its link (the original path and
-  the trashed name one file) is finished by a rerun; a missing directory
+  the trashed name one file) is finished by a rerun; a trashed name found
+  already gone after the link means another restore finished this one, and
+  the link is kept; a missing directory
   above the path is made only when it is missing (at T2 the parent was
   always asked for, a call that changed nothing); a link refused with
   `EACCES` is the oracle's `[Errno 13]` line, and only `EPERM` (a file
@@ -277,6 +279,18 @@ unit and PAX row is unchanged and stays green.
   `race-restore-twice` and `race-restore-twice-dir` held, as predicted.
 - With the hardening: every oracle row, every cut and every round green, at
   the first build that compiled (one move error in `trash-rm` aside).
+- **The plant found one more.** With every hold made shared (so that it
+  excludes nothing, the plant below), `race-restore-twice` lost the file in
+  27 of 100 rounds: one restore finished the other's (its link made, the
+  trashed name still there), and the other, finding its trashed name gone,
+  undid its own link, the only name left. A host that keeps no locks could
+  do the same, so a trashed name already gone now means a restore another
+  command finished, and the link is kept (`3544d81`); with the plant, that
+  row then held. Two other robustness fixes came from reading the code
+  against PAX's kernel: only a lock another file holds is busy, and any
+  other refusal of `flock` (`ENOLCK` included) is a host that keeps none
+  (`490a52c`), so a refusal of the call can never make `trash` pass over
+  every name.
 
 **Prediction against result.**
 
@@ -320,12 +334,21 @@ run as the user on the same fixtures):
 | `trash-restore` (another file system) | a partial or whole copy at the path, the item whole in the trash; or the item gone and its info file left | refuses by name |
 | `trash-rm`, `trash-empty` | an item part-removed, or an info file whose item is gone | carries on, and ends as the uncut run |
 
+## The plant
+
+`tb03-plant-unheld` (one token on the green head): a hold takes a shared lock
+(`fs_lock(fd, 1)`), which never excludes another. Red by name at
+`race-put-empty` (16 of 100 rounds), and at `race-put-rm` (10) and
+`race-collide` (5: a live reservation taken back as stale, and one file then
+renamed over the other's, since every rename replaces, wolf-lang#706);
+every cut row and the restore races hold.
+
 ## Gaps met
 
-None new. PAX's kernel lists `flock` (its own syscall table, px62), where the
-wolf specification's host note at 0.2.38 expected `unsupported`; the PAX rows
-do not race, so either answer serves them, and the image's KVM leg (the
-second part) runs the commands there.
+None new. PAX's kernel implements `flock` (its own syscall table, px62),
+where the wolf specification's host note at 0.2.38 expected `unsupported`;
+the PAX rows do not race, so either answer serves them, and the image's KVM
+leg (the second part) runs the commands there.
 
 ## SKIPs
 
@@ -392,5 +415,7 @@ Each is implemented as recommended (A).
   directory (in the scratch home's tmpfs), a read-only parent, a file that
   cannot be read but may be moved; each decided as above.
 - [x] The README's user section.
-- [ ] One plant, red by name, and the record behind both of a host's locks
-  (the hand-back names them).
+- [x] One plant, `tb03-plant-unheld`, red by name at `race-put-empty`.
+- [x] The records behind both of satoyama's locks: the Linux gate and the
+  PAX legs in one gauntlet at the head, and the plant's record, both
+  verified (their paths and digests are in the hand-back).
