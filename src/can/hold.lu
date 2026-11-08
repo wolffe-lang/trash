@@ -1,0 +1,119 @@
+// can: an entry held. A command that reserves or changes an entry of the
+// trash holds an exclusive lock (`flock(2)`, `fs_lock`) on its info file
+// while it works: `trash` from the exclusive create of the info file until
+// the item is in `files/`; `trash-restore`, `trash-rm` and `trash-empty`
+// around their change to that one entry. Another command that meets the
+// lock leaves the entry alone. A command that takes the lock and then finds
+// the info file unlinked (its link count 0) knows another removed it first.
+//
+// The lock is tried once and never waited for, and it goes with the
+// process, so a command that dies (a power cut, a kill) holds nothing: an
+// info file whose lock can be taken and whose item never arrived is a stale
+// reservation, which `trash` may take back. Where the host keeps no locks
+// (PAX at the pin answers `unsupported`), every lock is "had" and nothing
+// stale is ever taken back, since a live reservation could not be told
+// from a dead one.
+
+/// What a hold of an info file came to.
+pub struct Hold {
+    /// The open info file, or -1.
+    fd: int,
+    /// 0 held; 1 held, but the host keeps no locks; 2 busy (another command
+    /// holds it); 3 gone (removed before the lock was had); 4 not opened.
+    state: int,
+    /// The info file's device and inode, when held.
+    dev: int,
+    ino: int,
+}
+
+/// Lock the open file `fd`: 0 held, 1 the host keeps no locks, 2 busy,
+/// 3 gone (its last link removed before the lock was had).
+pub fn lock_fd(fd: int) -> int {
+    var state = 0
+    fs_lock(fd, 2) else |e| match e {
+        busy => {
+            state = 2
+        },
+        invalid => {
+            state = 2
+        },
+        io => {
+            state = 2
+        },
+        unsupported => {
+            state = 1
+        },
+    }
+    if state == 2 {
+        return 2
+    }
+    let r = fs_fstat_record(fd) else |_| {
+        return state
+    }
+    if r.len > 5 && r[5] == 0 {
+        return 3
+    }
+    state
+}
+
+/// Hold the info file at `path`: open it (never through a final link) and
+/// lock it.
+pub fn hold(path: str) -> Hold {
+    let fd = fs_open_mode(path, 0 + 16) else |_| {
+        return Hold { fd: -1, state: 4, dev: 0, ino: 0 }
+    }
+    let state = lock_fd(fd)
+    if state >= 2 {
+        fs_close(fd) else |_| {}
+        return Hold { fd: -1, state: state, dev: 0, ino: 0 }
+    }
+    let r = fs_fstat_record(fd) else |_| {
+        List[int]()
+    }
+    if r.len > 10 {
+        return Hold { fd: fd, state: state, dev: r[9], ino: r[10] }
+    }
+    Hold { fd: fd, state: state, dev: 0, ino: 0 }
+}
+
+/// Whether a hold was had (locked, or the host keeps no locks).
+pub fn had(h: Hold) -> bool {
+    h.state <= 1
+}
+
+/// Let a hold go.
+pub fn release(h: Hold) {
+    if h.fd >= 0 {
+        fs_close(h.fd) else |_| {}
+    }
+}
+
+/// Whether `path` is still the file a hold had (the same device and inode).
+pub fn still(h: Hold, path: str) -> bool {
+    let r = fs_lstat(path) else |_| {
+        return false
+    }
+    h.dev == 0 && h.ino == 0 || r[9] == h.dev && r[10] == h.ino
+}
+
+/// The whole of an open file, from where its offset stands.
+pub fn read_all(fd: int) -> List[byte] {
+    var out = List[byte]()
+    var more = true
+    while more {
+        let chunk = fs_read_chunk(fd, 65536) else |e| match e {
+            eof => {
+                more = false
+                List[byte]()
+            },
+            io => {
+                more = false
+                List[byte]()
+            },
+        }
+        for b in chunk {
+            (mut out).push(b)
+        }
+    }
+    out
+}
