@@ -2,12 +2,14 @@
 """Build the commands: every `src/NAME.lu` that is an entry (`//! member: false`)
 and not a unit program (`*_test.lu`), with the pinned wolf.
 
-  build.py --wolf WOLF --out DIR [--static]
+  build.py --wolf WOLF --out DIR [--static] [--entry PATH:NAME ...]
 
 The default tier, warnings denied. With --static the link goes through a cc
 that adds -static (wolf has no --static), every command is checked to be a
 static ET_EXEC with no interpreter, and a stripped copy is kept in
 DIR/stripped for the PAX image, as tools/census.py builds the census.
+--entry builds the named entries instead (a test fixture such as the PAX
+rows' rowtool, which is no command).
 """
 import argparse
 import os
@@ -46,17 +48,19 @@ def main():
     p.add_argument('--wolf', required=True)
     p.add_argument('--out', required=True)
     p.add_argument('--static', action='store_true')
+    p.add_argument('--entry', action='append', default=[])
     a = p.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     env = static_env(out) if a.static else dict(os.environ)
-    srcs = commands()
+    srcs = [(p, p.stem) for p in commands()]
+    if a.entry:
+        srcs = [(ROOT / e.split(':')[0], e.split(':')[1]) for e in a.entry]
     if not srcs:
         print('FAIL build-commands no entry in src/')
         return 1
     bad = 0
-    for src in srcs:
-        name = src.stem
+    for src, name in srcs:
         exe = out / name
         log = out / (name + '.build.log')
         with log.open('w') as f:
