@@ -1,0 +1,67 @@
+{
+ "row": "perm-empty-readonly-tree",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "d"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-empty"
+   ],
+   "exit": 0,
+   "stderr": "trash-empty: cannot remove /tmp/trash-rows/home/Trash/files/d\ntrash-empty: cannot remove /tmp/trash-rows/home/Trash/files/d\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/files/d": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/files/d/ro": {
+    "mode": "0555",
+    "mtime": 1700000000,
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/files/d/ro/f": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "1000:1000",
+    "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

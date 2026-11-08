@@ -1,0 +1,95 @@
+{
+ "row": "space-tree",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/t"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {},
+  "xdev-top/.Trash-0": {
+   "files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "files/t": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "files/t/a": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "files/t/b": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "files/t/c": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "files/t/d": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "files/t/e": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "files/t/f": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "info/t.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=trash-rows/t\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

@@ -1,0 +1,60 @@
+{
+ "row": "perm-sticky-own",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "sticky/mine"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/files/mine": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "1000:1000",
+    "sha256": "01a60e35df88d8b49546cb3f8f4ba4f406870f9b8e1f394c9d48ab73548d748d",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/info/mine.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/sticky/mine\nDeletionDate=<in-window>\n",
+    "type": "file"
+   },
+   "sticky": {
+    "mode": "1777",
+    "mtime": "<in-window>",
+    "owner": "2000:2000",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

@@ -1,0 +1,60 @@
+{
+ "row": "perm-shared-dir",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "shared/f"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/files/f": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "2000:2000",
+    "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/info/f.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/shared/f\nDeletionDate=<in-window>\n",
+    "type": "file"
+   },
+   "shared": {
+    "mode": "0777",
+    "mtime": "<in-window>",
+    "owner": "2000:2000",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

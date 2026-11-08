@@ -1,0 +1,47 @@
+{
+ "row": "space-empty-v",
+ "steps": [
+  {
+   "argv": [
+    "trash-empty",
+    "-v"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "removing /small/trash-rows/home/Trash/files/big\nremoving /small/trash-rows/home/Trash/info/big.trashinfo\n"
+  },
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

@@ -1,0 +1,67 @@
+{
+ "row": "perm-sticky-other",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "sticky/f"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash regular file 'sticky/f' (from volume '/tmp')\ntrash:  `- failed to trash sticky/f in /tmp/trash-rows/home/Trash, because failed to move sticky/f in /tmp/trash-rows/home/Trash/files: [Errno 1] Operation not permitted: 'sticky/f'\ntrash:  `- failed to trash sticky/f in /tmp/.Trash/1000, because trash dir cannot be created because its parent does not exists, trash-dir: /tmp/.Trash/1000, parent: /tmp/.Trash\ntrash:  `- failed to trash sticky/f in /tmp/.Trash-1000, because failed to move sticky/f in /tmp/.Trash-1000/files: [Errno 1] Operation not permitted: 'sticky/f'\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "sticky": {
+    "mode": "1777",
+    "mtime": 1700000000,
+    "owner": "2000:2000",
+    "type": "dir"
+   },
+   "sticky/f": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "2000:2000",
+    "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "tmp-top/.Trash-1000": {
+   "files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   },
+   "info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "1000:1000",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}
