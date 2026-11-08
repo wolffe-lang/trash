@@ -6,9 +6,9 @@ item into the user's trash instead of unlinking it; `trash-list`,
 `trash-restore`, `trash-rm` and `trash-empty` look after it until it is
 emptied.
 
-**State: `trash` itself.** `trash` is written, held to the oracle on Linux and
-to its own captures on PAX; `trash-list`, `trash-restore`, `trash-rm` and
-`trash-empty` come next.
+**State: the companions.** `trash`, `trash-list`, `trash-restore`, `trash-rm`
+and `trash-empty` are written, held to the oracle on Linux and to their own
+captures on PAX; hardening against a power cut and the PAX image come next.
 
 ## Using it
 
@@ -33,6 +33,30 @@ error.
   it, and a mount point are refused by name.
 - A name that is not UTF-8 is refused by name for now: wolf cannot yet name such
   a path (wolf-lang#687).
+
+```
+trash-list
+trash-restore [--sort {date,path,none}] [PATH]
+trash-rm PATTERN
+trash-empty [-v] [-i] [-f] [--dry-run] [DAYS]
+```
+
+- `trash-list` prints one line per item: the date and time it was trashed
+  and where it came from.
+- `trash-restore` lists, by number, what was trashed from the working
+  directory or under it (or from PATH or under it), and asks which to put
+  back: a number, a list (`0,2`) or a span (`0-3`). It never puts an item
+  back over anything at its path, and makes a missing directory above it.
+  An item that was trashed from another file system is copied back, checked,
+  given back its modes, owner and times, and only then removed from the
+  trash.
+- `trash-rm PATTERN` removes for good every item whose original name matches
+  the shell pattern, or whose whole original path does when PATTERN starts
+  with `/`.
+- `trash-empty` removes everything for good; `trash-empty DAYS` only what was
+  trashed more than DAYS days ago. It asks first when standard input is a
+  terminal, or with `-i`; `-f` never asks. `-v` names what it removes and
+  `--dry-run` names it and removes nothing.
 
 ## What it does
 
