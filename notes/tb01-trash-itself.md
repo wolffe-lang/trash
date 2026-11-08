@@ -316,3 +316,29 @@ implemented.
 - R-tb01-9 (open): the footprint. (A) `cross-cutting`, recommended:
   `tools/in-container`, which CI runs, changed its mounts. (B) `module`: no
   path the audit classes as CI changed.
+
+## Done-when
+
+- [x] The prediction committed before any change (`73ccd96`), and scored
+  above.
+- [x] `trash FILE…`, static, for PAX and Linux x86-64: files, directories and
+  symbolic links (the link, never its target), the info file created with
+  `O_EXCL` before the rename and removed when the rename fails.
+- [x] Collisions named as the oracle names them, three deep, by the exclusive
+  create; long names shortened as it shortens them.
+- [x] Across file systems: the space refused by name before any copy;
+  modes, owner, times to the nanosecond and links kept; the copy verified,
+  then the source removed; a failure part-way leaves the source whole.
+- [x] The flags as trash-cli takes them, its messages, prompts and exit
+  codes; `--help` and `--version` in this program's own words.
+- [x] The refusals by name: `.`, `..`, `/`, the trash and anything in it, a
+  missing operand without `-f`, and a name that is not UTF-8 (wolf-lang#687).
+- [x] `DeletionDate` in local time, UTC when no zone answers; `Path=` as the
+  oracle encodes it.
+- [x] tb00's census and oracle rows still green; the new oracle rows red
+  against the stub first; the expected-capture rows and the PAX rows red
+  first; every row green at the head.
+- [x] One plant, `tb01-plant-rename-first`: the rename before the info file's
+  exclusive create, red by name at `put-collision`.
+- [x] The records behind both of a lane host's locks, the Linux gate and the
+  PAX legs in one gauntlet, and the plant's record, both verified.
