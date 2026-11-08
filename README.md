@@ -6,7 +6,9 @@ item into the user's trash instead of unlinking it; `trash-list`,
 `trash-restore`, `trash-rm` and `trash-empty` look after it until it is
 emptied.
 
-**State: the repository scaffold.** Nothing is implemented yet.
+**State: the census and the scaffold.** The commands are not written yet.
+What is here measures what they will need and holds them, once written, to
+the oracle: see *The census* and *The oracle* below.
 
 ## What it does
 
@@ -26,6 +28,51 @@ emptied.
 - **Never destructive by surprise:** a restore never overwrites, `.`, `..`,
   `/` and the trash itself are refused by name, and a symlink is trashed as
   the link, never its target.
+
+## The census
+
+`census/` holds one small wolf program per operation the commands need
+(rename, telling a cross-device rename apart; an exclusive create; mkdir with
+a mode; symbolic links; modes, owners and times; a recursive walk; free space;
+local time), and `census/run.sh` runs them on both file systems a trashing
+can involve. `census/expect.json` records, for Linux x86-64 and for PAX, what
+each prints and whether the call is present, missing or wrong there, with the
+upstream issue for each gap. `tools/census.py` runs them on Linux;
+`tools/gate-pax` boots PAX under KVM with an ext2 home and the in-memory
+`/tmp` and runs the same programs there.
+
+## The oracle
+
+trash-cli, pinned by the digest of its published source archive and of the
+wheel built from it (`trash-oracle.toml`), runs in a container image built by
+`ci/oracle.Containerfile` from a dated Ubuntu archive snapshot, every package
+version locked (`ci/packages.lock`). It is only ever run as a program.
+
+`tools/oracle.py` runs each row of `tests/oracle/rows.json` on trash-cli and
+on this repository's commands in matching scratch homes, and compares every
+command's exit status, standard output and standard error, and the trees left
+behind: every entry's type, mode, bytes, link target and time, and every
+`.trashinfo` line by line. The deletion date is the one value normalised: its
+shape is held, and its instant must fall inside the run. trash-cli's own
+results are recorded in `tests/oracle/golden/`, and the pinned trash-cli must
+reproduce them.
+
+## Building and testing
+
+The toolchain is pinned by digest in `wolf-toolchain.toml` (wolf 0.2.38 and
+lupin 0.1.60); `tools/fetch-toolchain.py` fetches and checks it.
+
+- `bash tools/gate unit`: the pins, and the census and oracle harnesses' own
+  tests. Needs only Python 3.11 or later.
+- `bash tools/in-container`: builds the oracle image, checks it against its
+  locks, and runs `tools/gate linux` inside it: the toolchain, `wolf fmt
+  --check`, the census on Linux, the static census for PAX, and the oracle's
+  rows. `TRASH_ENGINE=podman` for podman.
+- `tools/gate-pax PAXTREE KERNEL INPUTS CENSUS-STATIC HOME.img OUTDIR`: the
+  census on PAX under KVM (see the script's header for its inputs).
+
+Every gate step prints `START name` and `END name exit=N`, and the first step
+that fails stops the gate.
 
 ## Clean room
 
