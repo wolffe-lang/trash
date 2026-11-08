@@ -1,0 +1,151 @@
+{
+ "row": "list-info-shapes",
+ "steps": [
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "Parse Error: /tmp/trash-rows/home/Trash/info/empty.trashinfo: Unable to parse Path.\nParse Error: /tmp/trash-rows/home/Trash/info/nopath.trashinfo: Unable to parse Path.\n",
+   "stdout": "2020-01-01 00:00:01 /tmp/trash-rows/home/hdr\n2020-01-01 00:00:02 /tmp/trash-rows/home/first\n2020-01-01 00:00:04 /tmp/trash-rows/home/extra\n2020-01-01 00:00:05 /tmp/trash-rows/home/crlf\n2020-01-01 00:00:07 /tmp/trash-rows/home/noheader\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/crlf": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "30138914088d7006bf9994f8f3a3f34ade3b5585eaaed8d2b44c6b7922258d79",
+    "size": 5,
+    "type": "file"
+   },
+   "Trash/files/dup": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "94dd9502b0ae09b64cd5a874e165ea17f002f71a3e6c88e9ba9f3a48adfcf443",
+    "size": 4,
+    "type": "file"
+   },
+   "Trash/files/empty": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "45fd2f9df187bc411dc80df5c4c4844ac00f4dd69bc69453f1893a5d143433d6",
+    "size": 6,
+    "type": "file"
+   },
+   "Trash/files/extra": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "65110ea3b8b62b0c09742c368bf1527f0978b06dff7a1371ef7b4c98e244d91a",
+    "size": 6,
+    "type": "file"
+   },
+   "Trash/files/hdr": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "5c49aa0218b8eb165d8338df744d2c4297f6f1c83afa43e107ed38327b5e41ee",
+    "size": 4,
+    "type": "file"
+   },
+   "Trash/files/noheader": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "f6f75eafc00cb4752d501258409da69eb3eb0a7d646668946e85aac0777254c7",
+    "size": 9,
+    "type": "file"
+   },
+   "Trash/files/nopath": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "2632713135530c25a54def676058177bba9089aea9fa75a053b37ab227eefc42",
+    "size": 7,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/crlf.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\r\nPath=/tmp/trash-rows/home/crlf\r\nDeletionDate=<bad-shape:2020-01-01T00:00:05\r>\n",
+    "type": "file"
+   },
+   "Trash/info/dup.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/first\nPath=/tmp/trash-rows/home/second\nDeletionDate=<outside-window:2020-01-01T00:00:02>\nDeletionDate=<outside-window:2020-01-01T00:00:03>\n",
+    "type": "file"
+   },
+   "Trash/info/empty.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "",
+    "type": "file"
+   },
+   "Trash/info/extra.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nFoo=bar\nPath=/tmp/trash-rows/home/extra\nX-Y=z\nDeletionDate=<outside-window:2020-01-01T00:00:04>\n",
+    "type": "file"
+   },
+   "Trash/info/hdr.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash info]\nPath=/tmp/trash-rows/home/hdr\nDeletionDate=<outside-window:2020-01-01T00:00:01>\n",
+    "type": "file"
+   },
+   "Trash/info/noheader.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "Path=/tmp/trash-rows/home/noheader\nDeletionDate=<outside-window:2020-01-01T00:00:07>\n",
+    "type": "file"
+   },
+   "Trash/info/nopath.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nDeletionDate=<outside-window:2020-01-01T00:00:06>\n",
+    "type": "file"
+   },
+   "Trash/info/notinfo.txt": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "d2af1136ff06ec102530ba3d1ec082bab494cb005ed9995b2ffd26034698e939",
+    "size": 80,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

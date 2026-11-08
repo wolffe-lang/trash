@@ -1,0 +1,77 @@
+{
+ "row": "rm-info-shapes",
+ "steps": [
+  {
+   "argv": [
+    "trash-rm",
+    "*"
+   ],
+   "exit": 0,
+   "stderr": "trash-rm: /tmp/trash-rows/home/Trash/info/empty.trashinfo: unable to parse 'Path'\ntrash-rm: /tmp/trash-rows/home/Trash/info/nopath.trashinfo: unable to parse 'Path'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "Parse Error: /tmp/trash-rows/home/Trash/info/empty.trashinfo: Unable to parse Path.\nParse Error: /tmp/trash-rows/home/Trash/info/nopath.trashinfo: Unable to parse Path.\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/empty": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "45fd2f9df187bc411dc80df5c4c4844ac00f4dd69bc69453f1893a5d143433d6",
+    "size": 6,
+    "type": "file"
+   },
+   "Trash/files/nopath": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "2632713135530c25a54def676058177bba9089aea9fa75a053b37ab227eefc42",
+    "size": 7,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/empty.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "",
+    "type": "file"
+   },
+   "Trash/info/nopath.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nDeletionDate=<outside-window:2020-01-01T00:00:00>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

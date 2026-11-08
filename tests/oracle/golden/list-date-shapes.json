@@ -1,0 +1,263 @@
+{
+ "row": "list-date-shapes",
+ "steps": [
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "0999-01-01 00:00:00 /tmp/trash-rows/home/s3\n2020-01-02 03:04:05 /tmp/trash-rows/home/s1\n2020-01-02 03:04:05 /tmp/trash-rows/home/s2\n2020-01-02 03:04:05 /tmp/trash-rows/home/s5\n2020-01-02 03:04:05 /tmp/trash-rows/home/sb\n2020-02-29 00:00:00 /tmp/trash-rows/home/s7\n????-??-?? ??:??:?? /tmp/trash-rows/home/s4\n????-??-?? ??:??:?? /tmp/trash-rows/home/s6\n????-??-?? ??:??:?? /tmp/trash-rows/home/s8\n????-??-?? ??:??:?? /tmp/trash-rows/home/s9\n????-??-?? ??:??:?? /tmp/trash-rows/home/sa\n????-??-?? ??:??:?? /tmp/trash-rows/home/sc\n????-??-?? ??:??:?? /tmp/trash-rows/home/sd\n????-??-?? ??:??:?? /tmp/trash-rows/home/se\n????-??-?? ??:??:?? /tmp/trash-rows/home/sf\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/s1": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "c16536a72c4b685dd4b73915f1588f3edbdc95eb2cbba408ba85db12ffc491de",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/s2": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "b4a7f47b7504602ce10b55a6c40b1758cdd716f0533a594fa426f26418b7d1eb",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/s3": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "890a78cb53f9f10eb7de08fc334f241c4e26aaa4f4862c6e0d672788393f449e",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/s4": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "02319367e7011940b29a0b2cfba999d9341cc3a7d23ec19d6e12aa1286bf61c8",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/s5": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "bb43890c6b305d8871355da31484953aa5d468b38b7e896648c2e2d22a92b51f",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/s6": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "c74a7fafe85a65bd7c4ed6ad545c0b2974dadad20182224a80e55a42d5e9b9d7",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/s7": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "61c6d1503ed5d6fa0e1bb3b8d4f9b148c2c4a17f4940f4c72465c1d8fb38b5be",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/s8": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "c4e4418809c8d3b0e30e472b1abb5d037226381ff94c80c26fa022f2a6319ca7",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/s9": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "4bf74e6dbe506e9130c879d2b051a65e8b437d2e6b51e0094adbc1d07fbab265",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/sa": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "7dec79b1cebe0335e84f8a218917cc69a7f1f75a4d7590b5433c673b688eeab9",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/sb": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "c9fea4d5aa396a3ab03f629357d31fd35ffd4d77dc077cd0173c5abf8181f80f",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/sc": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "7b75deae4fcb230c17fd19612e7499b50bc479697299808d9b341c720816fb38",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/sd": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "9e905e4994cb390014f545738408c088987a33e440237d4bd03756485d0b8f6f",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/se": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "cb5978f97f08df548a322598cd868a1c969f309a22c580596c36a7ad922f22f1",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/files/sf": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "a14d9bda6b267049959ee486ba492ee2165d94f95bc60817c369bcd0da682acc",
+    "size": 3,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/s1.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/s1\nDeletionDate=<bad-shape:2020-1-2T3:4:5>\n",
+    "type": "file"
+   },
+   "Trash/info/s2.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/s2\nDeletionDate=<bad-shape:2020-01-02T03:04:5>\n",
+    "type": "file"
+   },
+   "Trash/info/s3.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/s3\nDeletionDate=<outside-window:0999-01-01T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/s4.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/s4\nDeletionDate=<bad-shape:20201-01-01T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/s5.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/s5\nDeletionDate=<bad-shape:2020-01- 2T03:04:05>\n",
+    "type": "file"
+   },
+   "Trash/info/s6.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/s6\nDeletionDate=<bad-shape:2020-01-02T03:04:60>\n",
+    "type": "file"
+   },
+   "Trash/info/s7.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/s7\nDeletionDate=<outside-window:2020-02-29T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/s8.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/s8\nDeletionDate=<bad-shape:2021-02-29T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/s9.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/s9\nDeletionDate=<bad-shape: 2020-01-02T03:04:05>\n",
+    "type": "file"
+   },
+   "Trash/info/sa.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/sa\nDeletionDate=<bad-shape:2020-01-02T03:04:05 >\n",
+    "type": "file"
+   },
+   "Trash/info/sb.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/sb\nDeletionDate=<bad-shape:2020-01-02t03:04:05>\n",
+    "type": "file"
+   },
+   "Trash/info/sc.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/sc\nDeletionDate=<bad-shape:2020-01-02T24:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/sd.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/sd\nDeletionDate=<bad-shape:2020-00-10T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/se.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/se\nDeletionDate=<bad-shape:2020-01-00T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/sf.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/sf\nDeletionDate=<bad-shape:+2020-01-02T03:04:05>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

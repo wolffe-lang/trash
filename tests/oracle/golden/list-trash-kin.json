@@ -1,0 +1,49 @@
+{
+ "row": "list-trash-kin",
+ "steps": [
+  {
+   "argv": [
+    "trash-list",
+    "--trash-dir",
+    "/tmp/trash-rows/home/Trash"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list",
+    "--trash-dirs"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "/tmp/trash-rows/home/Trash\n"
+  },
+  {
+   "argv": [
+    "trash-list",
+    "--all-users"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list",
+    "--print-completion",
+    "bash"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "Please install shtab firstly!\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

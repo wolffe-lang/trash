@@ -1,0 +1,20 @@
+{
+ "row": "empty-i-nothing",
+ "steps": [
+  {
+   "argv": [
+    "trash-empty",
+    "-i"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "Would empty the following trash directories:\n    - /tmp/trash-rows/home/Trash\nProceed? (y/N) "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

@@ -1,0 +1,56 @@
+{
+ "row": "empty-i-yes-word",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "a.txt"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-empty",
+    "-i"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "Would empty the following trash directories:\n    - /tmp/trash-rows/home/Trash\nProceed? (y/N) "
+  },
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}
