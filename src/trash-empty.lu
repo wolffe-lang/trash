@@ -1,0 +1,9 @@
+//! member: false
+//!
+//! trash-empty: the stub T2's rows are held red against first. It refuses
+//! every invocation with one line of its own and touches nothing.
+
+fn main() -> int {
+    eprint("trash-empty: not written yet")
+    74
+}
