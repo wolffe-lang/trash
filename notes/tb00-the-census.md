@@ -321,3 +321,22 @@ Each is implemented.
   and T2 lists in host order as the oracle does.
 - R-tb00-10: CI runs on a pull request only when it is labelled
   `full-matrix`; the local record is the gate otherwise.
+
+## Done-when
+
+- [x] The prediction committed before any measurement (`458ee6f`).
+- [x] The census on Linux x86-64 and on PAX under KVM, 57 rows each, held to
+  `census/expect.json`, red first where the prediction missed.
+- [x] Each gap filed upstream with its witness, or already filed and named,
+  and T1's way round each in the table above.
+- [x] The oracle image, trash-cli pinned by version and digest, and the
+  harness that compares both tools row by row, with its goldens and its own
+  tests.
+- [x] `DeletionDate` normalised by name: its shape held, its instant inside
+  the run's window.
+- [x] README, licence, CI on Linux, `wolf fmt --check`, `tools/gate`, and the
+  PAX build path (static).
+- [x] One plant, red by name: the info normaliser hides the `Path=` line too,
+  and the harness's selftest fails `selftest-path-line`.
+- [x] The record at the final head, Linux gate and PAX legs, behind a block's
+  locks.
