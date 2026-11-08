@@ -31,7 +31,9 @@ modification time, and the full text of every `.trashinfo` and of
     `<in-window>`. Fixed dates a fixture wrote are outside it and stay.
   - A modification time inside the window: `<in-window>`.
   - A step marked `"order": "host"`: its standard output's lines sorted, for
-    a listing in the order the host's directory hands entries over.
+    a listing in the order the host's directory hands entries over; and one
+    marked `"errors": "host"`, its standard error's lines, for messages about
+    entries met in that order.
   - A row marked `"words": "own"` (`--help`, `--version`): each stream reads
     `<text>` when it holds anything, so the row holds the exit status and
     which stream carries the text, and this repository's text is its own.
@@ -388,7 +390,8 @@ def run_row(row, tool):
         cwd = where(unescape(step.get('cwd', '')))
         r = run_step(argv, cwd, env_for(row), unescape(step.get('stdin', '')), step.get('tty', False))
         steps.append({'argv': [show(a) for a in [unescape(step['run'][0])] + argv[1:]], 'order': step.get('order', 'kept'),
-                      'exit': r.returncode, 'stdout': show(r.stdout), 'stderr': show(r.stderr)})
+                      'errors': step.get('errors', 'kept'), 'exit': r.returncode, 'stdout': show(r.stdout),
+                      'stderr': show(r.stderr)})
     end = time.time()
     exact = row.get('times') == 'exact'
     trees = {'home': snapshot(bytes(home()), exact), 'xdev': snapshot(bytes(XDEV), exact)}
@@ -595,6 +598,8 @@ def normalise(cap):
         if s.get('order') == 'host':
             out = host_order(out)
         err = norm_output(err, w, tz, offs)
+        if s.get('errors') == 'host':
+            err = host_order(err)
         if cap.get('own_words'):
             # this repository's --help and --version are in its own words
             out, err = ('<text>' if out else ''), ('<text>' if err else '')

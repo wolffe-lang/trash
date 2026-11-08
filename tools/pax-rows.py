@@ -166,7 +166,8 @@ def captures(lines, rows):
         elif kind == 'step':
             runs = [st for st in by[name]['steps'] if 'make' not in st]
             st = runs[int(f[3]) - 1]
-            c['steps'].append({'argv': argv_of(st), 'order': st.get('order', 'kept'), 'exit': int(f[4]),
+            c['steps'].append({'argv': argv_of(st), 'order': st.get('order', 'kept'), 'errors': st.get('errors', 'kept'),
+                               'exit': int(f[4]),
                                'stdout': oracle.show(unhex(f[5])), 'stderr': oracle.show(unhex(f[6]))})
         elif kind == 'entry':
             tree, rel = f[3], oracle.show(unhex(f[4]))
