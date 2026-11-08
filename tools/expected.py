@@ -763,6 +763,16 @@ def hardening():
         step(['trash', X + '/secret'], 74, stderr="trash: cannot trash '%s/secret': cannot open '%s/secret': Permission denied; "
              "%s\n" % (X, X, LEFT)),
     ], trash_dirs(owner=u), {'secret': f('s\n', '0000', owner=u)})
+    s['perm-sticky-other'] = cap('perm-sticky-other', [
+        step(['trash', 'sticky/f'], 74, stderr="trash: cannot trash 'sticky/f': Operation not permitted\n"),
+    ], {**trash_dirs(owner=u), 'sticky': d('1777', owner='2000:2000'), 'sticky/f': f('f\n', owner='2000:2000')})
+    s['perm-trash-readonly'] = cap('perm-trash-readonly', [
+        step(['trash', 'a.txt'], 74, stderr="trash: cannot trash 'a.txt': cannot make its info file "
+             "'%s/Trash/info/a.txt.trashinfo': Permission denied\n" % H),
+    ], {'Trash': d('0700', owner=u), 'Trash/files': d('0700', owner=u), 'Trash/info': d('0500', owner=u),
+        'a.txt': f('a\n', owner=u)})
+    s['perm-empty-readonly-tree'] = cap('perm-empty-readonly-tree', [step(['trash', 'd']), step(['trash-empty'])],
+                                        trash_dirs(owner=u))
     small = 'the home volume has too little free space to copy it'
     s['space-full-trash'] = cap('space-full-trash', [
         step(['trash', 'fill']),

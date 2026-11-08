@@ -8862,7 +8862,8 @@
       "sticky/f"
      ]
     }
-   ]
+   ],
+   "diverge": "refused with the host's reason, as rm words it, and nothing made outside ~/Trash; the oracle's long form names each volume trash it tried, and it leaves one made at the top of the home's file system"
   },
   {
    "name": "perm-sticky-own",
@@ -9025,7 +9026,8 @@
       "a.txt"
      ]
     }
-   ]
+   ],
+   "diverge": "an info file that cannot be made in ~/Trash is refused by name, since there is one trash; the oracle falls back to the volume trash at the top of the home's file system"
   },
   {
    "name": "perm-restore-readonly-parent",
@@ -9113,7 +9115,8 @@
      ],
      "stdin": ""
     }
-   ]
+   ],
+   "diverge": "the user's own read-only directories inside an item are opened up through their handles, so the item goes as asked; the oracle (and rm) cannot remove the tree, and the oracle removes its info file anyway, leaving the item with none"
   },
   {
    "name": "space-full-trash",
