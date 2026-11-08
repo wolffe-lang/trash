@@ -1,0 +1,438 @@
+{
+ "cuts": [
+  {
+   "after": "whole",
+   "list": {
+    "exit": 0,
+    "stderr": "trash-list: '/tmp/trash-rows/home/Trash/files/stray' has no info file, so where it came from is not known\n",
+    "stdout": "<in-window> /tmp/trash-rows/home/a.txt\n<in-window> /tmp/trash-rows/home/d\n"
+   },
+   "rerun": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": ""
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": ""
+   },
+   "step": "remove /tmp/trash-rows/home/Trash/files/a.txt",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/a.txt": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/files/d": {
+      "mode": "0755",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/d/f": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/files/stray": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "cbc80bb5c0c0f8944bf73b3a429505ac5cde16644978bc9a1e74c5755f8ca556",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/a.txt.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/a.txt\nDeletionDate=<in-window>\n",
+      "type": "file"
+     },
+     "Trash/info/d.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/d\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {}
+   }
+  },
+  {
+   "after": "whole",
+   "list": {
+    "exit": 0,
+    "stderr": "trash-list: '/tmp/trash-rows/home/Trash/files/stray' has no info file, so where it came from is not known\ntrash-list: '/tmp/trash-rows/home/Trash/info/a.txt.trashinfo' names an item that is not in the trash\n",
+    "stdout": "<in-window> /tmp/trash-rows/home/a.txt\n<in-window> /tmp/trash-rows/home/d\n"
+   },
+   "rerun": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": ""
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": ""
+   },
+   "step": "remove /tmp/trash-rows/home/Trash/files/d/f",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/d": {
+      "mode": "0755",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/d/f": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/files/stray": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "cbc80bb5c0c0f8944bf73b3a429505ac5cde16644978bc9a1e74c5755f8ca556",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/a.txt.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/a.txt\nDeletionDate=<in-window>\n",
+      "type": "file"
+     },
+     "Trash/info/d.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/d\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {}
+   }
+  },
+  {
+   "after": "whole",
+   "list": {
+    "exit": 0,
+    "stderr": "trash-list: '/tmp/trash-rows/home/Trash/files/stray' has no info file, so where it came from is not known\ntrash-list: '/tmp/trash-rows/home/Trash/info/a.txt.trashinfo' names an item that is not in the trash\n",
+    "stdout": "<in-window> /tmp/trash-rows/home/a.txt\n<in-window> /tmp/trash-rows/home/d\n"
+   },
+   "rerun": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": ""
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": ""
+   },
+   "step": "remove /tmp/trash-rows/home/Trash/files/d",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/d": {
+      "mode": "0755",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/stray": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "cbc80bb5c0c0f8944bf73b3a429505ac5cde16644978bc9a1e74c5755f8ca556",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/a.txt.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/a.txt\nDeletionDate=<in-window>\n",
+      "type": "file"
+     },
+     "Trash/info/d.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/d\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {}
+   }
+  },
+  {
+   "after": "whole",
+   "list": {
+    "exit": 0,
+    "stderr": "trash-list: '/tmp/trash-rows/home/Trash/files/stray' has no info file, so where it came from is not known\ntrash-list: '/tmp/trash-rows/home/Trash/info/a.txt.trashinfo' names an item that is not in the trash\ntrash-list: '/tmp/trash-rows/home/Trash/info/d.trashinfo' names an item that is not in the trash\n",
+    "stdout": "<in-window> /tmp/trash-rows/home/a.txt\n<in-window> /tmp/trash-rows/home/d\n"
+   },
+   "rerun": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": ""
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": ""
+   },
+   "step": "remove /tmp/trash-rows/home/Trash/files/stray",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/stray": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "cbc80bb5c0c0f8944bf73b3a429505ac5cde16644978bc9a1e74c5755f8ca556",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/a.txt.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/a.txt\nDeletionDate=<in-window>\n",
+      "type": "file"
+     },
+     "Trash/info/d.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/d\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {}
+   }
+  },
+  {
+   "after": "whole",
+   "list": {
+    "exit": 0,
+    "stderr": "trash-list: '/tmp/trash-rows/home/Trash/info/a.txt.trashinfo' names an item that is not in the trash\ntrash-list: '/tmp/trash-rows/home/Trash/info/d.trashinfo' names an item that is not in the trash\n",
+    "stdout": "<in-window> /tmp/trash-rows/home/a.txt\n<in-window> /tmp/trash-rows/home/d\n"
+   },
+   "rerun": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": ""
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": ""
+   },
+   "step": "remove /tmp/trash-rows/home/Trash/info/a.txt.trashinfo",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/a.txt.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/a.txt\nDeletionDate=<in-window>\n",
+      "type": "file"
+     },
+     "Trash/info/d.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/d\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {}
+   }
+  },
+  {
+   "after": "whole",
+   "list": {
+    "exit": 0,
+    "stderr": "trash-list: '/tmp/trash-rows/home/Trash/info/d.trashinfo' names an item that is not in the trash\n",
+    "stdout": "<in-window> /tmp/trash-rows/home/d\n"
+   },
+   "rerun": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": ""
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": ""
+   },
+   "step": "remove /tmp/trash-rows/home/Trash/info/d.trashinfo",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/d.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/tmp/trash-rows/home/d\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {}
+   }
+  }
+ ],
+ "row": "cut-empty",
+ "whole": {
+  "run": {
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  "trees": {
+   "home": {
+    "Trash": {
+     "mode": "0700",
+     "mtime": "<in-window>",
+     "owner": "0:0",
+     "type": "dir"
+    },
+    "Trash/files": {
+     "mode": "0700",
+     "mtime": "<in-window>",
+     "owner": "0:0",
+     "type": "dir"
+    },
+    "Trash/info": {
+     "mode": "0700",
+     "mtime": "<in-window>",
+     "owner": "0:0",
+     "type": "dir"
+    }
+   },
+   "xdev": {}
+  }
+ }
+}

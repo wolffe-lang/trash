@@ -22,6 +22,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'tests/oracle/expected'
 OUT_PAX = ROOT / 'tests/pax/expected'
+OUT_CUTS = ROOT / 'tests/cuts/expected'
 FIX = 1700000000
 W = '<in-window>'
 H = '/tmp/trash-rows/home'
@@ -191,6 +192,7 @@ def statements():
                     "name such a path yet (wolf-lang#687); %s\n" % (X, X, LEFT)),
     ], trash_dirs(), {'d': d(), 'd/a': f('a\n'), 'd/b\\xffc': f('b\n'), 'd/sub': d(), 'd/sub/z': f('z\n')})
     s.update(companions())
+    s.update(hardening())
     return s
 
 
@@ -514,6 +516,272 @@ def pax_companions():
     return s
 
 
+T = H + '/Trash'
+PENDING = '[Trash Info]\n# being copied into the trash\n'
+NO_ITEM = "trash-list: '%s/info/%%s.trashinfo' names an item that is not in the trash\n" % T
+NO_INFO = "trash-list: '%s/files/%%s' has no info file, so where it came from is not known\n" % T
+UNPARSED = 'Parse Error: %s/info/%%s.trashinfo: Unable to parse Path.\n' % T
+
+
+def ran(exit=0, stdout='', stderr=''):
+    return {'exit': exit, 'stdout': stdout, 'stderr': stderr}
+
+
+def lines(*xs):
+    """A listing's lines as the cut harness holds them: sorted."""
+    return ''.join(sorted(xs))
+
+
+def cut(step_name, trees, listing, rerun, after='whole', run=None):
+    return {'step': step_name, 'run': run or ran(-9), 'trees': trees, 'list': listing, 'rerun': rerun, 'after': after}
+
+
+def cut_cap(row, whole_run, whole_trees, cuts):
+    return {'row': row, 'whole': {'run': whole_run, 'trees': whole_trees}, 'cuts': cuts}
+
+
+def homes(home, xdev=None):
+    return {'home': home, 'xdev': xdev or {}}
+
+
+def cut_statements():
+    """The cut rows (tests/cuts/rows.json): the state each cut leaves, what
+    the listing names, and what the rerun does. Written from T3's design
+    (notes/tb03-hardening-and-the-image.md) before the hook and the
+    hardening existed."""
+    s = {}
+    fixdirs = {'Trash': d('0700'), 'Trash/files': d('0700'), 'Trash/info': d('0700')}
+    empty_info = {'type': 'file', 'mode': '0600', 'mtime': W, 'owner': '0:0', 'text': ''}
+    pending = {'type': 'file', 'mode': '0600', 'mtime': W, 'owner': '0:0', 'text': PENDING}
+
+    # trash a.txt, with no trash yet.
+    a = {'a.txt': f('a\n')}
+    ainfo = 'Trash/info/a.txt.trashinfo'
+    full_a = {**trash_dirs(), ainfo: info(H + '/a.txt')}
+    whole = {**trash_dirs(), 'Trash/files/a.txt': f('a\n'), ainfo: info(H + '/a.txt')}
+    quiet = ran()
+    listed_a = ran(stdout='%s %s/a.txt\n' % (W, H), stderr=NO_ITEM % 'a.txt')
+    s['cut-put-file'] = cut_cap('cut-put-file', quiet, homes(whole), [
+        cut('make ' + T, homes(a), quiet, quiet),
+        cut('make %s/files' % T, homes({**a, 'Trash': d('0700', W)}), quiet, quiet),
+        cut('make %s/info' % T, homes({**a, 'Trash': d('0700', W), 'Trash/files': d('0700', W)}), quiet, quiet),
+        cut('reserve %s/info/a.txt.trashinfo' % T, homes({**a, **trash_dirs()}), quiet, quiet),
+        cut('write %s/info/a.txt.trashinfo' % T, homes({**a, **trash_dirs(), ainfo: empty_info}),
+            ran(stderr=UNPARSED % 'a.txt'), quiet),
+        cut('sync %s/info/a.txt.trashinfo' % T, homes({**a, **full_a}), listed_a, quiet),
+        cut('sync %s/info' % T, homes({**a, **full_a}), listed_a, quiet),
+        cut('rename %s/a.txt to %s/files/a.txt' % (H, T), homes({**a, **full_a}), listed_a, quiet),
+    ])
+
+    # trash d, a tree, into a trash that is there.
+    tree = {'d': d(), 'd/f': f('f\n'), 'd/g': d(), 'd/g/h': f('h\n')}
+    dinfo = 'Trash/info/d.trashinfo'
+    there = {'Trash': d('0700'), 'Trash/files': d('0700'), 'Trash/info': d('0700', W)}
+    listed_d = ran(stdout='%s %s/d\n' % (W, H), stderr=NO_ITEM % 'd')
+    s['cut-put-dir'] = cut_cap('cut-put-dir', quiet, homes({
+        'Trash': d('0700'), 'Trash/files': d('0700', W), 'Trash/info': d('0700', W),
+        **{'Trash/files/' + k: v for k, v in tree.items()}, dinfo: info(H + '/d')}), [
+        cut('reserve %s/info/d.trashinfo' % T, homes({**fixdirs, **tree}), quiet, quiet),
+        cut('write %s/info/d.trashinfo' % T, homes({**there, **tree, dinfo: empty_info}), ran(stderr=UNPARSED % 'd'), quiet),
+        cut('sync %s/info/d.trashinfo' % T, homes({**there, **tree, dinfo: info(H + '/d')}), listed_d, quiet),
+        cut('sync %s/info' % T, homes({**there, **tree, dinfo: info(H + '/d')}), listed_d, quiet),
+        cut('rename %s/d to %s/files/d' % (H, T), homes({**there, **tree, dinfo: info(H + '/d')}), listed_d, quiet),
+    ])
+
+    # trash /xdev/…/t, a tree on another file system: copied, verified,
+    # finished, synced, its info file written whole, then the source removed.
+    src = {'t': d('0750'), 't/f': f('f\n', '0640'), 't/l': link('f')}
+    tinfo = 'Trash/info/t.trashinfo'
+    tpath = X + '/t'
+    listed_t_orphan = ran(stdout='%s %s\n' % (W, tpath), stderr=NO_ITEM % 't')
+    listed_t = ran(stdout='%s %s\n' % (W, tpath))
+    unparsed_t = ran(stderr=UNPARSED % 't')
+    finished = {'Trash/files/t': d('0750'), 'Trash/files/t/f': f('f\n', '0640'), 'Trash/files/t/l': link('f')}
+    whole_t = {'Trash': d('0700'), 'Trash/files': d('0700', W), 'Trash/info': d('0700', W), **finished,
+               tinfo: info(tpath)}
+    filesw = {'Trash': d('0700'), 'Trash/files': d('0700', W), 'Trash/info': d('0700', W)}
+
+    def ht(home, xdev=src):
+        return homes(home, xdev)
+
+    def copy_t_1(xdev_left):
+        """The rerun after the source was partly removed: what is left
+        trashed again, as t_1, beside the whole copy."""
+        out = {**whole_t, 'Trash/info/t_1.trashinfo': info(tpath)}
+        for rel, e in xdev_left.items():
+            out['Trash/files/t_1' + rel[1:]] = e
+        return homes(out)
+    t_reserved = {**there, tinfo: empty_info}
+    t_full = {**there, tinfo: info(tpath)}
+    t_pend = {**there, tinfo: pending}
+    s['cut-put-other-fs'] = cut_cap('cut-put-other-fs', quiet, homes(whole_t), [
+        cut('reserve %s/info/t.trashinfo' % T, ht(fixdirs), quiet, quiet),
+        cut('write %s/info/t.trashinfo' % T, ht(t_reserved), unparsed_t, quiet),
+        cut('sync %s/info/t.trashinfo' % T, ht(t_full), listed_t_orphan, quiet),
+        cut('sync %s/info' % T, ht(t_full), listed_t_orphan, quiet),
+        cut('rename %s to %s/files/t' % (tpath, T), ht(t_full), listed_t_orphan, quiet),
+        cut('mark %s/info/t.trashinfo copying' % T, ht(t_full), listed_t_orphan, quiet),
+        cut('sync %s/info/t.trashinfo' % T, ht(t_pend), unparsed_t, quiet),
+        cut('make %s/files/t' % T, ht(t_pend), unparsed_t, quiet),
+        cut('write %s/files/t/f' % T, ht({**filesw, tinfo: pending, 'Trash/files/t': d('0700', W)}), unparsed_t, quiet),
+        cut('link %s/files/t/l' % T, ht({**filesw, tinfo: pending, 'Trash/files/t': d('0700', W),
+                                          'Trash/files/t/f': f('f\n', '0600', W)}), unparsed_t, quiet),
+        cut('finish %s/files/t/f' % T, ht({**filesw, tinfo: pending, 'Trash/files/t': d('0700', W),
+                                            'Trash/files/t/f': f('f\n', '0600', W), 'Trash/files/t/l': link('f', W)}),
+            unparsed_t, quiet),
+        cut('finish %s/files/t/l' % T, ht({**filesw, tinfo: pending, 'Trash/files/t': d('0700', W),
+                                            'Trash/files/t/f': f('f\n', '0640'), 'Trash/files/t/l': link('f', W)}),
+            unparsed_t, quiet),
+        cut('finish %s/files/t' % T, ht({**filesw, tinfo: pending, 'Trash/files/t': d('0700', W),
+                                          'Trash/files/t/f': f('f\n', '0640'), 'Trash/files/t/l': link('f')}),
+            unparsed_t, quiet),
+        cut('sync %s/files/t' % T, ht({**filesw, tinfo: pending, **finished}), unparsed_t, quiet),
+        cut('write %s/info/t.trashinfo' % T, ht({**filesw, tinfo: pending, **finished}), unparsed_t, quiet),
+        cut('sync %s/info/t.trashinfo' % T, ht(whole_t), listed_t, quiet, copy_t_1(src)),
+        cut('remove %s/f' % tpath, ht(whole_t), listed_t, quiet, copy_t_1(src)),
+        cut('remove %s/l' % tpath, ht(whole_t, {'t': d('0750', W), 't/l': link('f')}), listed_t, quiet,
+            copy_t_1({'t': d('0750', W), 't/l': link('f')})),
+        cut('remove %s' % tpath, ht(whole_t, {'t': d('0750', W)}), listed_t, quiet, copy_t_1({'t': d('0750', W)})),
+    ])
+
+    # trash-restore of a file: linked back, the trashed name removed, then the info file.
+    prompt_a = listed(0, W, H + '/a.txt') + PROMPT % 0
+    shown = ran(-9, prompt_a)
+    in_trash = {**trash_dirs(), 'Trash/files/a.txt': f('a\n'), ainfo: info(H + '/a.txt')}
+    back = {**trash_dirs(), 'a.txt': f('a\n')}
+    linked = {**in_trash, 'a.txt': f('a\n')}
+    left_info = {**trash_dirs(), ainfo: info(H + '/a.txt'), 'a.txt': f('a\n')}
+    refused_a = ran(1, prompt_a, 'Refusing to overwrite existing file "a.txt".\n')
+    s['cut-restore-file'] = cut_cap('cut-restore-file', ran(0, prompt_a), homes(back), [
+        cut('link %s/files/a.txt to %s/a.txt' % (T, H), homes(in_trash), ran(stdout='%s %s/a.txt\n' % (W, H)),
+            ran(0, prompt_a), run=shown),
+        cut('sync ' + H, homes(linked), ran(stdout='%s %s/a.txt\n' % (W, H)), ran(0, prompt_a), run=shown),
+        cut('remove %s/files/a.txt' % T, homes(linked), ran(stdout='%s %s/a.txt\n' % (W, H)), ran(0, prompt_a), run=shown),
+        cut('remove %s/info/a.txt.trashinfo' % T, homes(left_info), listed_a, refused_a, homes(left_info), run=shown),
+    ])
+
+    # trash-restore of a directory: its placeholder made, renamed onto, then the info file.
+    prompt_d = listed(0, W, H + '/d') + PROMPT % 0
+    shown_d = ran(-9, prompt_d)
+    dtree = {'d': d(), 'd/f': f('f\n')}
+    d_in = {**trash_dirs(), 'Trash/files/d': d(), 'Trash/files/d/f': f('f\n'), dinfo: info(H + '/d')}
+    placeholder = {**d_in, 'd': d('0700', W)}
+    d_back_info = {**trash_dirs(), dinfo: info(H + '/d'), **dtree}
+    refused_d = ran(1, prompt_d, 'Refusing to overwrite existing file "d".\n')
+    s['cut-restore-dir'] = cut_cap('cut-restore-dir', ran(0, prompt_d), homes({**trash_dirs(), **dtree}), [
+        cut('make %s/d' % H, homes(d_in), ran(stdout='%s %s/d\n' % (W, H)), ran(0, prompt_d), run=shown_d),
+        cut('rename %s/files/d to %s/d' % (T, H), homes(placeholder), ran(stdout='%s %s/d\n' % (W, H)), refused_d,
+            homes(placeholder), run=shown_d),
+        cut('sync ' + H, homes(d_back_info), listed_d, refused_d, homes(d_back_info), run=shown_d),
+        cut('remove %s/info/d.trashinfo' % T, homes(d_back_info), listed_d, refused_d, homes(d_back_info), run=shown_d),
+    ])
+
+    # trash-restore of a file trashed from another file system: copied back,
+    # finished, synced, the trashed item removed, then the info file.
+    xpath = X + '/x'
+    prompt_x = listed(0, W, xpath) + PROMPT % 0
+    shown_x = ran(-9, prompt_x)
+    x_in = {**trash_dirs(), 'Trash/files/x': f('x\n'), 'Trash/info/x.trashinfo': info(xpath)}
+    x_left = {**trash_dirs(), 'Trash/info/x.trashinfo': info(xpath)}
+    refused_x = ran(1, prompt_x, 'Refusing to overwrite existing file "x".\n')
+    listed_x = ran(stdout='%s %s\n' % (W, xpath))
+    s['cut-restore-other-fs'] = cut_cap('cut-restore-other-fs', ran(0, prompt_x), homes(trash_dirs(), {'x': f('x\n')}), [
+        cut('write ' + xpath, homes(x_in), listed_x, ran(0, prompt_x), run=shown_x),
+        cut('finish ' + xpath, homes(x_in, {'x': f('x\n', '0600', W)}), listed_x, refused_x,
+            homes(x_in, {'x': f('x\n', '0600', W)}), run=shown_x),
+        cut('sync ' + xpath, homes(x_in, {'x': f('x\n')}), listed_x, refused_x, homes(x_in, {'x': f('x\n')}), run=shown_x),
+        cut('remove %s/files/x' % T, homes(x_in, {'x': f('x\n')}), listed_x, refused_x, homes(x_in, {'x': f('x\n')}),
+            run=shown_x),
+        cut('remove %s/info/x.trashinfo' % T, homes(x_left, {'x': f('x\n')}),
+            ran(stdout='%s %s\n' % (W, xpath), stderr=NO_ITEM % 'x'), refused_x, homes(x_left, {'x': f('x\n')}),
+            run=shown_x),
+    ])
+
+    # trash-rm '*.txt': each match's item, then its info file; keep.log stays.
+    items = {'Trash/files/a.txt': f('a\n'), 'Trash/files/d.txt': d(), 'Trash/files/d.txt/f': f('f\n'),
+             'Trash/files/keep.log': f('k\n')}
+    infos = {'Trash/info/a.txt.trashinfo': info(H + '/a.txt'), 'Trash/info/d.txt.trashinfo': info(H + '/d.txt'),
+             'Trash/info/keep.log.trashinfo': info(H + '/keep.log')}
+    keep = {**trash_dirs(), 'Trash/files/keep.log': f('k\n'), 'Trash/info/keep.log.trashinfo': info(H + '/keep.log')}
+    la, ld, lk = ('%s %s/%s\n' % (W, H, n) for n in ('a.txt', 'd.txt', 'keep.log'))
+    rm_tree = {**trash_dirs(), **items, **infos}
+
+    def less(tree, *gone, **changed):
+        out = {k: v for k, v in tree.items() if k not in gone}
+        for k, v in changed.items():
+            out[k.replace('__', '/').replace('_dot_', '.')] = v
+        return out
+    s1 = less(rm_tree, 'Trash/files/a.txt')
+    s2 = less(s1, 'Trash/info/a.txt.trashinfo')
+    s3 = {**less(s2, 'Trash/files/d.txt/f'), 'Trash/files/d.txt': d(mtime=W)}
+    s4 = less(s3, 'Trash/files/d.txt')
+    s['cut-rm'] = cut_cap('cut-rm', quiet, homes(keep), [
+        cut('remove %s/files/a.txt' % T, homes(rm_tree), ran(stdout=lines(la, ld, lk)), quiet),
+        cut('remove %s/info/a.txt.trashinfo' % T, homes(s1), ran(stdout=lines(la, ld, lk), stderr=NO_ITEM % 'a.txt'), quiet),
+        cut('remove %s/files/d.txt/f' % T, homes(s2), ran(stdout=lines(ld, lk)), quiet),
+        cut('remove %s/files/d.txt' % T, homes(s3), ran(stdout=lines(ld, lk)), quiet),
+        cut('remove %s/info/d.txt.trashinfo' % T, homes(s4), ran(stdout=lines(ld, lk), stderr=NO_ITEM % 'd.txt'), quiet),
+    ])
+
+    # trash-empty over a file, a tree and an item with no info file: each item,
+    # then the orphan, then each info file.
+    e0 = {**trash_dirs(), 'Trash/files/a.txt': f('a\n'), 'Trash/files/d': d(), 'Trash/files/d/f': f('f\n'),
+          'Trash/files/stray': f('s\n'), ainfo: info(H + '/a.txt'), dinfo: info(H + '/d')}
+    la, ldd = '%s %s/a.txt\n' % (W, H), '%s %s/d\n' % (W, H)
+    e1 = less(e0, 'Trash/files/a.txt')
+    e2 = {**less(e1, 'Trash/files/d/f'), 'Trash/files/d': d(mtime=W)}
+    e3 = less(e2, 'Trash/files/d')
+    e4 = less(e3, 'Trash/files/stray')
+    e5 = less(e4, ainfo)
+    s['cut-empty'] = cut_cap('cut-empty', quiet, homes(trash_dirs()), [
+        cut('remove %s/files/a.txt' % T, homes(e0), ran(stdout=lines(la, ldd), stderr=NO_INFO % 'stray'), quiet),
+        cut('remove %s/files/d/f' % T, homes(e1), ran(stdout=lines(la, ldd), stderr=lines(NO_INFO % 'stray', NO_ITEM % 'a.txt')),
+            quiet),
+        cut('remove %s/files/d' % T, homes(e2), ran(stdout=lines(la, ldd), stderr=lines(NO_INFO % 'stray', NO_ITEM % 'a.txt')),
+            quiet),
+        cut('remove %s/files/stray' % T, homes(e3),
+            ran(stdout=lines(la, ldd), stderr=lines(NO_INFO % 'stray', NO_ITEM % 'a.txt', NO_ITEM % 'd')), quiet),
+        cut('remove %s/info/a.txt.trashinfo' % T, homes(e4),
+            ran(stdout=lines(la, ldd), stderr=lines(NO_ITEM % 'a.txt', NO_ITEM % 'd')), quiet),
+        cut('remove %s/info/d.trashinfo' % T, homes(e5), ran(stdout=ldd, stderr=NO_ITEM % 'd'), quiet),
+    ])
+    return s
+
+
+def hardening():
+    """T3's oracle rows that depart from the oracle: the listing that names
+    both orphans (from the oracle's own goldens, its standard error added),
+    a file the copy cannot read, and the space rows."""
+    s = {}
+    for row, extra in (('list-orphans', [NO_ITEM % 'gone', NO_INFO % 'noinfo']),
+                       ('list-made', [NO_ITEM % 'orphan', NO_INFO % 'noinfo'])):
+        c = json.loads((ROOT / 'tests/oracle/golden' / (row + '.json')).read_text())
+        c['steps'][0]['stderr'] = ''.join(sorted(c['steps'][0]['stderr'].splitlines(True) + extra))
+        s[row] = c
+    u = '1000:1000'
+    s['perm-unreadable-other-fs'] = cap('perm-unreadable-other-fs', [
+        step(['trash', X + '/secret'], 74, stderr="trash: cannot trash '%s/secret': cannot open '%s/secret': Permission denied; "
+             "%s\n" % (X, X, LEFT)),
+    ], trash_dirs(owner=u), {'secret': f('s\n', '0000', owner=u)})
+    small = 'the home volume has too little free space to copy it'
+    s['space-full-trash'] = cap('space-full-trash', [
+        step(['trash', 'fill']),
+        step(['trash', X + '/big'], 74, stderr="trash: cannot trash '%s/big': %s\n" % (X, small)),
+        step(['trash-list'], stdout='%s %s/fill\n' % (W, SMALL_H)),
+        step(['trash-empty']),
+        step(['trash', X + '/big']),
+        step(['trash-list'], stdout='%s %s/big\n' % (W, X)),
+    ], {**trash_dirs(), 'Trash/files/big': f(big(1048576)), 'Trash/info/big.trashinfo': info(X + '/big')})
+    s['space-tree'] = cap('space-tree', [
+        step(['trash', X + '/t'], 74, stderr="trash: cannot trash '%s/t': %s\n" % (X, small)),
+    ], trash_dirs(), {'t': d(), **{'t/' + n: f(big(409600)) for n in 'abcdef'}})
+    return s
+
+
+def cut_rows():
+    return {r['name'] for r in json.loads((ROOT / 'tests/cuts/rows.json').read_text())['rows']}
+
+
 def rendered(c):
     return json.dumps(c, indent=1, sort_keys=True, ensure_ascii=False) + '\n'
 
@@ -531,7 +799,8 @@ def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else 'check'
     bad = 0
     total = 0
-    for s, want, out in ((statements(), diverging(), OUT), (pax_statements(), pax_rows(), OUT_PAX)):
+    for s, want, out in ((statements(), diverging(), OUT), (pax_statements(), pax_rows(), OUT_PAX),
+                         (cut_statements(), cut_rows(), OUT_CUTS)):
         rel = out.relative_to(ROOT)
         total += len(s)
         for name in sorted(want - set(s)):

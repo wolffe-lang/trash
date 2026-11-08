@@ -1,0 +1,94 @@
+{
+ "row": "space-tree",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/t"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '/xdev/trash-rows/t': the home volume has too little free space to copy it\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {
+   "t": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t/a": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "t/b": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "t/c": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "t/d": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "t/e": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   },
+   "t/f": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "31c7e2bfc7d7c4dca32efe3d76419e5865a128f0cc9a2bef09e19c717050c57f",
+    "size": 409600,
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

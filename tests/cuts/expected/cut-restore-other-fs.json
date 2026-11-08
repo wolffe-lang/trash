@@ -1,0 +1,533 @@
+{
+ "cuts": [
+  {
+   "after": "whole",
+   "list": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": "<in-window> /xdev/trash-rows/x\n"
+   },
+   "rerun": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "step": "write /xdev/trash-rows/x",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/x.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/xdev/trash-rows/x\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {}
+   }
+  },
+  {
+   "after": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/x.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/xdev/trash-rows/x\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {
+     "x": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     }
+    }
+   },
+   "list": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": "<in-window> /xdev/trash-rows/x\n"
+   },
+   "rerun": {
+    "exit": 1,
+    "stderr": "Refusing to overwrite existing file \"x\".\n",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "step": "finish /xdev/trash-rows/x",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/x.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/xdev/trash-rows/x\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {
+     "x": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     }
+    }
+   }
+  },
+  {
+   "after": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/x.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/xdev/trash-rows/x\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {
+     "x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     }
+    }
+   },
+   "list": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": "<in-window> /xdev/trash-rows/x\n"
+   },
+   "rerun": {
+    "exit": 1,
+    "stderr": "Refusing to overwrite existing file \"x\".\n",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "step": "sync /xdev/trash-rows/x",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/x.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/xdev/trash-rows/x\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {
+     "x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     }
+    }
+   }
+  },
+  {
+   "after": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/x.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/xdev/trash-rows/x\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {
+     "x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     }
+    }
+   },
+   "list": {
+    "exit": 0,
+    "stderr": "",
+    "stdout": "<in-window> /xdev/trash-rows/x\n"
+   },
+   "rerun": {
+    "exit": 1,
+    "stderr": "Refusing to overwrite existing file \"x\".\n",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "step": "remove /tmp/trash-rows/home/Trash/files/x",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files/x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/x.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/xdev/trash-rows/x\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {
+     "x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     }
+    }
+   }
+  },
+  {
+   "after": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/x.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/xdev/trash-rows/x\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {
+     "x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     }
+    }
+   },
+   "list": {
+    "exit": 0,
+    "stderr": "trash-list: '/tmp/trash-rows/home/Trash/info/x.trashinfo' names an item that is not in the trash\n",
+    "stdout": "<in-window> /xdev/trash-rows/x\n"
+   },
+   "rerun": {
+    "exit": 1,
+    "stderr": "Refusing to overwrite existing file \"x\".\n",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "run": {
+    "exit": -9,
+    "stderr": "",
+    "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+   },
+   "step": "remove /tmp/trash-rows/home/Trash/info/x.trashinfo",
+   "trees": {
+    "home": {
+     "Trash": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/files": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info": {
+      "mode": "0700",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "type": "dir"
+     },
+     "Trash/info/x.trashinfo": {
+      "mode": "0600",
+      "mtime": "<in-window>",
+      "owner": "0:0",
+      "text": "[Trash Info]\nPath=/xdev/trash-rows/x\nDeletionDate=<in-window>\n",
+      "type": "file"
+     }
+    },
+    "xdev": {
+     "x": {
+      "mode": "0644",
+      "mtime": 1700000000,
+      "owner": "0:0",
+      "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+      "size": 2,
+      "type": "file"
+     }
+    }
+   }
+  }
+ ],
+ "row": "cut-restore-other-fs",
+ "whole": {
+  "run": {
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /xdev/trash-rows/x\nWhat file to restore [0..0]: "
+  },
+  "trees": {
+   "home": {
+    "Trash": {
+     "mode": "0700",
+     "mtime": "<in-window>",
+     "owner": "0:0",
+     "type": "dir"
+    },
+    "Trash/files": {
+     "mode": "0700",
+     "mtime": "<in-window>",
+     "owner": "0:0",
+     "type": "dir"
+    },
+    "Trash/info": {
+     "mode": "0700",
+     "mtime": "<in-window>",
+     "owner": "0:0",
+     "type": "dir"
+    }
+   },
+   "xdev": {
+    "x": {
+     "mode": "0644",
+     "mtime": 1700000000,
+     "owner": "0:0",
+     "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+     "size": 2,
+     "type": "file"
+    }
+   }
+  }
+ }
+}

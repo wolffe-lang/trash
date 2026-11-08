@@ -1,0 +1,96 @@
+{
+ "row": "space-full-trash",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "fill"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/big"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '/xdev/trash-rows/big': the home volume has too little free space to copy it\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "<in-window> /small/trash-rows/home/fill\n"
+  },
+  {
+   "argv": [
+    "trash-empty"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/big"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "<in-window> /xdev/trash-rows/big\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/big": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "cc2cffa7208256c3d2e7fc44bc928e2b18c4390920e90bf087c97fcc4bec1f23",
+    "size": 1048576,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/big.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/xdev/trash-rows/big\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}
