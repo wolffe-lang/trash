@@ -5,7 +5,8 @@
 #   unit       what needs no toolchain and no oracle: the pins, the harnesses'
 #              own tests, the census expectations, the expected captures.
 #   candidate  inside the oracle image: the toolchain, the formatter, the
-#              commands built, and the commands held to the oracle's rows.
+#              commands built, their unit programs, and the commands held to
+#              the oracle's rows.
 #   linux      everything, inside the oracle image (tools/in-container runs it):
 #              the toolchain by digest, the formatter, the census built and run
 #              on Linux and held to census/expect.json, the static census and
@@ -38,18 +39,20 @@ step toolchain "${fetch[@]}"
 wolf=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["tools"]["wolf"]["root"]+"/wolf")' "$stage/manifest.json")
 step wolf-fmt "$wolf" fmt --check census src
 if [ "$mode" = candidate ]; then
-    rm -rf target/bin
+    rm -rf target/bin target/unit
     step trash-build python3 -I tools/build.py --wolf "$wolf" --out target/bin
+    step trash-unit python3 -I tools/unit.py --wolf "$wolf" --out target/unit
     step oracle-compare python3 -I tools/oracle.py compare --rows tests/oracle/rows.json --candidate target/bin
     exit 0
 fi
-rm -rf target/census target/census-bin target/census-static /xdev/census target/bin target/static
+rm -rf target/census target/census-bin target/census-static /xdev/census target/bin target/static target/unit
 step census-build python3 -I tools/census.py build --wolf "$wolf" --out target/census-bin
 step census-linux python3 -I tools/census.py run --bin target/census-bin --same target/census/same \
     --other /xdev/census --out target/census/linux.json
 step census-linux-verdict python3 -I tools/census.py verdict --record target/census/linux.json --platform linux
 step census-static python3 -I tools/census.py build --wolf "$wolf" --out target/census-static --static
 step trash-build python3 -I tools/build.py --wolf "$wolf" --out target/bin
+step trash-unit python3 -I tools/unit.py --wolf "$wolf" --out target/unit
 step trash-static python3 -I tools/build.py --wolf "$wolf" --out target/static --static
 step oracle-live-selftest python3 -I tools/oracle.py selftest --live --rows tests/oracle/rows.json
 step oracle-goldens python3 -I tools/oracle.py check --rows tests/oracle/rows.json --golden tests/oracle/golden
