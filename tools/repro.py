@@ -14,8 +14,16 @@ carries) is held to its other build by sha256:
   PASS repro-NAME SHA256 BYTES     the two builds are byte for byte the same
   FAIL repro-NAME a=SHA256 b=SHA256  they differ
 
-A binary whose bytes depend on where the tree is cannot be pinned by digest:
-PAX's builder and this repository's gate build at different paths. The digests
+Then the first copy is built again with an `ld.lld` on PATH that refuses to
+link (wolf asks the cc for lld whenever it finds one, and lld's bytes are not
+the system linker's), and held to its first build:
+
+  PASS repro-linker                 the five are the same, and lld never ran
+  FAIL repro-linker ...             the build reached lld, or a binary differs
+
+A binary whose bytes depend on where the tree is, or on what else is installed
+beside the toolchain, cannot be pinned by digest: PAX's builder and this
+repository's gate build at different paths, in different images. The digests
 the row prints are the gate's, the ones a pin quotes.
 """
 import argparse
@@ -77,8 +85,30 @@ def cmd_run(a):
             return 1
     lines, bad = verdicts(trees[0] / 'target/static/stripped', trees[1] / 'target/static/stripped')
     print('\n'.join(lines))
+    bad += linker(trees[0], wolf, out / 'lld')
     print('SUMMARY repro commands=%d failed=%d' % (len(NAMES), bad))
     return 1 if bad else 0
+
+
+def linker(tree, wolf, stub):
+    """The first copy built again with an ld.lld on PATH that refuses to link."""
+    stub.mkdir(parents=True)
+    (stub / 'ld.lld').write_text('#!/bin/sh\necho "ld.lld: this build must not link with lld" >&2\nexit 1\n')
+    (stub / 'ld.lld').chmod(0o755)
+    env = dict(os.environ)
+    env['PATH'] = str(stub) + os.pathsep + env['PATH']
+    r = subprocess.run([sys.executable, '-I', 'tools/build.py', '--wolf', wolf, '--out', 'target/static-lld',
+                        '--static'], cwd=tree, capture_output=True, text=True, env=env)
+    print(''.join('  ' + line for line in r.stdout.splitlines(True)), end='')
+    if r.returncode != 0:
+        print('FAIL repro-linker the build with an ld.lld on PATH exited %d' % r.returncode)
+        return 1
+    lines, bad = verdicts(tree / 'target/static/stripped', tree / 'target/static-lld/stripped')
+    if bad:
+        print('\n'.join('FAIL repro-linker ' + l[len('FAIL repro-'):] for l in lines if l.startswith('FAIL ')))
+        return 1
+    print('PASS repro-linker')
+    return 0
 
 
 def cmd_selftest(a):
