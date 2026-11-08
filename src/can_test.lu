@@ -3,7 +3,9 @@
 //! The pure parts of `can`, by name: words in messages, paths read
 //! lexically, `Path=`'s encoding, collision names and their shortening, the
 //! info text, the deletion date, and the argument parser on the shapes the
-//! oracle answered (tests/oracle/golden). Each check prints `PASS row` or
+//! oracle answered (tests/oracle/golden), and the companions' pure parts:
+//! info files read, dates read and cut, patterns matched, the companions'
+//! command lines and restore's answers. Each check prints `PASS row` or
 //! `FAIL row got … want …`; tests/unit-rows.json lists the rows.
 
 use can
@@ -290,6 +292,291 @@ fn arg_rows(mut t: Tally) {
     check(mut t, "args-space", parsed("x", no), "{none} ops=[x] err=")
 }
 
+fn shown_ints(xs: List[int]) -> str {
+    var out = ""
+    for x in xs {
+        out += if out.len == 0 then "{x}" else ",{x}"
+    }
+    "[{out}]"
+}
+
+fn bstr(s: str) -> List[byte] {
+    can.bytes_of(s)
+}
+
+fn info_rows(mut t: Tally) {
+    check(mut t, "decode-space", can.shown(can.decode(bstr("a%20b"))), "a b")
+    check(mut t, "decode-lower", can.shown(can.decode(bstr("lower%e9"))), "lower\\xe9")
+    check(mut t, "decode-slash-pct", can.shown(can.decode(bstr("a%2Fb%25"))), "a/b%")
+    check(mut t, "decode-not-hex", can.shown(can.decode(bstr("zz%zz trail%"))), "zz%zz trail%")
+    check(mut t, "decode-cut", can.shown(can.decode(bstr("half%4"))), "half%4")
+    check(mut t, "decode-plus", can.shown(can.decode(bstr("a+b"))), "a+b")
+    var parts = ""
+    for line in can.lines_of(bstr("a\r\nb\rc\nd")) {
+        parts += "[{can.shown(line)}]"
+    }
+    check(mut t, "lines-ends", parts, "[a][b][c][d]")
+    let (h1, p1, d1) = can.parse_info(
+        bstr("[Trash Info]\nPath=/a\nPath=/b\nDeletionDate=2020-01-02T03:04:05\nDeletionDate=x\n"),
+    )
+    check(mut t, "info-firsts", "{h1} {can.shown(p1)} {d1}", "true /a 2020-01-02T03:04:05")
+    let (h2, _, d2) = can.parse_info(bstr("[Trash Info]\nDeletionDate=2020-01-02T03:04:05\n"))
+    check(mut t, "info-no-path", "{h2} {d2}", "false 2020-01-02T03:04:05")
+    let (h3, p3, d3) = can.parse_info(bstr("Path=docs/rel\r\nDeletionDate=garbage\r\n"))
+    check(mut t, "info-relative-crlf", "{h3} {can.shown(p3)} [{d3}]", "true /docs/rel []")
+    let (h4, _, _) = can.parse_info(List[byte]())
+    check(mut t, "info-empty", "{h4}", "false")
+}
+
+fn date_shape_rows(mut t: Tally) {
+    check(mut t, "date-padded", can.read_date(bstr("2020-1-2T3:4:5")), "2020-01-02T03:04:05")
+    check(mut t, "date-lower-t", can.read_date(bstr("2020-01-02t03:04:05")), "2020-01-02T03:04:05")
+    check(
+        mut t,
+        "date-space-day",
+        can.read_date(bstr("2020-01- 2T03:04:05")),
+        "2020-01-02T03:04:05",
+    )
+    check(mut t, "date-year-999", can.read_date(bstr("0999-01-01T00:00:00")), "0999-01-01T00:00:00")
+    check(mut t, "date-year-0", can.read_date(bstr("0000-01-01T00:00:00")), "")
+    check(mut t, "date-year-5", can.read_date(bstr("20201-01-01T00:00:00")), "")
+    check(mut t, "date-month-13", can.read_date(bstr("2020-13-01T00:00:00")), "")
+    check(mut t, "date-leap", can.read_date(bstr("2020-02-29T00:00:00")), "2020-02-29T00:00:00")
+    check(mut t, "date-not-leap", can.read_date(bstr("2021-02-29T00:00:00")), "")
+    check(mut t, "date-hour-24", can.read_date(bstr("2020-01-02T24:00:00")), "")
+    check(mut t, "date-second-60", can.read_date(bstr("2020-01-02T03:04:60")), "")
+    check(mut t, "date-leading-space", can.read_date(bstr(" 2020-01-02T03:04:05")), "")
+    check(mut t, "date-trailing", can.read_date(bstr("2020-01-02T03:04:05Z")), "")
+    check(mut t, "date-fraction", can.read_date(bstr("2020-01-02T03:04:05.123")), "")
+    check(mut t, "date-empty", can.read_date(List[byte]()), "")
+    check(mut t, "listed-date", can.listed_date("2020-01-02T03:04:05"), "2020-01-02 03:04:05")
+    check(mut t, "listed-no-date", can.listed_date(""), "????-??-?? ??:??:??")
+}
+
+fn civil_rows(mut t: Tally) {
+    check(mut t, "civil-epoch", "{can.days_from_civil(1970, 1, 1)}", "0")
+    check(
+        mut t,
+        "civil-leap-day",
+        "{can.days_from_civil(2000, 3, 1) - can.days_from_civil(2000, 2, 28)}",
+        "2",
+    )
+    var trips = ""
+    for z in [-1000000, -1, 0, 59, 10957, 2932896] {
+        let (y, m, d) = can.civil_from_days(z)
+        trips += if can.days_from_civil(y, m, d) == z then "y" else "n"
+    }
+    check(mut t, "civil-round-trip", trips, "yyyyyy")
+    let (y0, m0, d0) = can.civil_from_days(-1)
+    check(mut t, "civil-before-epoch", "{y0}-{m0}-{d0}", "1969-12-31")
+    env_set("TZ", "UTC0") else |_| {}
+    check(mut t, "cutoff-utc", can.cutoff(864000, 1), "1970-01-10T00:00:00")
+    check(mut t, "cutoff-zero", can.cutoff(864000, 0), "1970-01-11T00:00:00")
+    check(mut t, "cutoff-negative", can.cutoff(864000, -1), "1970-01-12T00:00:00")
+    check(mut t, "cutoff-far", can.cutoff(864000, 10000000), "0000-00-00T00:00:00")
+    env_set("TZ", "CET-1CEST,M3.5.0,M10.5.0/3") else |_| {}
+    check(mut t, "cutoff-summer-time", can.cutoff(1794139200, 180), "2026-05-12T13:00:00")
+    env_set("TZ", "UTC0") else |_| {}
+    check(
+        mut t,
+        "older-before",
+        "{can.older("2020-01-01T00:00:00", "2021-01-01T00:00:00")}",
+        "true",
+    )
+    check(mut t, "older-at", "{can.older("2021-01-01T00:00:00", "2021-01-01T00:00:00")}", "true")
+    check(
+        mut t,
+        "older-after",
+        "{can.older("2021-01-01T00:00:01", "2021-01-01T00:00:00")}",
+        "false",
+    )
+    check(mut t, "older-no-date", "{can.older("", "2021-01-01T00:00:00")}", "false")
+}
+
+fn takes(pattern: str, path: str) -> str {
+    "{can.takes(bstr(pattern), bstr(path))}"
+}
+
+fn glob_rows(mut t: Tally) {
+    check(mut t, "glob-star", takes("*.txt", "/h/a.txt"), "true")
+    check(mut t, "glob-star-no", takes("*.txt", "/h/c.log"), "false")
+    check(mut t, "glob-question", takes("?.txt", "/h/ab.txt"), "false")
+    check(mut t, "glob-set", takes("[ab].txt", "/h/b.txt"), "true")
+    check(mut t, "glob-negated", takes("[!a].txt", "/h/a.txt"), "false")
+    check(mut t, "glob-range", takes("[a-c]x", "/h/bx"), "true")
+    check(mut t, "glob-range-reversed", takes("[c-a]x", "/h/bx"), "false")
+    check(mut t, "glob-bracket-first", takes("[]]", "/h/]"), "true")
+    check(mut t, "glob-unclosed", takes("[a", "/h/[a"), "true")
+    check(mut t, "glob-no-escape", takes("a\\*", "/h/a\\x"), "true")
+    check(mut t, "glob-basename", takes("a.txt", "/h/sub/a.txt"), "true")
+    check(mut t, "glob-full-path", takes("/h/*/a.txt", "/h/s/d/a.txt"), "true")
+    check(mut t, "glob-full-path-no", takes("/h/*/a.txt", "/h/a.txt"), "false")
+    check(mut t, "glob-utf8", takes("?.txt", "/h/é.txt"), "true")
+    check(mut t, "glob-star-backtrack", takes("*a*b", "/h/xaybzb"), "true")
+}
+
+fn int_text(s: str) -> str {
+    let (ok, n) = can.read_int(bstr(s))
+    if ok then "{n}" else "no"
+}
+
+fn int_rows(mut t: Tally) {
+    check(mut t, "int-plain", int_text("12"), "12")
+    check(mut t, "int-spaces", int_text(" 7 "), "7")
+    check(mut t, "int-plus", int_text("+1"), "1")
+    check(mut t, "int-minus", int_text("-1"), "-1")
+    check(mut t, "int-underscore", int_text("1_0"), "10")
+    check(mut t, "int-two-underscores", int_text("1__0"), "no")
+    check(mut t, "int-fraction", int_text("1.5"), "no")
+    check(mut t, "int-empty", int_text(""), "no")
+    check(mut t, "int-blank", int_text("   "), "no")
+}
+
+fn line_text(l: can.Line) -> str {
+    var ops = ""
+    for o in l.operands {
+        ops += "[{can.shown(o)}]"
+    }
+    "h={l.help} v={l.version} ask={l.ask} verbose={l.verbose} dry={l.dry_run} sort={l.sort} ops={ops} err={l.error}"
+}
+
+fn opts_rows(mut t: Tally) {
+    let none = "h=false v=false ask=0 verbose=false dry=false"
+    check(
+        mut t,
+        "opts-unknown",
+        line_text(can.read_args(words("-x"), can.list_opts(), 0)),
+        "{none} sort=date ops= err=unrecognized arguments: -x",
+    )
+    check(
+        mut t,
+        "opts-extra",
+        line_text(can.read_args(words("a b"), can.list_opts(), 0)),
+        "{none} sort=date ops= err=unrecognized arguments: a b",
+    )
+    check(
+        mut t,
+        "opts-sort-equals",
+        line_text(can.read_args(words("--sort=path"), can.restore_opts(), 1)),
+        "{none} sort=path ops= err=",
+    )
+    check(
+        mut t,
+        "opts-sort-next",
+        line_text(can.read_args(words("--sort none p"), can.restore_opts(), 1)),
+        "{none} sort=none ops=[p] err=",
+    )
+    check(
+        mut t,
+        "opts-sort-prefix",
+        line_text(can.read_args(words("--so path"), can.restore_opts(), 1)),
+        "{none} sort=path ops= err=",
+    )
+    check(
+        mut t,
+        "opts-sort-bad",
+        line_text(can.read_args(words("--sort bogus"), can.restore_opts(), 1)),
+        "{none} sort=date ops= err=argument --sort: invalid choice: 'bogus' (choose from 'date', 'path', 'none')",
+    )
+    check(
+        mut t,
+        "opts-sort-missing",
+        line_text(can.read_args(words("--sort"), can.restore_opts(), 1)),
+        "{none} sort=date ops= err=argument --sort: expected one argument",
+    )
+    check(
+        mut t,
+        "opts-last-f",
+        line_text(can.read_args(words("-i -f"), can.empty_opts(), 1)),
+        "h=false v=false ask=2 verbose=false dry=false sort=date ops= err=",
+    )
+    check(
+        mut t,
+        "opts-last-i",
+        line_text(can.read_args(words("-fi"), can.empty_opts(), 1)),
+        "h=false v=false ask=1 verbose=false dry=false sort=date ops= err=",
+    )
+    check(
+        mut t,
+        "opts-negative",
+        line_text(can.read_args(words("-1"), can.empty_opts(), 1)),
+        "{none} sort=date ops=[-1] err=",
+    )
+    check(
+        mut t,
+        "opts-dashdash",
+        line_text(can.read_args(words("-- -x"), can.empty_opts(), 1)),
+        "{none} sort=date ops=[-x] err=",
+    )
+    check(
+        mut t,
+        "opts-help-wins",
+        line_text(can.read_args(words("-x --help"), can.list_opts(), 0)),
+        "h=true v=false ask=0 verbose=false dry=false sort=date ops= err=",
+    )
+    check(
+        mut t,
+        "opts-explicit",
+        line_text(can.read_args(words("--help=1"), can.list_opts(), 0)),
+        "{none} sort=date ops= err=argument -h/--help: ignored explicit argument '1'",
+    )
+    check(
+        mut t,
+        "opts-cluster-unknown",
+        line_text(can.read_args(words("-vxq"), can.empty_opts(), 1)),
+        "h=false v=false ask=0 verbose=true dry=false sort=date ops= err=unrecognized arguments: -xq",
+    )
+    check(
+        mut t,
+        "opts-unknown-first",
+        line_text(can.read_args(words("--trash-dir /t"), can.empty_opts(), 1)),
+        "{none} sort=date ops=[/t] err=unrecognized arguments: --trash-dir",
+    )
+}
+
+fn choice_text(answer: str) -> str {
+    let (picked, bad) = can.choose(answer, 2)
+    if bad.len > 0 then "error: {bad}" else shown_ints(picked)
+}
+
+fn restore_rows(mut t: Tally) {
+    check(mut t, "quote-plain", can.py_quote("a b"), "'a b'")
+    check(mut t, "quote-single", can.py_quote("it's"), "\"it's\"")
+    check(mut t, "quote-both", can.py_quote("a'b\"c"), "'a\\'b\"c'")
+    check(mut t, "quote-newline", can.py_quote("a\nb"), "'a\\nb'")
+    check(mut t, "errno-line", can.errno_line(2, "/x"), "[Errno 2] No such file or directory: '/x'")
+    check(mut t, "choose-one", choice_text("1"), "[1]")
+    check(mut t, "choose-list", choice_text("2,0"), "[2,0]")
+    check(mut t, "choose-span", choice_text("0-2"), "[0,1,2]")
+    check(mut t, "choose-span-reversed", choice_text("2-0"), "[]")
+    check(mut t, "choose-spaces", choice_text(" 1 , 2"), "[1,2]")
+    check(mut t, "choose-open", choice_text("1-"), "error: open interval: 1-")
+    check(mut t, "choose-dash", choice_text("-1"), "error: open interval: -1")
+    check(mut t, "choose-word", choice_text("1,x"), "error: not an index: x")
+    check(mut t, "choose-empty-piece", choice_text("0,,1"), "error: not an index: ")
+    check(mut t, "choose-out", choice_text("0,5"), "error: out of range 0..2: 5")
+    check(mut t, "choose-span-out", choice_text("1-9"), "error: out of range 0..2: 3")
+    check(mut t, "choose-span-huge", choice_text("0-99999999999"), "error: out of range 0..2: 3")
+    check(mut t, "under-same", "{can.from_under(bstr("/h/a"), "/h/a")}", "true")
+    check(mut t, "under-child", "{can.from_under(bstr("/h/a/x"), "/h/a")}", "true")
+    check(mut t, "under-prefix", "{can.from_under(bstr("/h/ab"), "/h/a")}", "false")
+    check(mut t, "under-root", "{can.from_under(bstr("/x"), "/")}", "true")
+    var keys = List[List[byte]]()
+    for k in ["b", "a", "b", "a"] {
+        (mut keys).push(bstr(k))
+    }
+    check(mut t, "order-stable", shown_ints(can.order(keys)), "[1,3,0,2]")
+    var dated = List[List[byte]]()
+    (mut dated).push(can.sort_key("2020-01-01T00:00:00", bstr("/a"), false))
+    (mut dated).push(can.sort_key("", bstr("/z"), false))
+    (mut dated).push(can.sort_key("2020-01-01T00:00:00", bstr("/0"), false))
+    check(mut t, "order-undated-first", shown_ints(can.order(dated)), "[1,2,0]")
+    var by_path = List[List[byte]]()
+    (mut by_path).push(can.sort_key("2021-01-01T00:00:00", bstr("/z"), true))
+    (mut by_path).push(can.sort_key("2022-01-01T00:00:00", bstr("/a"), true))
+    check(mut t, "order-by-path", shown_ints(can.order(by_path)), "[1,0]")
+}
+
 fn main() -> int {
     var t = Tally { failed: 0 }
     text_rows(mut t)
@@ -297,5 +584,12 @@ fn main() -> int {
     name_rows(mut t)
     date_rows(mut t)
     arg_rows(mut t)
+    info_rows(mut t)
+    date_shape_rows(mut t)
+    civil_rows(mut t)
+    glob_rows(mut t)
+    int_rows(mut t)
+    opts_rows(mut t)
+    restore_rows(mut t)
     if t.failed > 0 then 1 else 0
 }
