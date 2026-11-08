@@ -182,3 +182,142 @@ row with its observation):
 
 No PAX kernel gap was found: every call trash needs answers on PAX as it does
 on Linux, on the ext2 volume and on the in-memory tree.
+
+## The oracle, and what `trash-put` writes
+
+**The image.** trash-cli 0.26.9.29, the newest release on PyPI when this lane
+started. PyPI publishes only its source archive, so the image builds a wheel
+from it (setuptools alone, no build isolation, `SOURCE_DATE_EPOCH` fixed) and
+installs that. Two builds gave the same bytes, and the wheel is pinned by that
+digest beside the archive's (`trash-oracle.toml`, `ci/oracle-*.txt`). Its two
+dependencies are published wheels pinned by hash. The base is Ubuntu 24.04 by
+digest, its packages from the archive snapshot `20261107T000000Z`, the whole
+closure locked (`ci/packages.lock`); `tools/in-container` refuses an image
+whose closure or oracle manifest differs, and `tools/check-pins.py` holds
+every file that repeats a pin to it. The oracle is run only as a program, and
+a Python traceback in its output would be redacted and fail its row (none
+occurred).
+
+**The harness** (`tools/oracle.py`) runs a row's steps on one tool in a
+scratch home at a fixed path, snapshots the home, the second file system and
+any per-volume trash at the top of either, removes everything, and runs the
+same steps on the other tool at the same path. Both tools see
+`XDG_DATA_HOME=$HOME`, so trash-cli's home trash is `~/Trash`, this
+repository's layout, and the two trees compare with no path rewritten. The
+comparison is every command's exit status, standard output and standard
+error, and every entry's type, mode, owner, size, bytes, link target and
+modification time, with each `.trashinfo` held line by line. Normalised by
+name, and only these: `DeletionDate=` (its shape held, its instant, read in
+the row's zone, inside the run's window), dates and times in a command's
+output inside the window, modification times inside the window, and the
+lines of a listing a row marks as host-ordered.
+
+**Its own tests.** `oracle.py selftest` checks the normaliser on a synthetic
+capture and then mutates 22 fields a difference could hide in — the `Path=`
+line, a missing `Path=`, the header, an extra line, a date outside the
+window, a date of the wrong shape, a date written in UTC where local time is
+due, the info file's mode, a file's bytes, mode and time, a link turned into
+a file, a link's target, a directory's mode, an extra and a missing entry,
+something left behind on the other file system, an exit status, both
+streams, a fixed date in a listing, and a traceback; each must be seen by
+name. With `--live` it runs every row on trash-cli twice and requires the two
+captures to agree, and `oracle.py check` holds trash-cli to its recorded
+goldens (`tests/oracle/golden/`, 44 rows). Both pass.
+
+**Prediction against result** (the goldens):
+
+| case | predicted | measured |
+|---|---|---|
+| a plain file | moved unchanged; info file of three lines, `Path=` absolute, `DeletionDate=` local time to the second; info `0600`; `Trash`, `files`, `info` `0700`; silent, exit 0 | held, every byte |
+| a directory | the tree moved whole, one info file | held |
+| a symbolic link | the link, its target untouched | held; and `trash l/`, a link to a directory named with a slash, also trashes the link, not the directory |
+| a name collision | `a_1.txt`, then `a_2.txt` | **wrong**: `a.txt_1`, then `a.txt_2`: the suffix follows the whole name, extension and all (`a.tar.gz_1`, `.hidden_1`, `noext_1`, a directory `dd_1`); the info files follow the names |
+| spaces and non-ASCII | `Path=…/my%20file%20%C3%A9.txt`, `%FF` for the byte 0xff, `/` kept | held. The bytes left unencoded are RFC 3986's unreserved set, letters, digits and `-._~`, with `/`; everything else is encoded in upper-case hex, RFC 2396's marks `!*'()` included; a tab is `%09`, a newline `%0A` |
+| refusals | a missing operand named on standard error, nonzero; `.` and `..` refused | held: `trash: cannot trash non existent 'nope'` and `trash: cannot trash directory '.'`, each exit 74; `-f` makes a missing operand silent with exit 0; the other operands are still trashed |
+
+Measured beyond the prediction, for T1 and T2 to be held to:
+
+- No operand: `usage: trash [OPTION]... FILE...` and `trash: error: Please
+  specify the files to trash.` on standard error, exit 2; an unknown option,
+  exit 2. `-r`, `-R`, `-d` and `-f` together are accepted.
+- `-v` writes `trash: 'a.txt' trashed in ~/Trash` to standard error; `-i`
+  asks `trash: trash regular file 'a.txt'? ` on standard output and takes `y`.
+- **Another file system:** trash-cli trashes into that volume's own trash
+  (`/xdev/.Trash-0`, `Path=` relative to the volume's top), and with
+  `--trash-dir ~/Trash` it refuses (exit 74, "not in the same volume"). It
+  never copies across file systems, so this repository's copy into `~/Trash`
+  has no oracle: those three rows are marked as diverging by design, and the
+  candidate is held to captures of its own (`tests/oracle/expected/`, written
+  with T1).
+- **The trash itself:** trash-cli trashes `Trash/files/a.txt` back into the
+  trash as `a.txt_1`, leaving `a.txt.trashinfo` orphaned, and trashes `Trash`
+  by moving the whole home trash into the root volume's trash
+  (`/.Trash-0`). This repository refuses both by name; the row diverges.
+- `trash-list` prints `YYYY-MM-DD hh:mm:ss PATH`, the path decoded, in the
+  order the directory hands the info files over (the row compares its lines
+  as a set, by name); an info file with no item is listed, an item with no
+  info file is not; a missing `DeletionDate` prints `????-??-?? ??:??:??`; a
+  relative `Path=` is read from the volume's top (`docs/rel` lists as
+  `/docs/rel`).
+- `trash-restore` lists `   0 DATE PATH` and asks `What file to restore
+  [0..0]: ` on standard output; it restores and removes the info file; it
+  recreates a missing parent directory; over an occupied path it prints
+  `Refusing to overwrite existing file "a.txt".` on standard error and exits
+  1, changing nothing; with nothing to restore, `No files trashed from current
+  dir ('/path')`, exit 0.
+- `trash-rm '*.txt'` matches the original names; `trash-empty` empties
+  without asking when standard input is not a terminal; `trash-empty 1`
+  removes what was trashed more than a day ago and keeps the rest.
+- `DeletionDate` is local time: the row run with `TZ=Asia/Tokyo` lies in the
+  window only when read as Tokyo time.
+
+## The scaffold
+
+- `wolf-toolchain.toml` pins wolf 0.2.38 and lupin 0.1.60 by archive digest,
+  from two reads of the release metadata (`tests/pin-read-*.json`);
+  `tools/fetch-toolchain.py` reads every archive twice and checks the staged
+  versions and the bundled standard library's revision.
+- `tools/gate unit` (pins, the census, PAX and oracle harnesses' own tests)
+  and `tools/gate linux` (in the oracle image: the toolchain, `wolf fmt
+  --check`, the census built, run and held on Linux, the static census for
+  PAX, the oracle twice per row and against its goldens).
+- The PAX build path: `tools/census.py build --static` builds through a `cc`
+  that adds `-static` (wolf has no `--static`), checks every program is a
+  static `ET_EXEC` with no interpreter, and keeps a stripped copy for an
+  image. `tools/gate-pax` boots the result. The image hook in PAX's tree
+  (`tools/mktrash`, `user/trash.pin`) comes with T3.
+- CI on Linux (`.github/workflows/ci.yml`): `tools/gate unit` and
+  `tools/in-container` on Ubuntu 24.04, on a pull request labelled
+  `full-matrix`, on every push to `trunk`, nightly and by hand.
+
+## SKIPs
+
+None. No row skips: a row that does not run fails by name.
+
+## Recommendations
+
+Each is implemented.
+
+- R-tb00-1: the PAX census image carries the zone data PAX's distribution
+  carries (UTC), not none.
+- R-tb00-2: the PAX probes are the default tier, static glibc, stripped for
+  the image.
+- R-tb00-3: the oracle's wheel is built in the image from the pinned source
+  archive and pinned by its own digest.
+- R-tb00-4: when no zone data answers, `DeletionDate` is written in UTC.
+- R-tb00-5: both tools run with `XDG_DATA_HOME=$HOME`, so trash-cli's home
+  trash is `~/Trash` and the trees compare without rewriting a path.
+  (B: two homes at two paths with the paths rewritten — more normalisation,
+  and a `Path=` difference could hide in it.)
+- R-tb00-6: the two runs of a row share one fixed scratch path, one after the
+  other.
+- R-tb00-7: collisions are named as the oracle names them, `NAME_1` after
+  the whole name.
+- R-tb00-8: the rows where this repository departs from the oracle by
+  design (the trash itself refused; another file system copied into
+  `~/Trash`) are marked `diverge`, and the candidate is held to its own
+  expected captures there.
+- R-tb00-9: a listing in host order is compared as a set of lines, by name,
+  and T2 lists in host order as the oracle does.
+- R-tb00-10: CI runs on a pull request only when it is labelled
+  `full-matrix`; the local record is the gate otherwise.
