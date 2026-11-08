@@ -1,0 +1,213 @@
+// can: the trash read back. `info/` in the order the host lists it, and
+// each info file's first `Path=` and first `DeletionDate=`, as the oracle
+// reads them (measured: notes/tb02-the-companions.md): no header is
+// required, lines end at LF, CR LF or CR, the path is percent-decoded to
+// bytes, and a relative path is read from `/`.
+
+/// One name in `info/` that ends `.trashinfo`, read.
+pub struct Info {
+    /// The item's name in `files/`: the info file's name less `.trashinfo`
+    /// ("" when the name is not UTF-8).
+    name: str,
+    /// The info file's own name, as bytes.
+    raw: List[byte],
+    /// 0 read; 1 not read (`errno` says why); 2 read, with no `Path=`; 3 its
+    /// name is not UTF-8, so wolf cannot open it (wolf-lang#687).
+    state: int,
+    errno: int,
+    /// The original path, decoded: the bytes of the first `Path=`, made
+    /// absolute from `/` when relative.
+    path: List[byte],
+    /// The first `DeletionDate=`, zero-padded `YYYY-MM-DDThh:mm:ss`, or ""
+    /// when it is missing or is not a date (`when.read_date`).
+    date: str,
+}
+
+/// The suffix of an info file's name.
+fn suffix_bytes() -> List[byte] {
+    bytes_of(".trashinfo")
+}
+
+fn ends_with(b: List[byte], tail: List[byte]) -> bool {
+    if b.len < tail.len {
+        return false
+    }
+    var i = 0
+    let off = b.len - tail.len
+    while i < tail.len {
+        if b[off + i] != tail[i] {
+            return false
+        }
+        i += 1
+    }
+    true
+}
+
+fn hex_value(c: int) -> int {
+    if c >= 48 && c <= 57 {
+        return c - 48
+    }
+    if c >= 65 && c <= 70 {
+        return c - 55
+    }
+    if c >= 97 && c <= 102 {
+        return c - 87
+    }
+    -1
+}
+
+/// `Path=`'s value decoded: `%HH` (either case) is that byte; a `%` not
+/// followed by two hex digits is itself.
+pub fn decode(v: List[byte]) -> List[byte] {
+    var out = List[byte]()
+    var i = 0
+    while i < v.len {
+        let c = v[i] as int
+        if c == 37 && i + 2 < v.len {
+            let hi = hex_value(v[i + 1] as int)
+            let lo = hex_value(v[i + 2] as int)
+            if hi >= 0 && lo >= 0 {
+                (mut out).push((hi * 16 + lo) as byte)
+                i += 3
+                continue
+            }
+        }
+        (mut out).push(v[i])
+        i += 1
+    }
+    out
+}
+
+/// Whether `line` starts with the bytes of `key`.
+fn keyed(line: List[byte], key: str) -> bool {
+    let k = key.bytes()
+    if line.len < k.len {
+        return false
+    }
+    var i = 0
+    while i < k.len {
+        if line[i] != k[i] {
+            return false
+        }
+        i += 1
+    }
+    true
+}
+
+/// The lines of an info file: split at LF, CR LF and a lone CR.
+pub fn lines_of(b: List[byte]) -> List[List[byte]] {
+    var out = List[List[byte]]()
+    var cur = List[byte]()
+    var i = 0
+    while i < b.len {
+        let c = b[i] as int
+        if c == 10 || c == 13 {
+            (mut out).push(copy cur)
+            cur = List[byte]()
+            if c == 13 && i + 1 < b.len && b[i + 1] as int == 10 {
+                i += 1
+            }
+        } else {
+            (mut cur).push(b[i])
+        }
+        i += 1
+    }
+    if cur.len > 0 {
+        (mut out).push(copy cur)
+    }
+    out
+}
+
+/// An info file's text read: (whether it has a `Path=`, the path decoded
+/// and made absolute, the date as `when.read_date` reads it).
+pub fn parse_info(text: List[byte]) -> (bool, List[byte], str) {
+    var has_path = false
+    var path = List[byte]()
+    var has_date = false
+    var date = ""
+    for line in lines_of(text) {
+        if !has_path && keyed(line, "Path=") {
+            has_path = true
+            path = decode(line[5..])
+        } else if !has_date && keyed(line, "DeletionDate=") {
+            has_date = true
+            date = read_date(line[13..])
+        }
+    }
+    if has_path && (path.len == 0 || path[0] as int != 47) {
+        var abs = List[byte]()
+        (mut abs).push(47 as byte)
+        for x in path {
+            (mut abs).push(x)
+        }
+        path = abs
+    }
+    (has_path, path, date)
+}
+
+/// Every `*.trashinfo` in `TRASH/info`, in the order the host lists them,
+/// each read. A trash with no `info/` holds none.
+pub fn scan(trash: str) -> List[Info] {
+    var out = List[Info]()
+    let entries = fs_read_dir_entries("{trash}/info") else |_| {
+        return out
+    }
+    let tail = suffix_bytes()
+    for e in entries {
+        let raw = e[1..]
+        if !ends_with(raw, tail) || raw.len == tail.len {
+            continue
+        }
+        let full = str_from_utf8(raw) else |_| {
+            (mut out).push(Info {
+                name: "",
+                raw: copy raw,
+                state: 3,
+                errno: 0,
+                path: List[byte](),
+                date: "",
+            })
+            continue
+        }
+        let name = full[0..full.len - 10]
+        var errno = 0
+        var read = true
+        let text = fs_read_bytes("{trash}/info/{full}") else |_| {
+            errno = os_error()
+            read = false
+            List[byte]()
+        }
+        if !read {
+            (mut out).push(Info {
+                name: name,
+                raw: copy raw,
+                state: 1,
+                errno: errno,
+                path: List[byte](),
+                date: "",
+            })
+            continue
+        }
+        let (has_path, path, date) = parse_info(text)
+        (mut out).push(Info {
+            name: name,
+            raw: copy raw,
+            state: if has_path then 0 else 2,
+            errno: 0,
+            path: path,
+            date: date,
+        })
+    }
+    out
+}
+
+/// The info file's path, as messages show it.
+pub fn info_shown(trash: str, x: Info) -> str {
+    "{trash}/info/{shown(x.raw)}"
+}
+
+/// The `[Errno N] TEXT: 'PATH'` line the oracle prints for a call that
+/// failed on PATH (Python's words for an `OSError`).
+pub fn errno_line(n: int, path: str) -> str {
+    "[Errno {n}] {os_error_text(n)}: {py_quote(path)}"
+}
