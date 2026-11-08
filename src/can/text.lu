@@ -1,0 +1,124 @@
+// can: what the trash family shares. This file: words as messages show them,
+// and the small text pieces the rest builds from.
+
+/// The two hex digits of `n` (0..255), upper case as `Path=` writes them, or
+/// lower case as a message shows a byte that is not UTF-8.
+pub fn hex2(n: int, upper: bool) -> str {
+    let digits = if upper then "0123456789ABCDEF" else "0123456789abcdef"
+    let hi = n / 16
+    let lo = n % 16
+    "{digits[hi..hi + 1]}{digits[lo..lo + 1]}"
+}
+
+/// How many bytes, from `i`, make one well-formed UTF-8 sequence in `b`; 0
+/// when the byte at `i` starts none (RFC 3629's table: no overlong form, no
+/// surrogate, nothing past U+10FFFF).
+pub fn utf8_run(b: List[byte], i: int) -> int {
+    let c = b[i] as int
+    if c < 128 {
+        return 1
+    }
+    var n = 0
+    var lo = 128
+    var hi = 191
+    if c >= 194 && c <= 223 {
+        n = 2
+    } else if c >= 224 && c <= 239 {
+        n = 3
+        if c == 224 {
+            lo = 160
+        }
+        if c == 237 {
+            hi = 159
+        }
+    } else if c >= 240 && c <= 244 {
+        n = 4
+        if c == 240 {
+            lo = 144
+        }
+        if c == 244 {
+            hi = 143
+        }
+    } else {
+        return 0
+    }
+    if i + n > b.len {
+        return 0
+    }
+    let second = b[i + 1] as int
+    if second < lo || second > hi {
+        return 0
+    }
+    var k = 2
+    while k < n {
+        let more = b[i + k] as int
+        if more < 128 || more > 191 {
+            return 0
+        }
+        k += 1
+    }
+    n
+}
+
+/// A word as a message shows it: its text where it is UTF-8, and `\xhh` for
+/// each byte that is not, as the oracle's own output reads in a capture.
+pub fn shown(b: List[byte]) -> str {
+    var out = List[byte]()
+    var i = 0
+    while i < b.len {
+        let n = utf8_run(b, i)
+        if n == 0 {
+            for x in "\\x{hex2(b[i] as int, false)}".bytes() {
+                (mut out).push(x)
+            }
+            i += 1
+        } else {
+            var k = 0
+            while k < n {
+                (mut out).push(b[i + k])
+                k += 1
+            }
+            i += n
+        }
+    }
+    str_from_utf8(out) else ""
+}
+
+/// The bytes of `s`, as a list of their own.
+pub fn bytes_of(s: str) -> List[byte] {
+    var out = List[byte]()
+    for x in s.bytes() {
+        (mut out).push(x)
+    }
+    out
+}
+
+/// How many code points `s` holds.
+pub fn chars(s: str) -> int {
+    var n: int = 0
+    for x in s.bytes() {
+        let c = x as int
+        if c < 128 || c > 191 {
+            n += 1
+        }
+    }
+    n
+}
+
+/// The first `k` code points of `s` (all of it when it holds fewer).
+pub fn first_chars(s: str, k: int) -> str {
+    var seen: int = 0
+    var i = 0
+    let b = s.bytes()
+    while i < b.len {
+        let c = b[i] as int
+        if c < 128 || c > 191 {
+            if seen == k {
+                return s[0..i]
+            }
+            seen += 1
+        }
+        i += 1
+    }
+    s
+}
