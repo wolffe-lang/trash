@@ -5,13 +5,15 @@
 #   unit       what needs no toolchain and no oracle: the pins, the harnesses'
 #              own tests, the census expectations, the expected captures.
 #   candidate  inside the oracle image: the toolchain, the formatter, the
-#              commands built, their unit programs, and the commands held to
-#              the oracle's rows.
+#              commands built, their unit programs, the commands held to
+#              the oracle's rows, and the hardening rows: each command cut
+#              at each durable step, two run at once, and GNU rm's own
+#              answers on the permission rows' fixtures (a witness).
 #   linux      everything, inside the oracle image (tools/in-container runs it):
 #              the toolchain by digest, the formatter, the census built and run
 #              on Linux and held to census/expect.json, the static census and
-#              commands for PAX, the oracle's rows on the oracle, and the
-#              commands held to them.
+#              commands for PAX, the oracle's rows on the oracle, the
+#              commands held to them, and the hardening rows.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
@@ -31,6 +33,7 @@ step census-pax-selftest python3 -I tools/census-pax.py selftest
 step oracle-selftest python3 -I tools/oracle.py selftest
 step expected-statements python3 -I tools/expected.py check
 step pax-rows-selftest python3 -I tools/pax-rows.py selftest
+step harden-selftest python3 -I tools/harden.py selftest
 [ "$mode" != unit ] || exit 0
 [ -f /opt/oracle-manifest.txt ] || { echo 'FAIL gate-linux-outside-the-image: run it through tools/in-container'; exit 2; }
 stage=$root/.wolf-bin
@@ -44,6 +47,10 @@ if [ "$mode" = candidate ]; then
     step trash-build python3 -I tools/build.py --wolf "$wolf" --out target/bin
     step trash-unit python3 -I tools/unit.py --wolf "$wolf" --out target/unit
     step oracle-compare python3 -I tools/oracle.py compare --rows tests/oracle/rows.json --candidate target/bin
+    step harden-cuts python3 -I tools/harden.py cuts --rows tests/cuts/rows.json --candidate target/bin
+    step harden-stress python3 -I tools/harden.py stress --rows tests/cuts/stress.json --candidate target/bin \
+        --rounds 100 --seed 20261108
+    step rm-witness python3 -I tools/harden.py rm-witness --rows tests/oracle/rows.json --only '^perm-'
     exit 0
 fi
 rm -rf target/census target/census-bin target/census-static /xdev/census target/bin target/static target/unit
@@ -60,3 +67,7 @@ step rowtool-static python3 -I tools/build.py --wolf "$wolf" --out target/static
 step oracle-live-selftest python3 -I tools/oracle.py selftest --live --rows tests/oracle/rows.json
 step oracle-goldens python3 -I tools/oracle.py check --rows tests/oracle/rows.json --golden tests/oracle/golden
 step oracle-compare python3 -I tools/oracle.py compare --rows tests/oracle/rows.json --candidate target/bin
+step harden-cuts python3 -I tools/harden.py cuts --rows tests/cuts/rows.json --candidate target/bin
+step harden-stress python3 -I tools/harden.py stress --rows tests/cuts/stress.json --candidate target/bin \
+    --rounds 100 --seed 20261108
+step rm-witness python3 -I tools/harden.py rm-witness --rows tests/oracle/rows.json --only '^perm-'
