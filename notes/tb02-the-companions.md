@@ -434,5 +434,5 @@ implemented as A. R-tb02-9 was ruled A (`cross-cutting`) at the merge.
   PAX rows and the round-trip property; every row green.
 - [x] One plant, `tb02-plant-restore-rename`, red by name at
   `restore-occupied`.
-- [x] The records behind both of satoyama's locks, the Linux gate and the
+- [x] The records behind both of a lane host's locks, the Linux gate and the
   PAX legs in one gauntlet, and the plant's record, both verified.

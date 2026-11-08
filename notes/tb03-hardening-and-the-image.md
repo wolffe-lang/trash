@@ -416,6 +416,6 @@ Each is implemented as recommended (A).
   cannot be read but may be moved; each decided as above.
 - [x] The README's user section.
 - [x] One plant, `tb03-plant-unheld`, red by name at `race-put-empty`.
-- [x] The records behind both of satoyama's locks: the Linux gate and the
+- [x] The records behind both of a lane host's locks: the Linux gate and the
   PAX legs in one gauntlet at the head, and the plant's record, both
   verified (their paths and digests are in the hand-back).
