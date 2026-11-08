@@ -48,7 +48,10 @@ tests/oracle/expected/ROW.json there instead of to the oracle.
 
 Nothing else is rewritten. A Python traceback in the oracle's output is never
 printed or kept (the clean room: it would quote the oracle's source); it is
-replaced by a count of its lines and fails the row by name.
+replaced by a count of its lines and fails the row by name, unless the row
+says `"oracle": "crashes"`: a row where the oracle has no answer (it is
+marked `diverge` too), whose golden holds the redacted crash so that the
+pinned oracle is still seen to crash the same way.
 
 `record` writes each row's normalised oracle capture to the golden directory;
 `check` runs the oracle again and holds it to them (the pinned oracle must
@@ -273,7 +276,11 @@ def snapshot(top, exact=False):
             st = os.lstat(p)
             e = {'mode': '%04o' % stat.S_IMODE(st.st_mode), 'mtime': int(st.st_mtime), 'owner': '%d:%d' % (st.st_uid, st.st_gid)}
             if exact:
-                e.update(mtime_ns=st.st_mtime_ns % 10**9, atime=st.st_atime_ns // 10**9, atime_ns=st.st_atime_ns % 10**9)
+                e.update(mtime_ns=st.st_mtime_ns % 10**9)
+                if not stat.S_ISLNK(st.st_mode):
+                    # A link's access time moves whenever a path is resolved
+                    # through it, this walk's own included: it is not kept.
+                    e.update(atime=st.st_atime_ns // 10**9, atime_ns=st.st_atime_ns % 10**9)
             if stat.S_ISLNK(st.st_mode):
                 e.update(type='link', target=show(os.readlink(p)))
             elif stat.S_ISDIR(st.st_mode):
@@ -475,6 +482,14 @@ def report(name, diffs, extra=''):
     return 0
 
 
+def oracle_diffs(row, want, got):
+    """compare(), less the crash a row says the oracle makes."""
+    diffs = compare(want, got)
+    if row.get('oracle') == 'crashes':
+        diffs = [d for d in diffs if d[0] != 'traceback']
+    return diffs
+
+
 def cmd_record(a):
     live_guard()
     out = Path(a.golden)
@@ -483,7 +498,7 @@ def cmd_record(a):
     for row in load_rows(a.rows, a.only):
         cap = normalise(run_row(row, oracle_bin()))
         (out / (row['name'] + '.json')).write_text(json.dumps(cap, indent=1, sort_keys=True, ensure_ascii=False) + '\n')
-        if cap['tracebacks']:
+        if cap['tracebacks'] and row.get('oracle') != 'crashes':
             fails += report(row['name'], [('traceback', 'the oracle crashed; its output is redacted')])
         else:
             print('RECORDED %s commands=%d' % (row['name'], len(cap['steps'])))
@@ -499,7 +514,7 @@ def cmd_check(a):
         if not path.exists():
             fails += report(row['name'], [('golden', 'none recorded')])
             continue
-        fails += report(row['name'], compare(json.loads(path.read_text()), normalise(run_row(row, oracle_bin()))))
+        fails += report(row['name'], oracle_diffs(row, json.loads(path.read_text()), normalise(run_row(row, oracle_bin()))))
     names = {r['name'] for r in load_rows(a.rows, None)}
     for g in sorted(Path(a.golden).glob('*.json')):
         if g.stem not in names:
@@ -692,7 +707,7 @@ def cmd_selftest(a):
         for row in load_rows(a.rows, a.only):
             one = normalise(run_row(row, oracle_bin()))
             two = normalise(run_row(row, oracle_bin()))
-            fails += report('live-' + row['name'], compare(one, two), ' (the oracle twice, the same)')
+            fails += report('live-' + row['name'], oracle_diffs(row, one, two), ' (the oracle twice, the same)')
     print('SUMMARY oracle-selftest failed=%d' % fails)
     return 1 if fails else 0
 
