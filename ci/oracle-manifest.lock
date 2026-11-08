@@ -1,0 +1,6 @@
+a8a01b99a6f4ac105347f38df0fe426af4ba3876b12ae0d06213a7231f9b014d  trash_cli-0.26.9.29-py3-none-any.whl
+version 0.26.9.29
+pip==24.0
+psutil==7.2.2
+six==1.17.0
+trash-cli==0.26.9.29

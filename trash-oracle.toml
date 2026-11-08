@@ -1,0 +1,18 @@
+# The black-box oracle: trash-cli, run only as a program, in the image that
+# ci/oracle.Containerfile builds. Its source archive is pinned by the digest
+# PyPI publishes (read twice: tests/oracle-pypi-read-1.json and -2.json), built
+# into a wheel in the image without being read, and that wheel is pinned by its
+# own digest (two builds, the same bytes). tools/check-pins.py holds every file
+# that repeats one of these facts to it.
+
+[trash-cli]
+version = "0.26.9.29"
+sdist = "trash_cli-0.26.9.29.tar.gz"
+sdist_sha256 = "2ca3300fd9f3b0334cb3f576a3ec95ced8593cc729df4332608d69a28eb50fb0"
+wheel = "trash_cli-0.26.9.29-py3-none-any.whl"
+wheel_sha256 = "a8a01b99a6f4ac105347f38df0fe426af4ba3876b12ae0d06213a7231f9b014d"
+bin = "/opt/trash-cli/bin"
+
+[container]
+base = "docker.io/library/ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55"
+apt_snapshot = "20261107T000000Z"
