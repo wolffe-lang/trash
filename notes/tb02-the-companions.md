@@ -211,3 +211,47 @@ in-memory tree): a tree trashed into the ext2 trash by copy and restored to
 - The plant (`tb02-plant-*`, one hunk on the green head): the restore by a
   plain `rename(2)` with no reservation, so the occupied path is replaced and
   `restore-occupied` goes red by name.
+
+## The oracle, measured on T2's rows
+
+128 rows joined T1's 118 (246 in all), each recorded on trash-cli 0.26.9.29 as
+a golden; `oracle.py check` reproduces all 246. 24 of the new rows diverge by
+design and are held to expected captures (`tools/expected.py`), five of them
+because the oracle crashes there (`"oracle": "crashes"`). The goldens took four
+recordings: each asked for rows the last had not thought of (the restore
+prompt's grammar, the date's shapes, trash-empty's question).
+
+**Prediction against result** (the misses and what was not foreseen; every
+other row held as predicted):
+
+| row | predicted | measured |
+|---|---|---|
+| `list-bad-dates`, `list-date-shapes` | a date of the wrong shape is question marks | held, and more: the date is read as `strptime` reads `%Y-%m-%dT%H:%M:%S`. The year is four digits; the other fields one or two, the day also a space and one digit; `T` in either case; the date must be real (no 29 February 2021, no second 60), and nothing may lead or trail. It is listed zero-padded: `2020-1-2T3:4:5` lists as `2020-01-02 03:04:05` |
+| `list-info-shapes`, `list-info-dir` | no `Path=` skipped with a message | held: `Parse Error: INFO: Unable to parse Path.`; a directory named like an info file is `[Errno 21] Is a directory: 'INFO'`; CRLF ends are line ends |
+| `list-trash-kin` | (diverging) | `--volumes` prints the host's mounts in no fixed order, so the row leaves it out |
+| `restore-sort-ties` | equal dates in host order | **wrong**: by path |
+| `restore-occupied-link` | the oracle replaces a dangling link | **wrong**: it refuses, as for a file; the row is compared |
+| `restore-by-path-none` | the "No files trashed" line | held, and it names the working directory even when a path was given |
+| `restore-input-eof` | nothing restored, exit 0 | **wrong**: a newline on standard error, exit 1 |
+| `restore-input-empty` | nothing restored, exit 0 | held, saying `No files were restored` |
+| `restore-input-span-reversed` | an error | **wrong**: `1-0` is an empty span, nothing restored, exit 0 |
+| `restore-input-*` (the grammar) | (not foreseen past the rows) | the answer is split at `,`; a piece holding `-` is a span, and one with an empty side is `Invalid entry: open interval: PIECE`; a piece is read as Python's `int()` reads (spaces around it and `+` allowed), else `Invalid entry: not an index: PIECE`; every index is checked before anything is restored (`Invalid entry: out of range 0..N: I`, the first past the end); then the items are restored in order, and the first failure stops the rest (`0,0,1` restores `p0`, refuses the second `0`, exit 1, and leaves `p1`) |
+| `restore-no-date`, `restore-bad-date`, `restore-sort-none` | listed | **the oracle crashes** (diverging) |
+| `restore-other-fs` | (diverging) | the oracle's restore does not find what its `trash-put` put in the other volume's trash at all |
+| `restore-into-trash` | the oracle restores into the trash | there it refused, since the path was taken; it would restore into the trash otherwise (diverging) |
+| `restore-trash-given` | (diverging) | the oracle says "No files trashed" |
+| `restore-info-shapes` | (not predicted) | an unreadable info file is shown as the oracle's own exception repr (`IOErrorReadingTrashInfo(path=…, error=…)`), a pathless one as `Non parsable trashinfo file: INFO, because Unable to parse Path` |
+| `rm-two-args` | a usage message | **wrong**: the first pattern is used, the rest ignored |
+| `rm-no-arg` | a usage message, nonzero | held: `Usage:` … `Please specify PATTERN.`, a line naming `fnmatch.fnmatchcase`, exit 8 |
+| `rm-star-slash` | `*` crosses `/` | held: fnmatch's rules on the whole path |
+| `rm-info-shapes`, `rm-info-dir` | (not predicted) | `trash-rm: INFO: unable to parse 'Path'`; an info directory crashes it (diverging) |
+| `empty-days-negative` | a usage error | **wrong**: `-1` empties everything |
+| `empty-days-dst` | DAYS × 24 h of real time | **wrong**: civil time: DAYS days back on the calendar, at the same wall-clock time, so across a change to summer time the cut moves by the hour |
+| `empty-orphans-days` | (not foreseen) | an item with no info file goes under DAYS too |
+| `empty-info-shapes` | (not foreseen) | without DAYS, every item an info file names (there or not), every orphan item and every `*.trashinfo` go; another name in `info/` stays; `-v` and `--dry-run` name each, `removing PATH` and `would remove PATH` |
+| `empty-i-*`, `empty-tty-*` | `-i` and a terminal ask | held: `Would empty the following trash directories:`, `    - ~/Trash` spelled out, `Proceed? (y/N) `; a yes is an answer that starts with `y` or `Y`; the last of `-i` and `-f` wins; it asks even with nothing to empty; at the end of input under `-i` it crashes (diverging) |
+| `empty-info-shapes-days` | (not foreseen) | the oracle crashes (diverging) |
+
+**Red first.** Against the stubs (`00f42d1`) at `63479cc`: the oracle compare
+ran all 246 rows, 140 red (the 128 new and the 12 tb01 left out) and the 106
+others green; the PAX rows, 5 of 19 red (the 5 new), the 14 others green.
