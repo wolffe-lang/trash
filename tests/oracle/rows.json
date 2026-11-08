@@ -474,7 +474,8 @@
       "x\\xffy"
      ]
     }
-   ]
+   ],
+   "diverge": "a name that is not UTF-8 is refused by name until wolf can name such a path (wolf-lang#687); the oracle trashes it"
   },
   {
    "name": "put-subdir",
@@ -1291,6 +1292,1365 @@
     }
    ],
    "tz": "Asia/Tokyo"
+  },
+  {
+   "name": "put-flag-R",
+   "about": "-R on a directory",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-R",
+      "d"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-force-present",
+   "about": "-f on a file that is there",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-f",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-force-no-operand",
+   "about": "-f and no operand",
+   "steps": [
+    {
+     "run": [
+      "trash",
+      "-f"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-help",
+   "about": "--help and -h, in this repository's own words",
+   "steps": [
+    {
+     "run": [
+      "trash",
+      "--help"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-h"
+     ]
+    }
+   ],
+   "words": "own"
+  },
+  {
+   "name": "put-version",
+   "about": "--version, in this repository's own words",
+   "steps": [
+    {
+     "run": [
+      "trash",
+      "--version"
+     ]
+    }
+   ],
+   "words": "own"
+  },
+  {
+   "name": "put-root",
+   "about": "the root directory",
+   "steps": [
+    {
+     "run": [
+      "trash",
+      "/"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-dot-spellings",
+   "about": "operands whose last component is . or .., and ./ itself",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "sub/deeper"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "sub/."
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "sub/deeper/.."
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "./"
+     ],
+     "cwd": "sub/deeper"
+    },
+    {
+     "run": [
+      "trash",
+      "deeper/.//"
+     ],
+     "cwd": "sub"
+    }
+   ]
+  },
+  {
+   "name": "put-interactive-kinds",
+   "about": "-i on a directory, a symbolic link and an empty file, each answered no",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "link",
+       "d",
+       "l"
+      ],
+      [
+       "file",
+       "e",
+       ""
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "d",
+      "l",
+      "e"
+     ],
+     "stdin": "n\nn\nn\n"
+    }
+   ]
+  },
+  {
+   "name": "put-interactive-kinds-yes",
+   "about": "-i on a directory, a symbolic link and an empty file, each answered yes",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "link",
+       "d",
+       "l"
+      ],
+      [
+       "file",
+       "e",
+       ""
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "d",
+      "l",
+      "e"
+     ],
+     "stdin": "y\ny\ny\n"
+    }
+   ]
+  },
+  {
+   "name": "put-interactive-answers",
+   "about": "-i answered Y, yes and \" y\"",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ],
+      [
+       "file",
+       "b",
+       "b\n"
+      ],
+      [
+       "file",
+       "c",
+       "c\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "a",
+      "b",
+      "c"
+     ],
+     "stdin": "Y\nyes\n y\n"
+    }
+   ]
+  },
+  {
+   "name": "put-interactive-eof",
+   "about": "-i with standard input at its end",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "a"
+     ],
+     "stdin": ""
+    }
+   ]
+  },
+  {
+   "name": "put-interactive-missing",
+   "about": "-i on a missing operand",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "nope",
+      "a"
+     ],
+     "stdin": "y\n"
+    }
+   ]
+  },
+  {
+   "name": "put-force-interactive",
+   "about": "-fi and -if, a missing operand among them",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ],
+      [
+       "file",
+       "b",
+       "b\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-fi",
+      "a",
+      "nope"
+     ],
+     "stdin": "y\n"
+    },
+    {
+     "run": [
+      "trash",
+      "-if",
+      "b",
+      "nope"
+     ],
+     "stdin": "y\n"
+    }
+   ]
+  },
+  {
+   "name": "put-long-options",
+   "about": "the long spellings of the flags",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ],
+      [
+       "file",
+       "b",
+       "b\n"
+      ],
+      [
+       "file",
+       "c",
+       "c\n"
+      ],
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "dir",
+       "e"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--force",
+      "a",
+      "nope"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--verbose",
+      "b"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--interactive",
+      "c"
+     ],
+     "stdin": "y\n"
+    },
+    {
+     "run": [
+      "trash",
+      "--recursive",
+      "d"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--directory",
+      "e"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-prefix",
+   "about": "an unambiguous prefix of a long option",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--verb",
+      "a"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-ambiguous",
+   "about": "a prefix two long options share",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--v",
+      "a"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-unknown",
+   "about": "a long option that is not one, and one given a value",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--nope",
+      "a"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--verbose=1",
+      "a"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-combined-unknown",
+   "about": "a known and an unknown flag combined",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-vx",
+      "a"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-combined-flags",
+   "about": "flags combined in one word",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ],
+      [
+       "dir",
+       "d"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-rfv",
+      "a",
+      "nope",
+      "d"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-option-after-operand",
+   "about": "an option after an operand",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a",
+      "-v"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-quote",
+   "about": "names holding a quote, a space and a double quote, missing and trashed",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "it's",
+       "q\n"
+      ],
+      [
+       "file",
+       "a b",
+       "s\n"
+      ],
+      [
+       "file",
+       "x\"y",
+       "d\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-v",
+      "it's",
+      "a b",
+      "x\"y",
+      "no'pe",
+      "no pe"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-negative-number",
+   "about": "a file named -1 and one named -",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "-1",
+       "n\n"
+      ],
+      [
+       "file",
+       "-",
+       "d\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-1",
+      "-"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-dir-slash",
+   "about": "a directory named with a trailing slash",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "d/"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-file-slash",
+   "about": "a file named with a trailing slash",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt/"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-empty-operand",
+   "about": "an empty operand",
+   "steps": [
+    {
+     "run": [
+      "trash",
+      ""
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-via-link-dir",
+   "about": "an operand reached through a linked directory",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/x",
+       "x\n"
+      ],
+      [
+       "link",
+       "d",
+       "ld"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "ld/x"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-dotdot-through-link",
+   "about": "a .. that a lexical reading and the host read differently",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "p/q"
+      ],
+      [
+       "file",
+       "p/x",
+       "p\n"
+      ],
+      [
+       "file",
+       "x",
+       "h\n"
+      ],
+      [
+       "link",
+       "p/q",
+       "lq"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "lq/../x"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-collision-orphan-item",
+   "about": "files/a.txt is there with no info file",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/files/a.txt",
+       "old\n"
+      ],
+      [
+       "file",
+       "a.txt",
+       "new\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-collision-orphan-info",
+   "about": "info/a.txt.trashinfo is there with no item",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "Trash/info/a.txt.trashinfo",
+       "[Trash Info]\nPath=/elsewhere/a.txt\nDeletionDate=2020-01-02T03:04:05\n",
+       "0600"
+      ],
+      [
+       "file",
+       "a.txt",
+       "new\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-name",
+   "about": "a 250-byte name, whose info file name is past the 255-byte limit",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-home",
+   "about": "the home, which holds the trash",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/tmp/trash-rows/home"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-mount-point",
+   "about": "the mount point of the second file system",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "@xdev/x.txt",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-many",
+   "about": "operands of every kind and fate in one command",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ],
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "link",
+       "a",
+       "l"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a",
+      "nope",
+      "d",
+      ".",
+      "l"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-verbose-paths",
+   "about": "-v names each operand as it was given",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "sub/x",
+       "x\n"
+      ],
+      [
+       "file",
+       "y",
+       "y\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-v",
+      "sub/x",
+      "/tmp/trash-rows/home/y"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-local-time-info",
+   "about": "the deletion date in a zone east of UTC, read from the info file",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ],
+   "tz": "Asia/Tokyo"
+  },
+  {
+   "name": "put-local-time-west",
+   "about": "the deletion date in a zone west of UTC",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ],
+   "tz": "America/Los_Angeles"
+  },
+  {
+   "name": "put-trash-inside",
+   "about": "the trash named other ways, and an item of it reached through a link to it",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "make": [
+      [
+       "link",
+       "Trash",
+       "tl"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "Trash/files"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "Trash/info/"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "Trash/"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/tmp/trash-rows/home/Trash"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "tl/files/a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "tl"
+     ]
+    }
+   ],
+   "diverge": "the trash and anything inside it are refused by name; the oracle trashes them"
+  },
+  {
+   "name": "put-other-fs-tree",
+   "about": "a tree on another file system: modes, owners, a link, a fifo, nested directories, and times with nanoseconds",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "@xdev/d",
+       "0750"
+      ],
+      [
+       "file",
+       "@xdev/d/f",
+       "f\n",
+       "0640"
+      ],
+      [
+       "file",
+       "@xdev/d/empty",
+       ""
+      ],
+      [
+       "file",
+       "@xdev/d/x.sh",
+       "#!/bin/sh\n",
+       "0755"
+      ],
+      [
+       "dir",
+       "@xdev/d/sub"
+      ],
+      [
+       "dir",
+       "@xdev/d/sub/ro",
+       "0500"
+      ],
+      [
+       "file",
+       "@xdev/d/sub/ro/g",
+       "g\n",
+       "0444"
+      ],
+      [
+       "link",
+       "../f",
+       "@xdev/d/sub/up"
+      ],
+      [
+       "link",
+       "nowhere",
+       "@xdev/d/dangling"
+      ],
+      [
+       "fifo",
+       "@xdev/d/p",
+       "0600"
+      ],
+      [
+       "chown",
+       "@xdev/d/f",
+       "4321",
+       "4322"
+      ],
+      [
+       "chown",
+       "@xdev/d/sub/up",
+       "4323",
+       "4324"
+      ],
+      [
+       "times",
+       "@xdev/d/f",
+       "1600000000",
+       "123456789",
+       "1500000000",
+       "987654321"
+      ],
+      [
+       "times",
+       "@xdev/d/sub/up",
+       "1400000000",
+       "5",
+       "1400000001",
+       "6"
+      ],
+      [
+       "times",
+       "@xdev/d/sub/ro",
+       "1300000000",
+       "7",
+       "1300000001",
+       "8"
+      ],
+      [
+       "times",
+       "@xdev/d",
+       "1200000000",
+       "9",
+       "1200000001",
+       "10"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/d"
+     ]
+    }
+   ],
+   "times": "exact",
+   "diverge": "an item on another file system is copied into ~/Trash (modes, owner, times and symbolic links kept), verified, then removed; the oracle uses the other volume's own trash, or refuses with --trash-dir"
+  },
+  {
+   "name": "put-other-fs-symlink",
+   "about": "a symbolic link on another file system, as the operand",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "@xdev/t",
+       "t\n"
+      ],
+      [
+       "link",
+       "t",
+       "@xdev/l"
+      ],
+      [
+       "times",
+       "@xdev/l",
+       "1400000000",
+       "11",
+       "1400000001",
+       "12"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/l"
+     ]
+    }
+   ],
+   "times": "exact",
+   "diverge": "an item on another file system is copied into ~/Trash (modes, owner, times and symbolic links kept), verified, then removed; the oracle uses the other volume's own trash, or refuses with --trash-dir"
+  },
+  {
+   "name": "put-other-fs-collision",
+   "about": "a name from another file system that is already in the trash",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "x.txt",
+       "home\n"
+      ],
+      [
+       "file",
+       "@xdev/x.txt",
+       "xdev\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "x.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/x.txt"
+     ]
+    }
+   ],
+   "diverge": "an item on another file system is copied into ~/Trash (modes, owner, times and symbolic links kept), verified, then removed; the oracle uses the other volume's own trash, or refuses with --trash-dir"
+  },
+  {
+   "name": "put-other-fs-verbose",
+   "about": "-v on an item from another file system",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "@xdev/x.txt",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-v",
+      "/xdev/trash-rows/x.txt"
+     ]
+    }
+   ],
+   "diverge": "an item on another file system is copied into ~/Trash (modes, owner, times and symbolic links kept), verified, then removed; the oracle uses the other volume's own trash, or refuses with --trash-dir"
+  },
+  {
+   "name": "put-other-fs-space",
+   "about": "an item larger than the home volume's free space",
+   "steps": [
+    {
+     "make": [
+      [
+       "big",
+       "@xdev/big",
+       "3145728"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/big"
+     ]
+    }
+   ],
+   "home": "small",
+   "diverge": "an item the home volume cannot hold is refused by name before anything is copied; the oracle uses the other volume's own trash"
+  },
+  {
+   "name": "put-other-fs-fits",
+   "about": "an item from another file system into a small home it fits",
+   "steps": [
+    {
+     "make": [
+      [
+       "big",
+       "@xdev/fits",
+       "262144"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/fits"
+     ]
+    }
+   ],
+   "home": "small",
+   "diverge": "an item on another file system is copied into ~/Trash (modes, owner, times and symbolic links kept), verified, then removed; the oracle uses the other volume's own trash, or refuses with --trash-dir"
+  },
+  {
+   "name": "put-other-fs-fail-socket",
+   "about": "a tree on another file system holding a socket, which cannot be copied",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "@xdev/d"
+      ],
+      [
+       "file",
+       "@xdev/d/a",
+       "a\n"
+      ],
+      [
+       "socket",
+       "@xdev/d/s"
+      ],
+      [
+       "file",
+       "@xdev/d/z",
+       "z\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/d"
+     ]
+    }
+   ],
+   "diverge": "a copy that fails part-way removes what it made and its info file and leaves the source whole; the oracle moves the tree within its volume"
+  },
+  {
+   "name": "put-other-fs-fail-name",
+   "about": "a tree on another file system holding a name that is not UTF-8",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "@xdev/d"
+      ],
+      [
+       "file",
+       "@xdev/d/a",
+       "a\n"
+      ],
+      [
+       "file",
+       "@xdev/d/b\\xffc",
+       "b\n"
+      ],
+      [
+       "dir",
+       "@xdev/d/sub"
+      ],
+      [
+       "file",
+       "@xdev/d/sub/z",
+       "z\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/d"
+     ]
+    }
+   ],
+   "diverge": "a copy that fails part-way removes what it made and its info file and leaves the source whole; the oracle moves the tree within its volume"
   }
  ]
 }
