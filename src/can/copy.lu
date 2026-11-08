@@ -26,6 +26,19 @@ struct Copied {
     rec: List[int],
 }
 
+/// The records a survey of a tree read, each before its directory was
+/// listed: where each path's record is in `recs`. (A list behind an index,
+/// since 0.2.38 does not yet compile a `copy` of a map's list value.)
+pub struct Seen {
+    index: Map[str, int],
+    recs: List[List[int]],
+}
+
+/// A survey that has read nothing yet.
+pub fn seen_none() -> Seen {
+    Seen { index: Map[str, int](), recs: List[List[int]]() }
+}
+
 /// The host's words for the last failed call.
 pub fn reason() -> str {
     let n = os_error()
@@ -43,7 +56,7 @@ fn rounded(n: int, frag: int) -> int {
 /// itself refuses it. Every entry's record is kept in `seen` as it was read,
 /// before its directory is listed: listing a directory moves its access
 /// time, and the copy must keep the time it had.
-pub fn estimate(path: str, rec: List[int], frag: int, mut seen: Map[str, List[int]]) -> int {
+pub fn estimate(path: str, rec: List[int], frag: int, mut seen: Seen) -> int {
     let kind = rec[0]
     if kind != 1 {
         return rounded(rec[1], frag)
@@ -60,7 +73,8 @@ pub fn estimate(path: str, rec: List[int], frag: int, mut seen: Map[str, List[in
         let crec = fs_lstat(child) else |_| {
             continue
         }
-        seen[child] = copy crec
+        seen.index[child] = seen.recs.len
+        (mut seen.recs).push(copy crec)
         total += estimate(child, crec, frag, mut seen)
     }
     total
@@ -81,13 +95,7 @@ pub fn free_space(dir: str) -> (int, int) {
 
 /// Pass 1 for one entry and everything inside it. An empty answer is
 /// success; any other is why it failed.
-fn copy_entry(
-    src: str,
-    dst: str,
-    rec: List[int],
-    seen: Map[str, List[int]],
-    mut done: List[Copied],
-) -> str {
+fn copy_entry(src: str, dst: str, rec: List[int], seen: Seen, mut done: List[Copied]) -> str {
     let kind = rec[0]
     if kind == 0 {
         let why = copy_file(src, dst)
@@ -107,8 +115,11 @@ fn copy_entry(
                 return "the name of an entry in '{src}' ({shown(raw)}) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
             }
             let child = "{src}/{name}"
-            var crec = seen[child] else List[int]()
-            if crec.len == 0 {
+            let k = seen.index[child] else -1
+            var crec = List[int]()
+            if k >= 0 {
+                crec = copy seen.recs[k]
+            } else {
                 crec = fs_lstat(child) else |_| {
                     return "cannot read '{child}': {reason()}"
                 }
@@ -432,7 +443,7 @@ pub struct Moved {
 
 /// Passes 1 to 4 for the item at `src` (its record `rec`) into `dst`, the
 /// records of the entries inside it as `estimate` read them in `seen`.
-pub fn copy_across(src: str, rec: List[int], dst: str, seen: Map[str, List[int]]) -> Moved {
+pub fn copy_across(src: str, rec: List[int], dst: str, seen: Seen) -> Moved {
     var done = List[Copied]()
     var why = copy_entry(src, dst, rec, seen, mut done)
     if why.len == 0 {

@@ -329,7 +329,7 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
     }
     if across {
         let (free, frag) = free_space("{c.trash}/files")
-        var seen = Map[str, List[int]]()
+        var seen = seen_none()
         let need = estimate(path, rec, frag, mut seen)
         if free >= 0 && need > free {
             fs_remove(info) else |_| {}
