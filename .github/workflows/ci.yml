@@ -1,8 +1,8 @@
 name: ci
 # The local gauntlet record is the merge gate for a change that touches only
-# notes or the program; CI runs on a pull request labelled full-matrix (a change
-# to CI, the pins or the shared tools), on every push to trunk, nightly, and by
-# hand. The PAX legs need KVM and PAX's own build, and run in the local record.
+# notes or the program; CI runs on a pull request labelled full-matrix, ci or
+# release-matrix (a change to CI, the pins or the shared tools), on every push to
+# trunk, nightly, and by hand. The PAX legs need KVM and PAX's own build, and run in the local record.
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
@@ -18,14 +18,14 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   unit:
-    if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') }}
+    if: ${{ (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - run: bash tools/gate unit
   linux:
-    if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') }}
+    if: ${{ (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
