@@ -1,0 +1,568 @@
+{
+ "about": "PAX's rows (tools/pax-rows.py): each runs on PAX under KVM, the home on PAX's ext2 home disk (/home/rh) and the second store PAX's in-memory /tmp (@tmp/ is /tmp/rows). Paths in make steps are relative to the home; 'name' makes an empty file whose name is the given hex bytes (the C fixture); an 'exec' step runs trash with its last argument as bytes.",
+ "rows": [
+  {
+   "name": "pax-put-file",
+   "about": "a plain file on the ext2 home",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-put-dir",
+   "about": "a directory tree on the ext2 home, moved whole",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "dir",
+       "d/sub"
+      ],
+      [
+       "file",
+       "d/sub/g",
+       "g\n"
+      ],
+      [
+       "link",
+       "f",
+       "d/lf"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "d"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-put-links",
+   "about": "a link to a file and a dangling link, trashed as links",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "hello\n"
+      ],
+      [
+       "link",
+       "a.txt",
+       "l"
+      ],
+      [
+       "link",
+       "nowhere/x",
+       "dl"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "l",
+      "dl"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-put-collision",
+   "about": "the same name trashed three times",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "1\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "3\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-put-names",
+   "about": "a space and non-ASCII UTF-8 in a name, and a double extension",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "my file é.txt",
+       "x\n"
+      ],
+      [
+       "file",
+       "a.tar.gz",
+       "z\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "my file é.txt",
+      "a.tar.gz"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-put-long-name",
+   "about": "a 250-byte name, shortened as the oracle shortens it",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "l\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-put-refusals",
+   "about": "., .., /, a missing operand with and without -f, the trash and an item inside it",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "sub/deeper"
+      ],
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "."
+     ],
+     "cwd": "sub/deeper"
+    },
+    {
+     "run": [
+      "trash",
+      ".."
+     ],
+     "cwd": "sub/deeper"
+    },
+    {
+     "run": [
+      "trash",
+      "/"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nope"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-f",
+      "nope"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "Trash/files/a"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "Trash"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-put-flags",
+   "about": "-v, -i answered y and n, and the usage errors",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ],
+      [
+       "file",
+       "b",
+       "b\n"
+      ],
+      [
+       "file",
+       "c",
+       "c\n"
+      ],
+      [
+       "dir",
+       "d"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-v",
+      "a",
+      "d"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-i",
+      "b",
+      "c"
+     ],
+     "stdin": "y\nn\n"
+    },
+    {
+     "run": [
+      "trash"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-x",
+      "c"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-put-not-utf8",
+   "about": "a name that is not UTF-8, given as bytes",
+   "steps": [
+    {
+     "make": [
+      [
+       "name",
+       "",
+       "78ff79"
+      ]
+     ]
+    },
+    {
+     "exec": [
+      "trash",
+      "--",
+      "78ff79"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-tmp-file",
+   "about": "a file in the in-memory /tmp, copied into the ext2 home trash",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "@tmp/x.txt",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/tmp/rows/x.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-tmp-tree",
+   "about": "a tree in /tmp: modes, owners, a link, nested directories, times with nanoseconds",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "@tmp/d",
+       "0750"
+      ],
+      [
+       "file",
+       "@tmp/d/f",
+       "f\n",
+       "0640"
+      ],
+      [
+       "file",
+       "@tmp/d/empty",
+       ""
+      ],
+      [
+       "file",
+       "@tmp/d/x.sh",
+       "#!/bin/sh\n",
+       "0755"
+      ],
+      [
+       "dir",
+       "@tmp/d/sub"
+      ],
+      [
+       "dir",
+       "@tmp/d/sub/ro",
+       "0500"
+      ],
+      [
+       "file",
+       "@tmp/d/sub/ro/g",
+       "g\n",
+       "0444"
+      ],
+      [
+       "link",
+       "../f",
+       "@tmp/d/sub/up"
+      ],
+      [
+       "link",
+       "nowhere",
+       "@tmp/d/dangling"
+      ],
+      [
+       "chown",
+       "@tmp/d/f",
+       "4321",
+       "4322"
+      ],
+      [
+       "chown",
+       "@tmp/d/sub/up",
+       "4323",
+       "4324"
+      ],
+      [
+       "times",
+       "@tmp/d/f",
+       "1600000000",
+       "123456789",
+       "1500000000",
+       "987654321"
+      ],
+      [
+       "times",
+       "@tmp/d/sub/up",
+       "1400000000",
+       "5",
+       "1400000001",
+       "6"
+      ],
+      [
+       "times",
+       "@tmp/d/sub/ro",
+       "1300000000",
+       "7",
+       "1300000001",
+       "8"
+      ],
+      [
+       "times",
+       "@tmp/d",
+       "1200000000",
+       "9",
+       "1200000001",
+       "10"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/tmp/rows/d"
+     ]
+    }
+   ],
+   "times": "exact"
+  },
+  {
+   "name": "pax-tmp-collision",
+   "about": "a name from /tmp already in the trash",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "x.txt",
+       "home\n"
+      ],
+      [
+       "file",
+       "@tmp/x.txt",
+       "tmp\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "x.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-v",
+      "/tmp/rows/x.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-tmp-space",
+   "about": "an item in /tmp larger than the ext2 home has free",
+   "steps": [
+    {
+     "make": [
+      [
+       "big",
+       "@tmp/big",
+       "41943040"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/tmp/rows/big"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pax-tmp-fail-name",
+   "about": "a tree in /tmp holding a name that is not UTF-8: the copy fails and the source stays whole",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "@tmp/d"
+      ],
+      [
+       "file",
+       "@tmp/d/a",
+       "a\n"
+      ],
+      [
+       "name",
+       "@tmp/d",
+       "62ff63"
+      ],
+      [
+       "dir",
+       "@tmp/d/sub"
+      ],
+      [
+       "file",
+       "@tmp/d/sub/z",
+       "z\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/tmp/rows/d"
+     ]
+    }
+   ]
+  }
+ ]
+}
