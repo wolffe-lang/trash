@@ -635,7 +635,8 @@
       "Trash"
      ]
     }
-   ]
+   ],
+   "diverge": "the trash and anything inside it are refused by name; the oracle trashes an item of the trash into the trash, orphaning its first info file, and moves the whole home trash into the volume trash at the root"
   },
   {
    "name": "put-no-operand",
@@ -817,7 +818,8 @@
       "/xdev/trash-rows/x.txt"
      ]
     }
-   ]
+   ],
+   "diverge": "an item on another file system is copied into ~/Trash (modes, owner, times and symbolic links kept), verified, then removed; the oracle uses the other volume's own trash, or refuses with --trash-dir"
   },
   {
    "name": "put-other-fs-home-trash",
@@ -840,7 +842,8 @@
       "/xdev/trash-rows/x.txt"
      ]
     }
-   ]
+   ],
+   "diverge": "an item on another file system is copied into ~/Trash (modes, owner, times and symbolic links kept), verified, then removed; the oracle uses the other volume's own trash, or refuses with --trash-dir"
   },
   {
    "name": "put-other-fs-dir-home-trash",
@@ -873,7 +876,8 @@
       "/xdev/trash-rows/d"
      ]
     }
-   ]
+   ],
+   "diverge": "an item on another file system is copied into ~/Trash (modes, owner, times and symbolic links kept), verified, then removed; the oracle uses the other volume's own trash, or refuses with --trash-dir"
   },
   {
    "name": "list-empty",
@@ -978,7 +982,8 @@
     {
      "run": [
       "trash-list"
-     ]
+     ],
+     "order": "host"
     }
    ]
   },

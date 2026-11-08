@@ -29,6 +29,12 @@ modification time, and the full text of every `.trashinfo` and of
     output, or a number of seconds in `directorysizes`, inside the window:
     `<in-window>`. Fixed dates a fixture wrote are outside it and stay.
   - A modification time inside the window: `<in-window>`.
+  - A step marked `"order": "host"`: its standard output's lines sorted, for
+    a listing in the order the host's directory hands entries over.
+
+A row marked `"diverge"` is one where this repository departs from the oracle
+by design (the reason is the mark's text); `compare` holds the candidate to
+tests/oracle/expected/ROW.json there instead of to the oracle.
 
 Nothing else is rewritten. A Python traceback in the oracle's output is never
 printed or kept (the clean room: it would quote the oracle's source); it is
@@ -136,13 +142,22 @@ def env_for(row):
             'LC_ALL': 'C.UTF-8', 'PATH': '/usr/bin:/bin'}
 
 
+# The tops of the two file systems a row touches, where a tool may make a
+# per-volume trash (`$topdir/.Trash-$uid`): the image's root, which holds the
+# scratch home, and the second file system.
+TOPS = (('root-top', Path('/')), ('xdev-top', Path('/xdev')))
+
+
 def clean():
+    # Only ever inside the oracle image: this removes what a tool left at the
+    # tops of its file systems.
+    assert Path('/opt/oracle-manifest.txt').exists(), 'clean() outside the oracle image'
     for d in (SCRATCH, XDEV):
         if d.exists():
             shutil.rmtree(d)
-    # What a tool made at the second file system's top (a per-volume trash).
-    for p in Path('/xdev').glob('.Trash*'):
-        shutil.rmtree(p) if p.is_dir() and not p.is_symlink() else p.unlink()
+    for _, top in TOPS:
+        for p in top.glob('.Trash*'):
+            shutil.rmtree(p) if p.is_dir() and not p.is_symlink() else p.unlink()
 
 
 def run_row(row, tool):
@@ -161,12 +176,13 @@ def run_row(row, tool):
         cwd = where(unescape(step.get('cwd', '')))
         r = subprocess.run(argv, cwd=cwd, env=env_for(row), input=unescape(step.get('stdin', '')),
                            capture_output=True, timeout=120)
-        steps.append({'argv': [show(a) for a in [unescape(step['run'][0])] + argv[1:]],
+        steps.append({'argv': [show(a) for a in [unescape(step['run'][0])] + argv[1:]], 'order': step.get('order', 'kept'),
                       'exit': r.returncode, 'stdout': show(r.stdout), 'stderr': show(r.stderr)})
     end = time.time()
     trees = {'home': snapshot(bytes(HOME)), 'xdev': snapshot(bytes(XDEV))}
-    for p in sorted(Path('/xdev').glob('.Trash*')):
-        trees['xdev-top/' + p.name] = snapshot(bytes(p))
+    for label, top in TOPS:
+        for p in sorted(top.glob('.Trash*')):
+            trees[label + '/' + p.name] = snapshot(bytes(p))
     clean()
     return {'row': row['name'], 'tz': row.get('tz', 'UTC'), 'window': [start, end], 'steps': steps, 'trees': trees}
 
@@ -245,6 +261,14 @@ def norm_output(text, window, tz):
     return DATE_RE.sub(date, text)
 
 
+def host_order(text):
+    """A listing in the order the host's directory hands entries over, which no
+    two file systems share: its lines sorted, for a step that says so by name."""
+    lines = text.split('\n')
+    tail = lines.pop() if lines and lines[-1] == '' else None
+    return '\n'.join(sorted(lines) + ([tail] if tail is not None else []))
+
+
 def redact(text):
     """(text, lines redacted): a traceback and everything after it in the stream."""
     i = text.find(TRACEBACK)
@@ -262,8 +286,10 @@ def normalise(cap):
         out, n1 = redact(s['stdout'])
         err, n2 = redact(s['stderr'])
         tracebacks += bool(n1) + bool(n2)
-        steps.append({'argv': s['argv'], 'exit': s['exit'], 'stdout': norm_output(out, w, tz),
-                      'stderr': norm_output(err, w, tz)})
+        out = norm_output(out, w, tz)
+        if s.get('order') == 'host':
+            out = host_order(out)
+        steps.append({'argv': s['argv'], 'exit': s['exit'], 'stdout': out, 'stderr': norm_output(err, w, tz)})
     trees = {}
     for tname, tree in cap['trees'].items():
         t = {}
@@ -400,8 +426,17 @@ def cmd_compare(a):
     fails = 0
     rows = load_rows(a.rows, a.only)
     for row in rows:
-        want = normalise(run_row(row, oracle_bin()))
         got = normalise(run_row(row, os.path.abspath(a.candidate)))
+        if row.get('diverge'):
+            # This repository departs from the oracle here by design (the row
+            # says why): the candidate is held to its own expected capture.
+            path = ROOT / 'tests/oracle/expected' / (row['name'] + '.json')
+            if not path.exists():
+                fails += report(row['name'], [('expected', 'a diverging row with no expected capture')])
+                continue
+            fails += report(row['name'], compare(json.loads(path.read_text()), got), ' (diverges: %s)' % row['diverge'])
+            continue
+        want = normalise(run_row(row, oracle_bin()))
         fails += report(row['name'], compare(want, got))
     print('SUMMARY oracle-compare rows=%d failed=%d' % (len(rows), fails))
     return 1 if fails else 0
@@ -483,6 +518,7 @@ def cmd_selftest(a):
         ('normalise-fixture-mtime-kept', n['trees']['home']['Trash/files/a b.txt']['mtime'] == FIXTURE_TIME, ''),
         ('normalise-bad-shape', norm_deletion_date('20261108T01:02:03', [0, 1], 'UTC') == '<bad-shape:20261108T01:02:03>', ''),
         ('normalise-outside', norm_deletion_date('2020-01-02T03:04:05', [0, 1], 'UTC') == '<outside-window:2020-01-02T03:04:05>', ''),
+        ('host-order', host_order('b\na\n') == 'a\nb\n' and host_order('b\na') == 'a\nb', ''),
         ('redact', redact('ok\n' + TRACEBACK + '\n  File "x"\nE\n') == ('ok\n<traceback redacted: 4 lines>\n', 4), ''),
         ('self-equal', compare(n, normalise(copy.deepcopy(base))) == [], compare(n, normalise(copy.deepcopy(base)))),
     ]
