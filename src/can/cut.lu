@@ -1,0 +1,75 @@
+// can: the cut hook. Every call that changes the file system is preceded
+// by a named step, `step("reserve PATH")`, so that a row can stop a command
+// between any two of its durable calls, as a power cut would, and see what
+// it leaves and what a second run makes of it (tools/harden.py).
+//
+// - `TRASH_CUT=N`: the Nth step ends the process, before that step's call,
+//   by SIGKILL, after one line on standard error, `cut before WHAT`. A kill
+//   between two calls leaves the kernel's state exactly as a power cut
+//   leaves a disk that kept every call made before it.
+// - `TRASH_PAUSE=N:MS`: the Nth step sleeps MS milliseconds instead, so a
+//   second command can run inside the window (the stress rows).
+//
+// The counters are kept in the environment, each step counting one down: a
+// module `var` is reachable only from `unsafe` code. With neither variable
+// set, a step costs two `env_get` calls that fail.
+
+/// The decimal number `v`, or -1 when it is not one.
+pub fn cut_number(v: str) -> int {
+    if v.len == 0 {
+        return -1
+    }
+    var n = 0
+    for b in v.bytes() {
+        let c = b as int
+        if c < 48 || c > 57 || n > 100000000 {
+            return -1
+        }
+        n = n * 10 + c - 48
+    }
+    n
+}
+
+/// `N:MS` read as (N, MS), or (-1, -1).
+pub fn cut_pause(v: str) -> (int, int) {
+    var i = 0
+    let b = v.bytes()
+    while i < b.len && b[i] as int != 58 {
+        i += 1
+    }
+    if i == b.len {
+        return (-1, -1)
+    }
+    let n = cut_number(v[0..i])
+    let ms = cut_number(v[i + 1..])
+    if n < 0 || ms < 0 {
+        return (-1, -1)
+    }
+    (n, ms)
+}
+
+/// One durable step, about to be taken: `what` names it.
+pub fn step(what: str) {
+    let cut = env_get("TRASH_CUT") else ""
+    if cut.len > 0 {
+        let n = cut_number(cut)
+        if n == 1 {
+            eprint("cut before {what}")
+            os_exit_signal(-9) else |_| {}
+            os_exit(137)
+        }
+        if n > 1 {
+            env_set("TRASH_CUT", "{n - 1}") else |_| {}
+        }
+    }
+    let pause = env_get("TRASH_PAUSE") else ""
+    if pause.len > 0 {
+        let (n, ms) = cut_pause(pause)
+        if n == 1 {
+            env_unset("TRASH_PAUSE") else |_| {}
+            time_sleep_ms(ms)
+        } else if n > 1 {
+            env_set("TRASH_PAUSE", "{n - 1}:{ms}") else |_| {}
+        }
+    }
+}
