@@ -6,9 +6,33 @@ item into the user's trash instead of unlinking it; `trash-list`,
 `trash-restore`, `trash-rm` and `trash-empty` look after it until it is
 emptied.
 
-**State: the census and the scaffold.** The commands are not written yet.
-What is here measures what they will need and holds them, once written, to
-the oracle: see *The census* and *The oracle* below.
+**State: `trash` itself.** `trash` is written, held to the oracle on Linux and
+to its own captures on PAX; `trash-list`, `trash-restore`, `trash-rm` and
+`trash-empty` come next.
+
+## Using it
+
+```
+trash [OPTION]... FILE...
+```
+
+Each FILE goes to `~/Trash/files/`, and a note of where it came from and when
+to `~/Trash/info/`. A second item of the same name is `NAME_1`, then `NAME_2`.
+`-f` says nothing of a FILE that is not there, `-i` asks first, `-v` says what
+was trashed, and `-r`, `-R` and `-d` are accepted as `rm` takes them (a
+directory is always trashed whole). A symbolic link is trashed as the link. The
+exit status is 0, 74 when some FILE could not be trashed, and 2 for a usage
+error.
+
+- An item on another file system (PAX's `/tmp` is in memory) is copied into
+  `~/Trash`, checked byte for byte, given back its modes, owner and times, and
+  only then removed. If the home volume has too little space for it, it is
+  refused before anything is copied; a copy that fails part-way is removed and
+  the item left where it was.
+- `.`, `..`, `/`, the trash itself, anything inside it, a directory that holds
+  it, and a mount point are refused by name.
+- A name that is not UTF-8 is refused by name for now: wolf cannot yet name such
+  a path (wolf-lang#687).
 
 ## What it does
 
@@ -62,14 +86,19 @@ reproduce them.
 The toolchain is pinned by digest in `wolf-toolchain.toml` (wolf 0.2.38 and
 lupin 0.1.60); `tools/fetch-toolchain.py` fetches and checks it.
 
-- `bash tools/gate unit`: the pins, and the census and oracle harnesses' own
-  tests. Needs only Python 3.11 or later.
+- `bash tools/gate unit`: the pins, the census, oracle and PAX harnesses' own
+  tests, and the expected captures. Needs only Python 3.11 or later.
 - `bash tools/in-container`: builds the oracle image, checks it against its
   locks, and runs `tools/gate linux` inside it: the toolchain, `wolf fmt
-  --check`, the census on Linux, the static census for PAX, and the oracle's
-  rows. `TRASH_ENGINE=podman` for podman.
+  --check`, the census on Linux, the commands and their unit programs, the
+  static census and commands for PAX, the oracle's rows on the oracle, and the
+  commands held to them. `TRASH_ENGINE=podman` for podman.
+  `bash tools/in-container bash tools/gate candidate` is the commands alone.
+  The image's root is read-only and every scratch file system a row writes is
+  a tmpfs of a fixed size.
 - `tools/gate-pax PAXTREE KERNEL INPUTS CENSUS-STATIC HOME.img OUTDIR`: the
-  census on PAX under KVM (see the script's header for its inputs).
+  census and then trash's own rows (`tests/pax/rows.json`) on PAX under KVM
+  (see the script's header for its inputs).
 
 Every gate step prints `START name` and `END name exit=N`, and the first step
 that fails stops the gate.
