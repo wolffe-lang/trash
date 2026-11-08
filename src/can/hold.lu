@@ -27,7 +27,10 @@ pub struct Hold {
 }
 
 /// Lock the open file `fd`: 0 held, 1 the host keeps no locks, 2 busy,
-/// 3 gone (its last link removed before the lock was had).
+/// 3 gone (its last link removed before the lock was had). Only a lock
+/// another open file holds is busy; any other refusal (a host or a file
+/// system that keeps no locks, `ENOLCK`) is taken as one that keeps none,
+/// so that a refusal of the call itself never stops a command.
 pub fn lock_fd(fd: int) -> int {
     var state = 0
     fs_lock(fd, 2) else |e| match e {
@@ -35,10 +38,10 @@ pub fn lock_fd(fd: int) -> int {
             state = 2
         },
         invalid => {
-            state = 2
+            state = 1
         },
         io => {
-            state = 2
+            state = 1
         },
         unsupported => {
             state = 1
