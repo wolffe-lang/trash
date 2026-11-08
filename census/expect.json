@@ -371,6 +371,26 @@
     "want": "ok target-kept=true left=false"
    }
   },
+  "rename-dir-exdev@across": {
+   "linux": {
+    "status": "present",
+    "want": "cross_device errno=18"
+   },
+   "pax": {
+    "status": "present",
+    "want": "cross_device errno=18"
+   }
+  },
+  "rename-dir-same@across": {
+   "linux": {
+    "status": "present",
+    "want": "ok"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok"
+   }
+  },
   "rename-exdev@across": {
    "linux": {
     "status": "present",
@@ -379,6 +399,16 @@
    "pax": {
     "status": "present",
     "want": "cross_device errno=18"
+   }
+  },
+  "rename-link@across": {
+   "linux": {
+    "status": "present",
+    "want": "kind=3 target-kept=true"
+   },
+   "pax": {
+    "status": "present",
+    "want": "kind=3 target-kept=true"
    }
   },
   "rename-missing@across": {

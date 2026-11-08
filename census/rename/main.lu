@@ -24,5 +24,23 @@ fn main() -> int {
         print("ROW rename-replaces@{a[0]} {e} errno={os_error()}")
     }
     print("ROW rename-replaces@{a[0]} r7={fs_read_text("{same}/r7") else "?"}")
+    fs_create_dir_all("{same}/d1/inner") else |e| { print("ROW rename-dir-same@{a[0]} setup:{e}") }
+    fs_rename("{same}/d1", "{same}/d2") else |e| {
+        print("ROW rename-dir-same@{a[0]} {e} errno={os_error()}")
+    }
+    if fs_is_dir("{same}/d2/inner") { print("ROW rename-dir-same@{a[0]} ok") }
+    fs_create_dir_all("{other}/d3/inner") else |e| {
+        print("ROW rename-dir-exdev@{a[0]} setup:{e}")
+    }
+    fs_rename("{other}/d3", "{same}/d4") else |e| {
+        print("ROW rename-dir-exdev@{a[0]} {e} errno={os_error()}")
+    }
+    if fs_is_dir("{same}/d4") { print("ROW rename-dir-exdev@{a[0]} ok") }
+    fs_symlink("r7", "{same}/l1") else |e| { print("ROW rename-link@{a[0]} setup:{e}") }
+    fs_rename("{same}/l1", "{same}/l2") else |e| {
+        print("ROW rename-link@{a[0]} {e} errno={os_error()}")
+    }
+    let k = (fs_lstat("{same}/l2") else List[int]()).get(0) else -1
+    print("ROW rename-link@{a[0]} kind={k} target-kept={fs_exists("{same}/r7")}")
     0
 }
