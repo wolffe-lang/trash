@@ -1,0 +1,354 @@
+// can: one operand put in the trash, in the specification's order: the
+// info file first, created exclusively, which reserves the name; then the
+// item, renamed into `files/` (or copied there from another file system).
+
+/// Where the trash is, and what this command was asked to do.
+pub struct Ctx {
+    /// `$HOME/Trash`, as written.
+    trash: str,
+    /// The real path of the trash (or of where it will be made).
+    trash_real: str,
+    /// The working directory, which a relative operand is read against.
+    cwd: str,
+    force: bool,
+    interactive: bool,
+    verbose: bool,
+}
+
+/// The context for a home: the trash's real path is read once.
+pub fn context(home: str, cwd: str, force: bool, interactive: bool, verbose: bool) -> Ctx {
+    let trash = "{home}/Trash"
+    var real = fs_realpath(trash) else ""
+    if real.len == 0 {
+        let h = fs_realpath(home) else home
+        real = if h == "/" then "/Trash" else "{h}/Trash"
+    }
+    Ctx {
+        trash: trash,
+        trash_real: real,
+        cwd: cwd,
+        force: force,
+        interactive: interactive,
+        verbose: verbose,
+    }
+}
+
+fn say(line: str) {
+    eprint("trash: {line}")
+}
+
+/// The words a question names a kind with, as the oracle asks.
+fn kind_words(rec: List[int]) -> str {
+    let kind = rec[0]
+    if kind == 0 {
+        return if rec[1] == 0 then "regular empty file" else "regular file"
+    }
+    if kind == 1 {
+        return "directory"
+    }
+    if kind == 3 {
+        return "symbolic link"
+    }
+    "entry"
+}
+
+/// `-i`'s question, and its answer: a line that starts with `y` or `Y` is
+/// a yes; anything else, the end of input included, is a no.
+fn asked(kind: str, op: str) -> bool {
+    print_raw("trash: trash {kind} '{op}'? ")
+    let line = read_line() else |_| {
+        return false
+    }
+    line.starts_with("y") || line.starts_with("Y")
+}
+
+/// The refusals the oracle makes of an operand by its spelling, and those
+/// this program adds once trailing slashes go: `.`, `..`, and a last
+/// component that is either. The message, or "".
+fn dot_refusal(op: str) -> str {
+    if op == "." || op == ".." {
+        return "cannot trash directory '{op}'"
+    }
+    if op.ends_with("/.") {
+        return "cannot trash '.' directory '{op}'"
+    }
+    if op.ends_with("/..") {
+        return "cannot trash '..' directory '{op}'"
+    }
+    let bare = unslashed(op)
+    if bare == "." || bare == ".." {
+        return "cannot trash directory '{op}'"
+    }
+    if bare.ends_with("/.") {
+        return "cannot trash '.' directory '{op}'"
+    }
+    if bare.ends_with("/..") {
+        return "cannot trash '..' directory '{op}'"
+    }
+    ""
+}
+
+/// The longest name a directory entry in `dir` may have.
+fn name_max(dir: str) -> int {
+    let w = fs_statfs(dir) else |_| {
+        return 255
+    }
+    if w[0] / 256 % 2 == 1 && w[8] > 0 then w[8] else 255
+}
+
+fn make_dir(path: str) -> str {
+    fs_create_dir_mode(path, 0o700) else |e| match e {
+        exists => {
+            if fs_is_dir(path) {
+                return ""
+            }
+            return "'{path}' is in the way of the trash"
+        },
+        denied => {
+            return "cannot make '{path}': {reason()}"
+        },
+        invalid => {
+            return "cannot make '{path}': {reason()}"
+        },
+        io => {
+            return "cannot make '{path}': {reason()}"
+        },
+        not_found => {
+            return "cannot make '{path}': {reason()}"
+        },
+        unsupported => {
+            return "cannot make '{path}': {reason()}"
+        },
+    }
+    ""
+}
+
+/// A reserved name: `name` is free in `files/` and `info/NAME.trashinfo`
+/// is this run's, open on `fd`. `why` is set instead when none could be had.
+struct Reserved {
+    name: str,
+    fd: int,
+    why: str,
+}
+
+/// Reserve a name for an item named `base`: create its info file with
+/// `O_EXCL`, trying `base`, `base_1`, `base_2`, … until one is created. A
+/// name whose item is already in `files/` (an item with no info file) is
+/// given back and the next tried, so a rename never replaces an earlier
+/// item. A try whose info file name is too long makes every later try a
+/// short one (`names.candidate`). No rename that never replaces exists yet
+/// (wolf-lang#706): the reservation is what keeps two runs, or a desktop's
+/// trash, off one name, as the specification asks.
+fn reserve(c: Ctx, base: str) -> Reserved {
+    let info = "{c.trash}/info"
+    let longest = name_max(info)
+    var short = false
+    var i = 0
+    while i < 1000000 {
+        let name = candidate(base, i, short)
+        if too_long(name, longest) {
+            if short {
+                return Reserved { name: "", fd: -1, why: "its name is too long for the trash" }
+            }
+            short = true
+            i += 1
+            continue
+        }
+        let path = "{info}/{name}.trashinfo"
+        var taken = false
+        var why = ""
+        let fd = fs_open_perm(path, 4, 0o600) else |e| match e {
+            exists => {
+                taken = true
+                -1
+            },
+            denied => {
+                why = reason()
+                -1
+            },
+            invalid => {
+                why = reason()
+                -1
+            },
+            io => {
+                why = reason()
+                -1
+            },
+            not_found => {
+                why = reason()
+                -1
+            },
+            unsupported => {
+                why = reason()
+                -1
+            },
+        }
+        if why.len > 0 {
+            return Reserved { name: "", fd: -1, why: "cannot make its info file '{path}': {why}" }
+        }
+        if !taken {
+            var occupied = true
+            let _ = fs_lstat("{c.trash}/files/{name}") else |_| {
+                occupied = false
+                List[int]()
+            }
+            if !occupied {
+                return Reserved { name: name, fd: fd, why: "" }
+            }
+            fs_close(fd) else |_| {}
+            fs_remove(path) else |_| {}
+        }
+        i += 1
+    }
+    Reserved { name: "", fd: -1, why: "no free name is left for it in the trash" }
+}
+
+/// Put one operand (`word`, as it was given) in the trash. True when it
+/// failed, which makes the command's status 74.
+pub fn put(c: Ctx, word: List[byte]) -> bool {
+    let op = str_from_utf8(word) else |_| {
+        say(
+            "cannot trash '{shown(word)}': its name is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)",
+        )
+        return true
+    }
+    let dots = dot_refusal(op)
+    if dots.len > 0 {
+        say(dots)
+        return true
+    }
+    var there = true
+    let _ = fs_lstat(op) else |_| {
+        there = false
+        List[int]()
+    }
+    if !there {
+        if c.force {
+            return false
+        }
+        say("cannot trash non existent '{op}'")
+        return true
+    }
+    let path = absolute(c.cwd, op)
+    if path == "/" {
+        say("cannot trash directory '{op}'")
+        return true
+    }
+    let rec = fs_lstat(path) else |_| {
+        if c.force {
+            return false
+        }
+        say("cannot trash non existent '{op}'")
+        return true
+    }
+    let dir = parent(path)
+    let dir_real = fs_realpath(dir) else dir
+    let real = if dir_real == "/" then "/{base(path)}" else "{dir_real}/{base(path)}"
+    if real == c.trash_real {
+        say("cannot trash '{op}': it is the trash itself")
+        return true
+    }
+    if under(real, c.trash_real) {
+        say("cannot trash '{op}': it is inside the trash")
+        return true
+    }
+    if under(c.trash_real, real) {
+        say("cannot trash '{op}': it holds the trash")
+        return true
+    }
+    if rec[0] == 1 {
+        let above = fs_lstat(dir) else |_| {
+            List[int]()
+        }
+        if above.len > 9 && above[9] != rec[9] {
+            say("cannot trash '{op}': it is a mount point")
+            return true
+        }
+    }
+    if c.interactive {
+        var follows = true
+        let _ = fs_stat(path) else |_| {
+            follows = false
+            List[int]()
+        }
+        if follows && !asked(kind_words(rec), op) {
+            return false
+        }
+    }
+    for d in ["{c.trash}", "{c.trash}/files", "{c.trash}/info"] {
+        let why = make_dir(d)
+        if why.len > 0 {
+            say("cannot trash '{op}': {why}")
+            return true
+        }
+    }
+    let r = reserve(c, base(path))
+    if r.why.len > 0 {
+        say("cannot trash '{op}': {r.why}")
+        return true
+    }
+    let info = "{c.trash}/info/{r.name}.trashinfo"
+    let text = info_text(real, deletion_date(time_unix_ms() / 1000))
+    var why = ""
+    fs_write_chunk(r.fd, bytes_of(text)) else |_| {
+        why = reason()
+    }
+    fs_close(r.fd) else |_| {
+        if why.len == 0 {
+            why = reason()
+        }
+    }
+    if why.len > 0 {
+        fs_remove(info) else |_| {}
+        say("cannot trash '{op}': cannot write its info file: {why}")
+        return true
+    }
+    let dst = "{c.trash}/files/{r.name}"
+    var across = false
+    fs_rename(path, dst) else |e| match e {
+        cross_device => {
+            across = true
+        },
+        denied => {
+            why = reason()
+        },
+        exists => {
+            why = reason()
+        },
+        io => {
+            why = reason()
+        },
+        not_found => {
+            why = reason()
+        },
+    }
+    if why.len > 0 {
+        fs_remove(info) else |_| {}
+        say("cannot trash '{op}': {why}")
+        return true
+    }
+    if across {
+        let (free, frag) = free_space("{c.trash}/files")
+        if free >= 0 && estimate(path, rec, frag) > free {
+            fs_remove(info) else |_| {}
+            say("cannot trash '{op}': the home volume has too little free space to copy it")
+            return true
+        }
+        let m = copy_across(path, rec, dst)
+        if m.state == 1 {
+            fs_remove(info) else |_| {}
+            say("cannot trash '{op}': {m.why}; it is left where it was")
+            return true
+        }
+        if m.state == 2 {
+            say(
+                "'{op}' is in the trash, but not all of it could be removed from where it was: {m.why}",
+            )
+            return true
+        }
+    }
+    if c.verbose {
+        say("'{op}' trashed in ~/Trash")
+    }
+    false
+}
