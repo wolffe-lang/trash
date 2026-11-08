@@ -1,0 +1,61 @@
+{
+ "row": "put-collision-orphan-info",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "a.txt"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/a.txt_1": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "7aa7a5359173d05b63cfd682e3c38487f3cb4f7f1d60659fe59fab1505977d4c",
+    "size": 4,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/a.txt.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/elsewhere/a.txt\nDeletionDate=<outside-window:2020-01-02T03:04:05>\n",
+    "type": "file"
+   },
+   "Trash/info/a.txt_1.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/a.txt\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

@@ -1,0 +1,49 @@
+{
+ "row": "put-other-fs-fits",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/fits"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {},
+  "xdev-top/.Trash-0": {
+   "files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "files/fits": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "06e887c79125f31b04ef2fa098dffd566cbe4cd34281771901febbb07e63817a",
+    "size": 262144,
+    "type": "file"
+   },
+   "info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "info/fits.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=trash-rows/fits\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

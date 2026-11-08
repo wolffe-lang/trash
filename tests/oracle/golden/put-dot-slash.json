@@ -1,0 +1,90 @@
+{
+ "row": "put-dot-slash",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "./"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash directory './' (from volume '/')\ntrash:  `- failed to trash ./ in /tmp/trash-rows/home/Trash, because failed to move ./ in /tmp/trash-rows/home/Trash/files: [Errno 22] Invalid argument: '.'\ntrash:  `- failed to trash ./ in /.Trash/0, because trash dir cannot be created because its parent does not exists, trash-dir: /.Trash/0, parent: /.Trash\ntrash:  `- failed to trash ./ in /.Trash-0, because failed to move ./ in /.Trash-0/files: [Errno 22] Invalid argument: '.'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "deeper/.//"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "deeper/../"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash non existent 'deeper/../'\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/deeper": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/deeper.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/sub/deeper\nDeletionDate=<in-window>\n",
+    "type": "file"
+   },
+   "sub": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "root-top/.Trash-0": {
+   "files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

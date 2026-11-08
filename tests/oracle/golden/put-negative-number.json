@@ -1,0 +1,38 @@
+{
+ "row": "put-negative-number",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "-1",
+    "-"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash [OPTION]... FILE...\ntrash: error: refusing to treat existing file -1 as an option (use './-1' or a '--' separator)\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "-": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
+    "size": 2,
+    "type": "file"
+   },
+   "-1": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "a4fb621495a0122493b2203591c448903c472e306a1ede54fabad829e01075c0",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

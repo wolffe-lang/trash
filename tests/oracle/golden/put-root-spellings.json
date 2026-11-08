@@ -1,0 +1,86 @@
+{
+ "row": "put-root-spellings",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "///"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash directory '///' (from volume '/')\ntrash:  `- failed to trash /// in /tmp/trash-rows/home/Trash, because failed to move /// in /tmp/trash-rows/home/Trash/files: Cannot move a directory '/' into itself '/tmp/trash-rows/home/Trash/files/_1'.\ntrash:  `- failed to trash /// in /.Trash/0, because trash dir cannot be created because its parent does not exists, trash-dir: /.Trash/0, parent: /.Trash\ntrash:  `- failed to trash /// in /.Trash-0, because failed to move /// in /.Trash-0/files: Cannot move a directory '/' into itself '/.Trash-0/files/_1'.\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "/."
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '.' directory '/.'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "/tmp/../.."
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '..' directory '/tmp/../..'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "../../../../.."
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash '..' directory '../../../../..'\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "sub": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "root-top/.Trash-0": {
+   "files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

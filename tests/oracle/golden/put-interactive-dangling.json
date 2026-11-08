@@ -1,0 +1,70 @@
+{
+ "row": "put-interactive-dangling",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "-i",
+    "dl",
+    "fl"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "trash: trash symbolic link 'fl'? "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/dl": {
+    "mode": "0777",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "target": "nowhere",
+    "type": "link"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/dl.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/dl\nDeletionDate=<in-window>\n",
+    "type": "file"
+   },
+   "fl": {
+    "mode": "0777",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "target": "t",
+    "type": "link"
+   },
+   "t": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "fe8edeeb98cc6d3b93cf2d57000254b84bd9eba34b4df7ce4b87db8b937b7703",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

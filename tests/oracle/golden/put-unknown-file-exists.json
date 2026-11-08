@@ -1,0 +1,29 @@
+{
+ "row": "put-unknown-file-exists",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "-x"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash [OPTION]... FILE...\ntrash: error: refusing to treat existing file -x as an option (use './-x' or a '--' separator)\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "-x": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

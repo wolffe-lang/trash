@@ -1,0 +1,20 @@
+{
+ "row": "put-empty-operand",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    ""
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash non existent ''\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

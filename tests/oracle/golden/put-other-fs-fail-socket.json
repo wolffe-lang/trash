@@ -1,0 +1,69 @@
+{
+ "row": "put-other-fs-fail-socket",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/xdev/trash-rows/d"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {},
+  "xdev-top/.Trash-0": {
+   "files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "files/d": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "files/d/a": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
+    "size": 2,
+    "type": "file"
+   },
+   "files/d/s": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "socket"
+   },
+   "files/d/z": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "c865f6c5ab8d1b0bcd383a5e1e3879d22681c96bf462c269b7581d523fbe70ab",
+    "size": 2,
+    "type": "file"
+   },
+   "info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "info/d.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=trash-rows/d\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

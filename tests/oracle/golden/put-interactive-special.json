@@ -1,0 +1,44 @@
+{
+ "row": "put-interactive-special",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "-i",
+    "p",
+    "s",
+    "ro"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "trash: trash entry 'p'? trash: trash entry 's'? trash: trash regular file 'ro'? "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "p": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "fifo"
+   },
+   "ro": {
+    "mode": "0444",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "8e54b0ca18020275e4aef1ca0eb5e197e066c065c1864817652a8a39c55402cd",
+    "size": 2,
+    "type": "file"
+   },
+   "s": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "socket"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

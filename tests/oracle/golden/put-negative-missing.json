@@ -1,0 +1,20 @@
+{
+ "row": "put-negative-missing",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "-1"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash non existent '-1'\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

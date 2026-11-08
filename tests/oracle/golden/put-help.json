@@ -1,0 +1,29 @@
+{
+ "row": "put-help",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "--help"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "<text>"
+  },
+  {
+   "argv": [
+    "trash",
+    "-h"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "<text>"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

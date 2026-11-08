@@ -1,0 +1,38 @@
+{
+ "row": "put-option-file-exists",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "-v",
+    "a"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash [OPTION]... FILE...\ntrash: error: refusing to treat existing file -v as an option (use './-v' or a '--' separator)\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "-v": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "73324e1ab1db72ee9eb4fdf1c90a586d67e00ab58330d1cbfea26ecd0a77fa4d",
+    "size": 2,
+    "type": "file"
+   },
+   "a": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

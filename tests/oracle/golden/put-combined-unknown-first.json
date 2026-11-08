@@ -1,0 +1,40 @@
+{
+ "row": "put-combined-unknown-first",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "-xv",
+    "a"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash [OPTION]... FILE...\ntrash: error: unrecognized arguments: -xv\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    "-vxq",
+    "a"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash [OPTION]... FILE...\ntrash: error: unrecognized arguments: -xq\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "a": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

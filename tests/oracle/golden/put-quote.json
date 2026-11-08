@@ -1,0 +1,89 @@
+{
+ "row": "put-quote",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "-v",
+    "it's",
+    "a b",
+    "x\"y",
+    "no'pe",
+    "no pe"
+   ],
+   "exit": 74,
+   "stderr": "trash: 'it's' trashed in ~/Trash\ntrash: 'a b' trashed in ~/Trash\ntrash: 'x\"y' trashed in ~/Trash\ntrash: cannot trash non existent 'no'pe'\ntrash: cannot trash non existent 'no pe'\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/a b": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "cbc80bb5c0c0f8944bf73b3a429505ac5cde16644978bc9a1e74c5755f8ca556",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/it's": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "4adc33bd9fe74303c344be46e5916d65182fb218e248fe80452ab3f025b06c64",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/x\"y": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/a b.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/a%20b\nDeletionDate=<in-window>\n",
+    "type": "file"
+   },
+   "Trash/info/it's.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/it%27s\nDeletionDate=<in-window>\n",
+    "type": "file"
+   },
+   "Trash/info/x\"y.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/x%22y\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}
