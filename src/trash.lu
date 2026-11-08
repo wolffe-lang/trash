@@ -1,9 +1,105 @@
 //! member: false
 //!
-//! trash: the stub T1's rows are held red against first. It refuses every
-//! invocation with one line of its own and touches nothing.
+//! trash — put files in the trash, as `rm` would remove them, but so that
+//! they can be put back until the trash is emptied.
+//!
+//! Written from the FreeDesktop.org Trash specification 1.0, the POSIX and
+//! Linux manual pages for the calls it makes, and black-box runs of a
+//! pinned trash-cli (`trash-put`), the oracle whose bytes it is held to
+//! (`tests/oracle/`). Never trash-cli's source, nor any other trash's.
+//!
+//! The trash is `~/Trash`: `files/` holds each item, `info/NAME.trashinfo`
+//! where it came from and when. What this program does, operand by operand,
+//! is `can.put`'s; `notes/tb01-trash-itself.md` records every rule and the
+//! measurement each came from.
+
+use can
+
+fn usage_line() -> str {
+    "usage: trash [OPTION]... FILE...\n"
+}
+
+fn help() -> str {
+    """
+    usage: trash [OPTION]... FILE...
+
+    Move each FILE into the trash, ~/Trash, instead of removing it: the
+    item goes to ~/Trash/files and a note of where it came from and when to
+    ~/Trash/info, where trash-list and trash-restore find it again. An item
+    on another file system is copied into the trash, checked, and only then
+    removed from where it was.
+
+    options:
+      -h, --help         print this help and exit
+      -f, --force        say nothing of a FILE that is not there
+      -i, --interactive  ask before trashing each FILE
+      -r, -R, --recursive, -d, --directory
+                         accepted, as rm takes them; a directory is always
+                         trashed whole
+      -v, --verbose      say what was trashed
+      --version          print the version and exit
+
+    '.', '..', '/', the trash itself, anything inside it and a directory
+    that holds it are never trashed. To trash a file whose name starts with
+    '-', say 'trash -- -name' or 'trash ./-name'.
+
+    The exit status is 0 when every FILE was trashed (or, under -f, was not
+    there), 74 when one could not be, and 2 for a usage error.
+    """
+}
+
+fn version() -> str {
+    "trash (wolffe-lang trash) 0.1.0-dev\n"
+}
+
+/// Whether a word names something that is there, a link or not.
+fn exists(w: List[byte]) -> bool {
+    let s = str_from_utf8(w) else |_| {
+        return false
+    }
+    let _ = fs_lstat(s) else |_| {
+        return false
+    }
+    true
+}
 
 fn main() -> int {
-    eprint("trash: not written yet")
-    74
+    let argv = env_args_bytes()
+    var words = List[List[byte]]()
+    var i = 1
+    while i < argv.len {
+        (mut words).push(copy argv[i])
+        i += 1
+    }
+    let a = can.parse(words, exists)
+    if a.help {
+        print_raw(help())
+        return 0
+    }
+    if a.version {
+        print_raw(version())
+        return 0
+    }
+    if a.error.len > 0 {
+        eprint_raw(usage_line())
+        eprint("trash: error: {a.error}")
+        return 2
+    }
+    let home = env_get("HOME") else ""
+    if !home.starts_with("/") {
+        eprint("trash: HOME is not set to an absolute path, so there is no ~/Trash")
+        return 74
+    }
+    let cwd = os_cwd() else |_| {
+        eprint("trash: cannot read the working directory: {can.reason()}")
+        return 74
+    }
+    let c = can.context(can.unslashed(home), cwd, a.force, a.interactive, a.verbose)
+    var status = 0
+    for w in a.operands {
+        if can.put(c, w) {
+            status = 74
+        }
+    }
+    status
 }
