@@ -256,6 +256,121 @@ other row held as predicted):
 ran all 246 rows, 140 red (the 128 new and the 12 tb01 left out) and the 106
 others green; the PAX rows, 5 of 19 red (the 5 new), the 14 others green.
 
+## What T2 does
+
+- **Layout.** Four entries beside `src/trash.lu`, each a thin `main`:
+  `src/trash-list.lu`, `src/trash-restore.lu`, `src/trash-rm.lu`,
+  `src/trash-empty.lu`. What they share joins `src/can/`: `scan.lu` (the
+  trash read back), `when.lu` (dates read and DAYS's cut), `glob.lu`
+  (trash-rm's patterns), `opts.lu` (the command lines), `erase.lu` (an item
+  removed for good), `back.lu` (one restore), `pick.lu` (restore's choices)
+  and `edge.lu` (the trash's place, the bytes written), beside T1's files.
+- **Reading the trash.** `info/` in the order the host lists it; each
+  `*.trashinfo` read whole; its first `Path=` and first `DeletionDate=`, no
+  header required, lines ended by LF, CR LF or CR; `%HH` decoded to a byte
+  (either case), any other `%` kept; a relative path read from `/`
+  (R-tb02-6). A date is read as `strptime` reads `%Y-%m-%dT%H:%M:%S` and must
+  be real; otherwise it is none. An info file that cannot be read, one with
+  no `Path=`, and one whose name is not UTF-8 are named on standard error in
+  each command's own words (the oracle's where it has them) and passed over.
+- **`trash-list`** writes `YYYY-MM-DD hh:mm:ss PATH` per item, the path's
+  bytes as they are, question marks for no date.
+- **`trash-restore [PATH]`** offers the items whose original path is PATH
+  (made absolute and read lexically) or under it, by date then path (`--sort
+  path`: path then date; `--sort none`: as listed), an undated item first
+  (R-tb02-4); writes `%4d DATE PATH` and the prompt; reads the answer as the
+  oracle reads it (pieces at `,`, spans with `-`, Python's `int()`), checks
+  every index before restoring any, restores in order and stops at the first
+  failure. The trash given as PATH, a PATH inside it, an original path inside
+  it, and one that is not UTF-8 are refused by name (R-tb02-5, wolf-lang#687).
+- **How a restore never replaces** (wolf-lang#706: every rename replaces).
+  The original path is reserved by a creation that fails when the path is
+  taken, never checked and then used (`can.restore`):
+  - a file, a link or a fifo goes back by `link(2)` of the trashed item to
+    its original path, which never replaces (`exists` when the path is
+    taken), and then the trashed name is removed;
+  - a directory goes back by `mkdir(2)` of the original path, an empty
+    private placeholder (`exists` when taken), and then `rename(2)` of the
+    trashed directory onto it. A rename can replace only an empty directory:
+    if another process removes the placeholder and puts something there in
+    between, the rename fails and nothing is lost; all it can replace is the
+    placeholder or another empty directory. PAX renames a directory onto an
+    empty one as Linux does (its own probe, `user/elf/tree.c`, renames one, and
+    `pax-restore` and `pax-roundtrip` do it on the ext2 home);
+  - across file systems (the item's device is not its destination's, or
+    either call answers `EXDEV`), or on a file system with no hard links
+    (`link` refused, R-tb02-7), `trash`'s copy brings it back: the space
+    checked, every entry created exclusively (`O_EXCL`, `mkdir`, `symlink`,
+    `mkfifo`), verified, given its owner, mode and times to the nanosecond,
+    and only then removed from the trash (R-TB-3);
+  - the oracle's own refusal of a path that is there, a dangling link
+    included (`Refusing to overwrite existing file "NAME".`), is made first,
+    so an occupied path changes nothing; missing directories above are made
+    as Python's `makedirs` makes them (mode `0777` less the umask, the
+    failing call's `[Errno N]` line otherwise); the info file goes last.
+- **`trash-rm PATTERN`** takes the first word as the pattern, whatever it
+  looks like, and matches it by fnmatch's rules (`*` crosses `/`) against the
+  original path's last component, or the whole path when the pattern starts
+  with `/`; each match is removed by held directory (`fs_open_at` with the
+  no-follow bit, a directory made writable through its handle), then its info
+  file.
+- **`trash-empty [DAYS]`** asks only when standard input is a terminal or
+  the last of `-i`/`-f` is `-i`, and takes an answer that starts with `y` or
+  `Y` (the end of input is a no, R-tb02-4). Without DAYS it removes every item
+  an info file names (there or not), every orphan item and every
+  `*.trashinfo`; with DAYS, the items whose date is at or before the cut,
+  their info files, and every orphan item. The cut is DAYS days back on the
+  calendar at the same local wall-clock time, as the oracle counts. `-v`
+  says `removing PATH`, `--dry-run` says `would remove PATH`.
+- **Orphans, both ways.** An info file whose item is missing is listed,
+  offered for restore (and its restore answers the oracle's `[Errno 2]` line
+  for the missing item), matched by trash-rm and removed by trash-empty. An
+  item with no info file is never listed, offered or matched, and
+  trash-empty removes it, with DAYS or without.
+- **What wolf cannot reach yet** (wolf-lang#687): an info file whose name is
+  not UTF-8 is named and skipped; a restore whose path is not UTF-8 is
+  refused; an item whose tree holds such a name is surveyed before anything
+  is removed and left whole, by name.
+
+## The rows
+
+- **Oracle rows** (`tests/oracle/rows.json`, 246): 202 compared with
+  trash-cli and 44 diverging, held to `tests/oracle/expected/` (written by
+  hand in `tools/expected.py` before the programs). No row is left out.
+- **Unit rows** (`src/can_test.lu`, 180, listed in `tests/unit-rows.json`):
+  104 new, for the info file read, the date read and cut, the calendar
+  arithmetic, the patterns, Python's `int()`, the command lines, the quoting
+  and restore's answers.
+- **PAX rows** (`tests/pax/rows.json`, 19): the 5 new ones list, restore (a
+  file, a directory onto its placeholder, a link, then an occupied path
+  refused), remove by pattern, empty with DAYS and then all, and a round trip
+  of a tree from the in-memory `/tmp` (copied both ways) and one on the ext2
+  home (renamed both ways), every time kept to the nanosecond.
+- **The round-trip property** (`roundtrip-home`, `roundtrip-other-fs`): six
+  generated trees each way; the trees are snapshotted, without moving a time,
+  before the first command and held to that after the last.
+
+**Red first, then green.** Against the stubs, 140 of the 246 oracle rows
+and 5 of the 19 PAX rows were red, exactly the new and the left-out ones
+(above). The first build of the programs that compiled passed every
+companion row, and with the unit rows every one of the 246 oracle rows, the
+180 unit rows and the 19 PAX rows; the work was then committed file by file,
+the tree unchanged (`73f0092`).
+
+## Gaps met
+
+| gap | filed | what T2 does |
+|---|---|---|
+| Every rename replaces | wolf-lang#706 | a restore reserves its path by `link(2)` or an empty directory (above) |
+| A path that is not UTF-8 cannot be named | wolf-lang#687 | named and skipped, refused, or left whole, by name (above) |
+
+No new gap was found: every call the companions need answers on PAX as on
+Linux.
+
+## SKIPs
+
+None. A row that cannot run fails by name.
+
 ## Recommendations
 
 R-tb02-1 to R-tb02-8 were ruled A (the user's word, about 14:20Z), and each is
@@ -290,3 +405,34 @@ implemented as A.
 - R-tb02-8: the companions read `~/Trash` alone, as `trash` writes only
   there. (B: also show `$topdir/.Trash-$uid`, the specification's "best
   effort".)
+- R-tb02-9: the footprint. (A, recommended) `cross-cutting`: the harness CI
+  runs (`tools/oracle.py`, `tools/pax-rows.py`) changed, and its new pieces
+  (a terminal, dated fixtures, generated trees, listings in a host's order)
+  want a run on CI's hosts before the merge. (B) `module`: no path the audit
+  classes as CI, a pin or shared tooling changed.
+
+## Done-when
+
+- [x] The prediction committed before any change (`3d0ffe2`), and scored
+  above.
+- [x] `trash-list`, `trash-restore`, `trash-rm PATTERN` and `trash-empty
+  [DAYS]`, static, for PAX and Linux x86-64, from the same tree as `trash`,
+  sharing `src/can/`.
+- [x] The listing's format and order, an orphan info listed, a missing date
+  as question marks, a relative path from `/`.
+- [x] Restore by index and by path, the prompt as the oracle prints it,
+  every kind of answer; an occupied path refused by name and never replaced,
+  under a reservation; missing parents made; across file systems copied back,
+  verified, then removed from the trash.
+- [x] trash-rm by the oracle's matching rule, measured; trash-empty with and
+  without DAYS, on both sides of the cut, its question, `-f`, `-i`, `-v`,
+  `--dry-run`; the options that choose another trash not taken.
+- [x] Orphans both ways, each command as the oracle, named above.
+- [x] tb01's 12 left-out rows back in, and every census, oracle and PAX row
+  of tb00 and tb01 still green.
+- [x] The new rows red against the stubs first; the expected captures, the
+  PAX rows and the round-trip property; every row green.
+- [x] One plant, `tb02-plant-restore-rename`, red by name at
+  `restore-occupied`.
+- [x] The records behind both of satoyama's locks, the Linux gate and the
+  PAX legs in one gauntlet, and the plant's record, both verified.
