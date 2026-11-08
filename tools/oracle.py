@@ -36,6 +36,17 @@ modification time, and the full text of every `.trashinfo` and of
     `<text>` when it holds anything, so the row holds the exit status and
     which stream carries the text, and this repository's text is its own.
 
+A `run` step marked `"tty": true` has a terminal for its standard input (a
+pty, given the step's input and then the end of input), its output streams
+still pipes. A `dated` make step writes an info file whose deletion date is
+some seconds from the moment it is made, and the normaliser reads a date that
+far from the window as `<in-window+N>` by name. A `tree` make step makes a
+tree generated from a seed (`tree_plan`), with its own modes, owners and
+times. A row marked `"property": "round-trip"` is snapshotted, exactly and
+without moving a time, before its first command, and every entry outside the
+trashes must be as it was after its last: a failure is a difference named
+`property`, held on every run of the row, the oracle's included.
+
 A row may also name `"home": "small"`: its scratch home is on a small tmpfs
 (/small, mounted by tools/in-container), so a copy into the home trash can
 be refused for space. A row marked `"times": "exact"` records every entry's
