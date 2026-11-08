@@ -58,6 +58,7 @@ pub fn make_dirs(dir: str) -> str {
         }
     }
     var n = 0
+    step("make {dir}")
     fs_create_dir_mode(dir, 0o777) else |_| {
         n = os_error()
     }
@@ -123,6 +124,7 @@ pub fn restore(trash: str, trash_real: str, x: Info) -> str {
     var taken = false
     var n = 0
     if !across && rec[0] == 1 {
+        step("make {dst}")
         fs_create_dir_mode(dst, 0o700) else |e| match e {
             exists => {
                 taken = true
@@ -149,6 +151,7 @@ pub fn restore(trash: str, trash_real: str, x: Info) -> str {
         if n != 0 {
             return errno_line(n, dst)
         }
+        step("rename {item} to {dst}")
         fs_rename(item, dst) else |e| match e {
             cross_device => {
                 across = true
@@ -167,12 +170,14 @@ pub fn restore(trash: str, trash_real: str, x: Info) -> str {
             },
         }
         if across || n != 0 {
+            step("remove {dst}")
             fs_remove_dir(dst) else |_| {}
         }
         if n != 0 {
             return errno_line(n, dst)
         }
     } else if !across {
+        step("link {item} to {dst}")
         fs_link(item, dst) else |e| match e {
             exists => {
                 taken = true
@@ -197,8 +202,10 @@ pub fn restore(trash: str, trash_real: str, x: Info) -> str {
             return errno_line(n, dst)
         }
         if !across {
+            step("remove {item}")
             fs_remove(item) else |_| {
                 let k = os_error()
+                step("remove {dst}")
                 fs_remove(dst) else |_| {}
                 return errno_line(k, item)
             }
@@ -211,6 +218,7 @@ pub fn restore(trash: str, trash_real: str, x: Info) -> str {
         }
     }
     let info = "{trash}/info/{x.name}.trashinfo"
+    step("remove {info}")
     fs_remove(info) else |_| {
         return errno_line(os_error(), info)
     }
