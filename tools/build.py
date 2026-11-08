@@ -7,8 +7,10 @@ and not a unit program (`*_test.lu`), with the pinned wolf.
 The default tier, warnings denied. wolf runs from the tree's root and is handed
 each entry by its path from there (`src/trash.lu`), so no path above the tree
 is written into a binary; with --static the link goes through a cc that adds
--static (wolf has no --static) and -Wl,--build-id=none, so the bytes do not
-depend on where the tree is, and every command is checked to be a
+-static (wolf has no --static) and -Wl,--build-id=none, and after wolf's own
+arguments -fuse-ld=bfd (wolf asks for lld whenever an ld.lld is on PATH), so
+the bytes depend neither on where the tree is nor on whether lld is
+installed, and every command is checked to be a
 static ET_EXEC with no interpreter, and a stripped copy is kept in
 DIR/stripped for the PAX image, as tools/census.py builds the census.
 --entry builds the named entries instead (a test fixture such as the PAX
@@ -39,7 +41,7 @@ def static_env(out):
     shim = out / 'static-cc'
     shim.mkdir(parents=True, exist_ok=True)
     cc = shutil.which('cc') or shutil.which('gcc')
-    (shim / 'cc').write_text('#!/bin/sh\nexec %s -static -Wl,--build-id=none "$@"\n' % cc)
+    (shim / 'cc').write_text('#!/bin/sh\nexec %s -static -Wl,--build-id=none "$@" -fuse-ld=bfd\n' % cc)
     (shim / 'cc').chmod(0o755)
     env = dict(os.environ)
     env['PATH'] = str(shim) + os.pathsep + env['PATH']
