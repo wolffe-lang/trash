@@ -5,7 +5,8 @@
 // write is made writable through its handle before it is emptied. A name
 // inside the item that is not UTF-8 cannot be named to be removed
 // (wolf-lang#687): a survey finds one before anything is removed, and the
-// whole item is left.
+// whole item is left. Entries go in the order of their names, so a cut's
+// place is the same on every host.
 
 /// The first name under the directory `path` that is not UTF-8, as a
 /// message names it ("" when there is none).
@@ -34,10 +35,10 @@ fn unreachable(path: str) -> str {
 
 /// The held directory `fd` (named `path`) emptied.
 fn empty_dir(fd: int, path: str) -> str {
-    let entries = fs_read_dir_entries_at(fd) else |_| {
+    let listed = fs_read_dir_entries_at(fd) else |_| {
         return "cannot list '{path}': {reason()}"
     }
-    for e in entries {
+    for e in by_name(listed) {
         let raw = e[1..]
         let name = str_from_utf8(raw) else |_| {
             return "the name of an entry in '{path}' ({shown(raw)}) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
