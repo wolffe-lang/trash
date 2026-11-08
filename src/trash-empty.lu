@@ -1,9 +1,160 @@
 //! member: false
 //!
-//! trash-empty: the stub T2's rows are held red against first. It refuses
-//! every invocation with one line of its own and touches nothing.
+//! trash-empty — remove everything in the trash for good, or, given DAYS,
+//! only what was trashed more than DAYS days ago.
+//!
+//! Written from the FreeDesktop.org Trash specification 1.0 and black-box
+//! runs of a pinned trash-cli (`trash-empty`), the oracle whose bytes it is
+//! held to (`tests/oracle/`). Never trash-cli's source, nor any other
+//! trash's. The rules, and the measurement each came from, are in
+//! `notes/tb02-the-companions.md`.
+
+use can
+
+fn usage() -> str {
+    "usage: trash-empty [-h] [--version] [-v] [-i] [-f] [--dry-run] [days]\n"
+}
+
+fn help() -> str {
+    """
+    usage: trash-empty [-h] [--version] [-v] [-i] [-f] [--dry-run] [days]
+
+    Remove what is in the trash, ~/Trash, for good. With DAYS, only the
+    items trashed more than DAYS days ago (by the calendar, in local time);
+    an item whose date cannot be read stays. When standard input is a
+    terminal it asks first.
+
+    options:
+      -h, --help         print this help and exit
+      --version          print the version and exit
+      -v, --verbose      name each thing removed
+      -i, --interactive  ask first, even when standard input is no terminal
+      -f                 never ask (the last of -i and -f wins)
+      --dry-run          name what would be removed, and remove nothing
+    """
+}
+
+fn say(verbose: bool, dry: bool, path: str) {
+    if dry {
+        print("would remove {path}")
+    } else if verbose {
+        print("removing {path}")
+    }
+}
+
+fn not_utf8() -> str {
+    "its name is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
+}
 
 fn main() -> int {
-    eprint("trash-empty: not written yet")
-    74
+    let l = can.read_args(can.arg_words(), can.empty_opts(), 1)
+    if l.help {
+        print_raw(help())
+        return 0
+    }
+    if l.version {
+        print_raw(can.version_of("trash-empty"))
+        return 0
+    }
+    if l.error.len > 0 {
+        return can.usage_error(usage(), "trash-empty", l.error)
+    }
+    var days = 0
+    let with_days = l.operands.len == 1
+    if with_days {
+        let (ok, n) = can.read_int(l.operands[0])
+        if !ok {
+            let why = "argument days: invalid int value: {can.py_quote(can.shown(l.operands[0]))}"
+            return can.usage_error(usage(), "trash-empty", why)
+        }
+        days = n
+    }
+    let trash = can.trash_of("trash-empty")
+    if trash.len == 0 {
+        return 74
+    }
+    let tty = os_isatty(0) else false
+    if l.ask == 1 || l.ask == 0 && tty {
+        print_raw("Would empty the following trash directories:\n    - {trash}\nProceed? (y/N) ")
+        let answer = read_line() else |_| {
+            return 0
+        }
+        if !can.yes(answer) {
+            return 0
+        }
+    }
+    let cut = if with_days then can.cutoff(time_unix_ms() / 1000, days) else ""
+    var status = 0
+    var named = Map[str, bool]()
+    var going = List[str]()
+    for x in can.scan(trash) {
+        if x.state == 3 {
+            eprint("trash-empty: cannot remove '{can.info_shown(trash, x)}': {not_utf8()}")
+            status = 1
+            continue
+        }
+        named[x.name] = true
+        if with_days && !(x.state == 0 && can.older(x.date, cut)) {
+            continue
+        }
+        (mut going).push(x.name)
+    }
+    // An item no info file names (an orphan) goes too, DAYS or not.
+    var orphans = List[str]()
+    let entries = fs_read_dir_entries("{trash}/files") else |_| {
+        List[List[byte]]()
+    }
+    for e in entries {
+        let raw = e[1..]
+        let n = str_from_utf8(raw) else |_| {
+            eprint("trash-empty: cannot remove '{trash}/files/{can.shown(raw)}': {not_utf8()}")
+            status = 1
+            continue
+        }
+        if !(named[n] else false) {
+            (mut orphans).push(n)
+        }
+    }
+    let dry = l.dry_run
+    var done = List[str]()
+    for n in going {
+        let item = "{trash}/files/{n}"
+        say(l.verbose, dry, item)
+        if dry {
+            (mut done).push(n)
+            continue
+        }
+        let why = can.erase(item)
+        if why.len > 0 {
+            eprint("trash-empty: cannot remove '{item}': {why}")
+            status = 1
+            continue
+        }
+        (mut done).push(n)
+    }
+    for n in orphans {
+        let item = "{trash}/files/{n}"
+        say(l.verbose, dry, item)
+        if dry {
+            continue
+        }
+        let why = can.erase(item)
+        if why.len > 0 {
+            eprint("trash-empty: cannot remove '{item}': {why}")
+            status = 1
+        }
+    }
+    for n in done {
+        let info = "{trash}/info/{n}.trashinfo"
+        say(l.verbose, dry, info)
+        if dry {
+            continue
+        }
+        let why = can.erase(info)
+        if why.len > 0 {
+            eprint("trash-empty: cannot remove '{info}': {why}")
+            status = 1
+        }
+    }
+    status
 }
