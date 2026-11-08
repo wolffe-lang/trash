@@ -122,3 +122,41 @@ pub fn first_chars(s: str, k: int) -> str {
     }
     s
 }
+
+/// A text quoted as Python's `repr` quotes one, as the oracle's messages
+/// show a path or a value: in single quotes, or double ones when it holds a
+/// single quote and no double one; a backslash, the quote, a tab, a newline,
+/// a carriage return and the other control characters escaped.
+pub fn py_quote(s: str) -> str {
+    let dq = s.contains("'") && !s.contains("\"")
+    var out = List[byte]()
+    let q = if dq then 34 else 39
+    (mut out).push(q as byte)
+    for x in s.bytes() {
+        let c = x as int
+        if c == 92 || c == q {
+            (mut out).push(92 as byte)
+            (mut out).push(x)
+        } else if c == 9 {
+            for y in "\\t".bytes() {
+                (mut out).push(y)
+            }
+        } else if c == 10 {
+            for y in "\\n".bytes() {
+                (mut out).push(y)
+            }
+        } else if c == 13 {
+            for y in "\\r".bytes() {
+                (mut out).push(y)
+            }
+        } else if c < 32 || c == 127 {
+            for y in "\\x{hex2(c, false)}".bytes() {
+                (mut out).push(y)
+            }
+        } else {
+            (mut out).push(x)
+        }
+    }
+    (mut out).push(q as byte)
+    str_from_utf8(out) else s
+}
