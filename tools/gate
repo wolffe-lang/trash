@@ -30,6 +30,7 @@ step census-selftest python3 -I tools/census.py selftest
 step census-pax-selftest python3 -I tools/census-pax.py selftest
 step oracle-selftest python3 -I tools/oracle.py selftest
 step expected-statements python3 -I tools/expected.py check
+step pax-rows-selftest python3 -I tools/pax-rows.py selftest
 [ "$mode" != unit ] || exit 0
 [ -f /opt/oracle-manifest.txt ] || { echo 'FAIL gate-linux-outside-the-image: run it through tools/in-container'; exit 2; }
 stage=$root/.wolf-bin
@@ -37,7 +38,7 @@ fetch=(python3 -I tools/fetch-toolchain.py --out "$stage")
 if [ -n "${TRASH_ARCHIVES:-}" ]; then fetch+=(--archive-dir "$TRASH_ARCHIVES"); fi
 step toolchain "${fetch[@]}"
 wolf=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["tools"]["wolf"]["root"]+"/wolf")' "$stage/manifest.json")
-step wolf-fmt "$wolf" fmt --check census src
+step wolf-fmt "$wolf" fmt --check census src tests/pax/rowtool
 if [ "$mode" = candidate ]; then
     rm -rf target/bin target/unit
     step trash-build python3 -I tools/build.py --wolf "$wolf" --out target/bin
@@ -54,6 +55,8 @@ step census-static python3 -I tools/census.py build --wolf "$wolf" --out target/
 step trash-build python3 -I tools/build.py --wolf "$wolf" --out target/bin
 step trash-unit python3 -I tools/unit.py --wolf "$wolf" --out target/unit
 step trash-static python3 -I tools/build.py --wolf "$wolf" --out target/static --static
+step rowtool-static python3 -I tools/build.py --wolf "$wolf" --out target/static --static \
+    --entry tests/pax/rowtool/main.lu:rowtool
 step oracle-live-selftest python3 -I tools/oracle.py selftest --live --rows tests/oracle/rows.json
 step oracle-goldens python3 -I tools/oracle.py check --rows tests/oracle/rows.json --golden tests/oracle/golden
 step oracle-compare python3 -I tools/oracle.py compare --rows tests/oracle/rows.json --candidate target/bin
