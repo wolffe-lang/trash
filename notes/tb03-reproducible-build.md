@@ -56,8 +56,8 @@ Scored against the prediction above: as predicted.
   before: 258 oracle rows, the 8 cut rows, the 6 stress rows at 100 rounds
   (seed `20261108`), the unit programs and every selftest. The PAX rows are
   in the record.
-- The plant, `tb03-repro-ld-plant-absolute` (`tools/build.py` hands wolf
-  the entry's absolute path again): red by name at `repro-trash`.
+- The plant, `tb03-repro-plant-abspath` (`tools/build.py` hands wolf the
+  entry's absolute path again): red by name at `repro-trash`.
 - The linker (below, not predicted): `repro-linker`, the first copy built
   again with an `ld.lld` on `PATH` that refuses to link. Red by name on the
   old builder (the row applied to `90169ed`, after the five digest rows) and
@@ -88,14 +88,14 @@ no `ld.lld`; PAX's build image (the same Ubuntu 24.04 gcc 13.3 and binutils
 larger, `.comment` named the linker, and no digest was the gate's. The static
 cc now adds `-fuse-ld=bfd` after wolf's own arguments (the last `-fuse-ld`
 wins), and `repro-linker` holds it: with it, PAX's build image gives the
-table above, byte for byte, at all five (R-tb03-14, implemented as
-recommended).
+table above, byte for byte, at all five (R-tb03-14, A).
 
 ## Gaps met
 
 None in trash. wolf's choice of lld when one is on `PATH` is not in its help
-or its manual at 0.2.38; the static cc's flag makes it moot here, and it is
-not filed (R-tb03-15).
+or its manual at 0.2.38: filed as wolf-lang#1082, with a two-line program's
+two `.comment` sections and sizes as its witness (R-tb03-15, B). The static
+cc's flag makes it moot here.
 
 ## SKIPs
 
@@ -105,15 +105,20 @@ None. A row that cannot run fails by name.
 
 R-tb03-12 (the build's bytes a function of the commit, by this change) and
 R-tb03-13 (PAX's hook's footprint, `cross-cutting`) were ruled A.
+R-tb03-14 and R-tb03-15 were not ruled on their own: the coordinator decided
+them inside R-tb03-12's ruling, whose outcome is that every checkout and
+trash's own gate give the same bytes. R-tb03-14 is A, the way that outcome
+is delivered, and R-tb03-15 is B.
 
-- R-tb03-14, the linker. (A) The static cc forces the system linker
-  (`-fuse-ld=bfd` after wolf's arguments), held by `repro-linker`: the
-  gate's digests are then PAX's builder's. (B) The relative paths and the
+- R-tb03-14, the linker, decided A. (A) The static cc forces the system
+  linker (`-fuse-ld=bfd` after wolf's arguments), held by `repro-linker`:
+  the gate's digests are then PAX's builder's. (B) The relative paths and the
   absent build-id alone: PAX's pin quotes its own builder's digests, and its
   note names the linker as the reason they are not the gate's.
-- R-tb03-15, wolf's silent lld. (A) Not filed: the flag makes it moot for
-  trash, and wolf's behaviour is a choice, not a fault. (B) A documentation
-  issue to wolf-lang with the two `.comment` sections as its witness.
+- R-tb03-15, wolf's silent lld, decided B. (A) Not filed: the flag makes it
+  moot for trash. (B) A documentation issue to wolf-lang with the two
+  `.comment` sections as its witness: every wolf-built component pinned by
+  digest is exposed when a build image gains or loses lld (wolf-lang#1082).
 
 The `trash //` divergence (tb01's note) stays a known oracle divergence.
 
@@ -124,7 +129,6 @@ The `trash //` divergence (tb01's note) stays a known oracle divergence.
 - [x] The reproducibility row, red by name at all five on the old builder,
   green with the change; `repro-linker` red on the old builder and without
   the flag, green with it.
-- [x] One plant, `tb03-repro-ld-plant-absolute`, red by name at
-  `repro-trash`.
+- [x] One plant, `tb03-repro-plant-abspath`, red by name at `repro-trash`.
 - [x] The records behind both of a lane host's locks: the Linux gate and the
   PAX rows at the head, and the plant's.
