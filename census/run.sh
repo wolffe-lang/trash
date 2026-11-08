@@ -25,7 +25,7 @@ for store in same other; do
     run links "$store" "$d/links"
     run changes "$store" "$d/changes"
     run walk "$store" "$d/walk"
-    : > "$d/names/nu/$(printf 'x\377y')"
+    printf '' > "$d/names/nu/$(printf 'x\377y')"
     run names "$store" "$d/names"
     run statfs "$store" "$d"
     run remove "$store" "$d/remove"
