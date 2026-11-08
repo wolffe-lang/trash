@@ -44,8 +44,9 @@ pub fn parent(p: str) -> str {
 
 /// `p` without its trailing slashes; a path of slashes alone is `/`.
 pub fn unslashed(p: str) -> str {
-    var end = p.len
-    while end > 0 && p[end - 1..end] == "/" {
+    let b = p.bytes()
+    var end = b.len
+    while end > 0 && b[end - 1] as int == 47 {
         end -= 1
     }
     if end == 0 && p.len > 0 {
