@@ -103,6 +103,7 @@ fn copy_entry(src: str, dst: str, rec: List[int], seen: Seen, mut done: List[Cop
             return why
         }
     } else if kind == 1 {
+        step("make {dst}")
         fs_create_dir_mode(dst, 0o700) else |_| {
             return "cannot make '{dst}': {reason()}"
         }
@@ -136,10 +137,12 @@ fn copy_entry(src: str, dst: str, rec: List[int], seen: Seen, mut done: List[Cop
         let t = str_from_utf8(target) else |_| {
             return "the link '{src}' names a path that is not UTF-8 ({shown(target)}), and wolf cannot make such a link yet (wolf-lang#687)"
         }
+        step("link {dst}")
         fs_symlink(t, dst) else |_| {
             return "cannot make the link '{dst}': {reason()}"
         }
     } else if kind == 4 {
+        step("fifo {dst}")
         fs_mkfifo(dst, 0o600) else |_| {
             return "cannot make the fifo '{dst}': {reason()}"
         }
@@ -159,6 +162,7 @@ fn copy_file(src: str, dst: str) -> str {
     let from = fs_open_mode(src, 16) else |_| {
         return "cannot open '{src}': {reason()}"
     }
+    step("write {dst}")
     let to = fs_open_perm(dst, 4, 0o600) else |_| {
         let why = "cannot make '{dst}': {reason()}"
         fs_close(from) else |_| {}
@@ -317,6 +321,7 @@ fn finish(done: List[Copied]) -> str {
         let r = c.rec
         let kind = r[0]
         var mode = r[4]
+        step("finish {c.dst}")
         fs_set_owner(c.dst, r[6], r[7], false) else |_| {
             fs_set_owner(c.dst, -1, r[7], false) else |_| {}
             mode = mode - mode / 1024 % 4 * 1024
@@ -355,9 +360,12 @@ pub fn remove_copy(path: str) {
             }
             remove_copy("{path}/{name}")
         }
+        step("open up {path}")
         fs_set_mode(path, 0o700) else |_| {}
+        step("remove {path}")
         fs_remove_dir(path) else |_| {}
     } else {
+        step("remove {path}")
         fs_remove(path) else |_| {}
     }
 }
@@ -395,10 +403,12 @@ fn empty_held(fd: int, path: str, copied: Map[str, bool]) -> str {
             if why.len > 0 {
                 return why
             }
+            step("remove {child}")
             fs_remove_dir_at(fd, name) else |_| {
                 return "cannot remove '{child}': {reason()}"
             }
         } else {
+            step("remove {child}")
             fs_remove_at(fd, name) else |_| {
                 return "cannot remove '{child}': {reason()}"
             }
@@ -410,6 +420,7 @@ fn empty_held(fd: int, path: str, copied: Map[str, bool]) -> str {
 /// Pass 4: the source, now that its copy is whole.
 fn remove_source(path: str, rec: List[int], done: List[Copied]) -> str {
     if rec[0] != 1 {
+        step("remove {path}")
         fs_remove(path) else |_| {
             return "cannot remove '{path}': {reason()}"
         }
@@ -427,6 +438,7 @@ fn remove_source(path: str, rec: List[int], done: List[Copied]) -> str {
     if why.len > 0 {
         return why
     }
+    step("remove {path}")
     fs_remove_dir(path) else |_| {
         return "cannot remove '{path}': {reason()}"
     }
