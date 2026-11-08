@@ -1,0 +1,293 @@
+// can: the companions' command lines, read as trash-cli's argparse
+// parsers read them (measured, not read): long options and any unambiguous
+// prefix of one, `--opt=value` and `--opt value`, short flags that
+// cluster, `--` ending the options, `-` and a negative number as
+// operands, `--help` and `--version` acting where they are met. The
+// errors are argparse's sentences after `PROG: error: `. Each command's
+// usage line names only what it takes (R-tb02-2), and the options that
+// choose another trash are not taken (R-tb02-1).
+
+/// What one companion's command line asks for.
+pub struct Line {
+    help: bool,
+    version: bool,
+    /// The last of `-i` (1) and `-f` (2), or 0.
+    ask: int,
+    verbose: bool,
+    dry_run: bool,
+    sort: str,
+    operands: List[List[byte]],
+    /// The sentence after `PROG: error: `, or "".
+    error: str,
+}
+
+/// One option a command takes: its long name, its short letter (0 for
+/// none), how errors name it, and the choices of its value (none: a flag).
+pub struct Opt {
+    long: str,
+    short: int,
+    shown: str,
+    choices: List[str],
+}
+
+/// An option that takes no value.
+pub fn flag(long: str, short: int, shown: str) -> Opt {
+    Opt { long: long, short: short, shown: shown, choices: List[str]() }
+}
+
+/// A long option that takes one value, one of `choices`.
+pub fn valued(long: str, shown: str, choices: List[str]) -> Opt {
+    Opt { long: long, short: 0, shown: shown, choices: copy choices }
+}
+
+fn takes_value(o: Opt) -> bool {
+    o.choices.len > 0
+}
+
+fn set_opt(mut l: Line, o: Opt, value: str) -> bool {
+    let n = o.long
+    if n == "--help" {
+        l.help = true
+        return false
+    }
+    if n == "--version" {
+        l.version = true
+        return false
+    }
+    if n == "--interactive" {
+        l.ask = 1
+    } else if n == "-f" {
+        l.ask = 2
+    } else if n == "--verbose" {
+        l.verbose = true
+    } else if n == "--dry-run" {
+        l.dry_run = true
+    } else if n == "--sort" {
+        l.sort = value
+    }
+    true
+}
+
+fn choices_text(c: List[str]) -> str {
+    var out = ""
+    for x in c {
+        out += if out.len == 0 then py_quote(x) else ", {py_quote(x)}"
+    }
+    out
+}
+
+fn short_opt(opts: List[Opt], c: int) -> int {
+    var i = 0
+    while i < opts.len {
+        if opts[i].short == c {
+            return i
+        }
+        i += 1
+    }
+    -1
+}
+
+/// A value's checks: one of the choices.
+fn check_value(mut l: Line, o: Opt, v: str) -> bool {
+    for c in o.choices {
+        if c == v {
+            return true
+        }
+    }
+    l.error = "argument {o.shown}: invalid choice: {py_quote(v)} (choose from {choices_text(o.choices)})"
+    false
+}
+
+/// Read the words after the program's name against `opts`; at most `most`
+/// operands, the rest are unrecognised.
+pub fn read_args(words: List[List[byte]], opts: List[Opt], most: int) -> Line {
+    var l = Line {
+        help: false,
+        version: false,
+        ask: 0,
+        verbose: false,
+        dry_run: false,
+        sort: "date",
+        operands: List[List[byte]](),
+        error: "",
+    }
+    var extras = List[str]()
+    var rest = false
+    var i = 0
+    while i < words.len {
+        let w = copy words[i]
+        i += 1
+        let s = shown(w)
+        let option = !rest && w.len >= 2 && w[0] as int == 45 && !negative_number(w)
+        if !option {
+            if l.operands.len < most {
+                (mut l.operands).push(w)
+            } else {
+                (mut extras).push(s)
+            }
+            continue
+        }
+        if w[1] as int == 45 {
+            if w.len == 2 {
+                rest = true
+                continue
+            }
+            let eq = s.find("=") else -1
+            let head = if eq < 0 then s else s[0..eq]
+            var hits = List[int]()
+            var k = 0
+            while k < opts.len {
+                if opts[k].long == head {
+                    hits = List[int]()
+                    (mut hits).push(k)
+                    break
+                }
+                if opts[k].long.starts_with(head) && opts[k].long.starts_with("--") {
+                    (mut hits).push(k)
+                }
+                k += 1
+            }
+            if hits.len == 0 {
+                (mut extras).push(s)
+                continue
+            }
+            if hits.len > 1 {
+                var all = ""
+                for h in hits {
+                    all += if all.len == 0 then opts[h].long else ", {opts[h].long}"
+                }
+                l.error = "ambiguous option: {head} could match {all}"
+                return l
+            }
+            let o = copy opts[hits[0]]
+            var value = ""
+            if takes_value(o) {
+                if eq >= 0 {
+                    value = s[eq + 1..]
+                } else if i < words.len && !(words[i].len > 0 && words[i][0] as int == 45) {
+                    value = shown(words[i])
+                    i += 1
+                } else {
+                    l.error = "argument {o.shown}: expected one argument"
+                    return l
+                }
+                if !check_value(mut l, o, value) {
+                    return l
+                }
+            } else if eq >= 0 {
+                l.error = "argument {o.shown}: ignored explicit argument {py_quote(s[eq + 1..])}"
+                return l
+            }
+            if !set_opt(mut l, o, value) {
+                return l
+            }
+            continue
+        }
+        // A cluster of short flags: each in turn; a letter that is no flag
+        // ends the word, and the rest of it is unrecognised.
+        var j = 1
+        while j < w.len {
+            let k = short_opt(opts, w[j] as int)
+            if k < 0 {
+                (mut extras).push("-{s[j..]}")
+                break
+            }
+            if !set_opt(mut l, opts[k], "") {
+                return l
+            }
+            j += 1
+        }
+    }
+    if extras.len > 0 {
+        var joined = ""
+        for e in extras {
+            joined += if joined.len == 0 then e else " {e}"
+        }
+        l.error = "unrecognized arguments: {joined}"
+    }
+    l
+}
+
+/// The usage error, as the oracle's commands print one, exit 2.
+pub fn usage_error(usage: str, prog: str, why: str) -> int {
+    eprint_raw(usage)
+    eprint("{prog}: error: {why}")
+    2
+}
+
+/// An operand read as Python's `int()` reads a word: spaces around it, a
+/// sign, digits with single underscores between them. (ok, value).
+pub fn read_int(w: List[byte]) -> (bool, int) {
+    var i = 0
+    var end = w.len
+    while i < end && (w[i] as int == 32 || w[i] as int >= 9 && w[i] as int <= 13) {
+        i += 1
+    }
+    while end > i &&
+        (w[end - 1] as int == 32 || w[end - 1] as int >= 9 && w[end - 1] as int <= 13) {
+        end -= 1
+    }
+    var neg = false
+    if i < end && (w[i] as int == 43 || w[i] as int == 45) {
+        neg = w[i] as int == 45
+        i += 1
+    }
+    if i >= end {
+        return (false, 0)
+    }
+    var n: int = 0
+    var digits = 0
+    var last_under = false
+    while i < end {
+        let c = w[i] as int
+        if c == 95 {
+            if digits == 0 || last_under {
+                return (false, 0)
+            }
+            last_under = true
+        } else if c >= 48 && c <= 57 {
+            if n > 100000000000000 {
+                return (false, 0)
+            }
+            n = n * 10 + (c - 48)
+            digits += 1
+            last_under = false
+        } else {
+            return (false, 0)
+        }
+        i += 1
+    }
+    if last_under {
+        return (false, 0)
+    }
+    (true, if neg then -n else n)
+}
+
+/// trash-list's options: `-h`, `--help` and `--version`.
+pub fn list_opts() -> List[Opt] {
+    var o = List[Opt]()
+    (mut o).push(flag("--help", 104, "-h/--help"))
+    (mut o).push(flag("--version", 0, "--version"))
+    o
+}
+
+/// trash-restore's: those, and `--sort {date,path,none}`.
+pub fn restore_opts() -> List[Opt] {
+    var o = list_opts()
+    var c = List[str]()
+    (mut c).push("date")
+    (mut c).push("path")
+    (mut c).push("none")
+    (mut o).push(valued("--sort", "--sort", c))
+    o
+}
+
+/// trash-empty's: `-h`, `--version`, `-v`, `-i`, `-f` and `--dry-run`.
+pub fn empty_opts() -> List[Opt] {
+    var o = list_opts()
+    (mut o).push(flag("--verbose", 118, "-v/--verbose"))
+    (mut o).push(flag("--interactive", 105, "-i/--interactive"))
+    (mut o).push(flag("-f", 102, "-f"))
+    (mut o).push(flag("--dry-run", 0, "--dry-run"))
+    o
+}
