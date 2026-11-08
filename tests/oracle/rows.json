@@ -8494,7 +8494,9 @@
       "trash-list"
      ]
     }
-   ]
+   ],
+   "oracle": "crashes",
+   "diverge": "the oracle crashes on an info file it cannot read; here trash-rm names it and goes on"
   },
   {
    "name": "empty-i-upper",
@@ -8738,6 +8740,39 @@
       "-i"
      ],
      "stdin": "y\n"
+    }
+   ]
+  },
+  {
+   "name": "empty-i-yep",
+   "about": "trash-empty -i answered 'yep'",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-empty",
+      "-i"
+     ],
+     "stdin": "yep\n"
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
     }
    ]
   }
