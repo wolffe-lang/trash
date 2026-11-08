@@ -4,7 +4,8 @@ in matching scratch homes, compared field by field.
 
   oracle.py record   --rows FILE --golden DIR [--only RE]
   oracle.py check    --rows FILE --golden DIR [--only RE]
-  oracle.py compare  --rows FILE --candidate DIR [--only RE]
+  oracle.py compare  --rows FILE --candidate DIR [--only RE] [--commands A,B]
+  oracle.py capture  --rows FILE --candidate DIR --out DIR [--only RE]
   oracle.py selftest [--live --rows FILE [--only RE]]
 
 A row is a list of steps: `make` steps build a fixture (files, directories and
@@ -31,6 +32,15 @@ modification time, and the full text of every `.trashinfo` and of
   - A modification time inside the window: `<in-window>`.
   - A step marked `"order": "host"`: its standard output's lines sorted, for
     a listing in the order the host's directory hands entries over.
+  - A row marked `"words": "own"` (`--help`, `--version`): each stream reads
+    `<text>` when it holds anything, so the row holds the exit status and
+    which stream carries the text, and this repository's text is its own.
+
+A row may also name `"home": "small"`: its scratch home is on a small tmpfs
+(/small, mounted by tools/in-container), so a copy into the home trash can
+be refused for space. A row marked `"times": "exact"` records every entry's
+access time too, and both times' nanoseconds; times inside the window are
+still `<in-window>`, with their nanoseconds dropped.
 
 A row marked `"diverge"` is one where this repository departs from the oracle
 by design (the reason is the mark's text); `compare` holds the candidate to
@@ -43,7 +53,9 @@ replaced by a count of its lines and fails the row by name.
 `record` writes each row's normalised oracle capture to the golden directory;
 `check` runs the oracle again and holds it to them (the pinned oracle must
 reproduce its own goldens); `compare` holds the candidate to a fresh oracle
-run; `selftest` checks the normaliser and the comparer on synthetic captures
+run, over the rows whose every command the candidate directory holds (or
+those `--commands` names); `capture` writes the candidate's own normalised
+captures, for review; `selftest` checks the normaliser and the comparer on synthetic captures
 (every field a difference can hide in is mutated and must be seen), and with
 --live runs every row on the oracle twice and requires them to agree.
 """
@@ -55,6 +67,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import socket
 import stat
 import subprocess
 import sys
@@ -66,6 +79,15 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRATCH = Path('/tmp/trash-rows')
 HOME = SCRATCH / 'home'
 XDEV = Path('/xdev/trash-rows')
+SMALL = Path('/small')
+# The scratch home a row runs in: the image's root file system by default, or
+# the small tmpfs (`"home": "small"`). Set by run_row for the row it runs.
+HOMES = {'root': HOME, 'small': SMALL / 'trash-rows/home'}
+CURRENT = {'home': HOME}
+
+
+def home():
+    return CURRENT['home']
 FIXTURE_TIME = 1700000000
 COMMANDS = ('trash', 'trash-put', 'trash-list', 'trash-restore', 'trash-rm', 'trash-empty')
 TRACEBACK = 'Traceback (most recent call last):'
@@ -90,17 +112,49 @@ def where(path_bytes):
     """A fixture path: relative to the home, or on the second file system with @xdev/."""
     if path_bytes.startswith(b'@xdev/'):
         return os.path.join(bytes(XDEV), path_bytes[len(b'@xdev/'):])
-    return os.path.join(bytes(HOME), path_bytes)
+    return os.path.join(bytes(home()), path_bytes)
 
 
 # ---------------------------------------------------------------- running
 
 
 def make(ops):
-    made = []
+    made, later = [], []
     for op in ops:
         kind = op[0]
-        if kind == 'file':
+        if kind == 'big':
+            # ["big", path, bytes]: a file of that many bytes, 0..250 repeated.
+            p = where(unescape(op[1]))
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            block = bytes(i % 251 for i in range(65536))
+            with open(p, 'wb') as f:
+                left = int(op[2])
+                while left > 0:
+                    f.write(block[:left])
+                    left -= len(block[:left])
+            os.chmod(p, 0o644)
+            made.append(p)
+        elif kind == 'fifo':
+            p = where(unescape(op[1]))
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            os.mkfifo(p, int(op[2], 8) if len(op) > 2 else 0o644)
+            os.chmod(p, int(op[2], 8) if len(op) > 2 else 0o644)
+            made.append(p)
+        elif kind == 'socket':
+            p = where(unescape(op[1]))
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.bind(p)
+            s.close()
+            made.append(p)
+        elif kind == 'chown':
+            # ["chown", path, uid, gid]: the entry itself, never a link's target.
+            later.append(('chown', where(unescape(op[1])), int(op[2]), int(op[3])))
+        elif kind == 'times':
+            # ["times", path, mtime_s, mtime_ns, atime_s, atime_ns]: after the
+            # fixture's own stamping, so these times are the ones that stay.
+            later.append(('times', where(unescape(op[1])), int(op[2]), int(op[3]), int(op[4]), int(op[5])))
+        elif kind == 'file':
             p = where(unescape(op[1]))
             os.makedirs(os.path.dirname(p), exist_ok=True)
             with open(p, 'wb') as f:
@@ -129,6 +183,12 @@ def make(ops):
     # directory's own time is set after its entries were made.
     for p in sorted(made, key=lambda q: -q.count(b'/')):
         os.utime(p, (FIXTURE_TIME, FIXTURE_TIME), follow_symlinks=False)
+    for op in later:
+        if op[0] == 'chown':
+            os.lchown(op[1], op[2], op[3])
+        else:
+            _, p, ms, mns, as_, ans = op
+            os.utime(p, ns=(as_ * 10**9 + ans, ms * 10**9 + mns), follow_symlinks=False)
 
 
 def tool_path(tool, command):
@@ -138,24 +198,26 @@ def tool_path(tool, command):
 
 
 def env_for(row):
-    return {'HOME': str(HOME), 'XDG_DATA_HOME': str(HOME), 'TZ': row.get('tz', 'UTC'),
+    return {'HOME': str(home()), 'XDG_DATA_HOME': str(home()), 'TZ': row.get('tz', 'UTC'),
             'LC_ALL': 'C.UTF-8', 'PATH': '/usr/bin:/bin'}
 
 
 # The tops of the two file systems a row touches, where a tool may make a
 # per-volume trash (`$topdir/.Trash-$uid`): the image's root, which holds the
 # scratch home, and the second file system.
-TOPS = (('root-top', Path('/')), ('xdev-top', Path('/xdev')))
+TOPS = (('root-top', Path('/')), ('xdev-top', Path('/xdev')), ('small-top', SMALL))
 
 
 def clean():
     # Only ever inside the oracle image: this removes what a tool left at the
     # tops of its file systems.
     assert Path('/opt/oracle-manifest.txt').exists(), 'clean() outside the oracle image'
-    for d in (SCRATCH, XDEV):
+    for d in (SCRATCH, XDEV, SMALL / 'trash-rows'):
         if d.exists():
             shutil.rmtree(d)
     for _, top in TOPS:
+        if not top.is_dir():
+            continue
         for p in top.glob('.Trash*'):
             shutil.rmtree(p) if p.is_dir() and not p.is_symlink() else p.unlink()
 
@@ -163,7 +225,11 @@ def clean():
 def run_row(row, tool):
     """The row on one tool: its steps' results and the trees it leaves, raw."""
     clean()
-    HOME.mkdir(parents=True)
+    where_home = row.get('home', 'root')
+    CURRENT['home'] = HOMES[where_home]
+    if where_home == 'small' and (not SMALL.is_dir() or os.stat(SMALL).st_dev == os.stat('/').st_dev):
+        raise SystemExit('FAIL oracle-small: /small is not a file system of its own (tools/in-container mounts it)')
+    home().mkdir(parents=True)
     XDEV.mkdir(parents=True)
     steps = []
     start = time.time()
@@ -179,16 +245,23 @@ def run_row(row, tool):
         steps.append({'argv': [show(a) for a in [unescape(step['run'][0])] + argv[1:]], 'order': step.get('order', 'kept'),
                       'exit': r.returncode, 'stdout': show(r.stdout), 'stderr': show(r.stderr)})
     end = time.time()
-    trees = {'home': snapshot(bytes(HOME)), 'xdev': snapshot(bytes(XDEV))}
+    exact = row.get('times') == 'exact'
+    trees = {'home': snapshot(bytes(home()), exact), 'xdev': snapshot(bytes(XDEV), exact)}
     for label, top in TOPS:
+        if not top.is_dir():
+            continue
         for p in sorted(top.glob('.Trash*')):
-            trees[label + '/' + p.name] = snapshot(bytes(p))
+            trees[label + '/' + p.name] = snapshot(bytes(p), exact)
     clean()
-    return {'row': row['name'], 'tz': row.get('tz', 'UTC'), 'window': [start, end], 'steps': steps, 'trees': trees}
+    cap = {'row': row['name'], 'tz': row.get('tz', 'UTC'), 'window': [start, end], 'steps': steps, 'trees': trees}
+    if row.get('words') == 'own':
+        cap['own_words'] = True
+    return cap
 
 
-def snapshot(top):
-    """Every entry under top: what the comparison reads, raw."""
+def snapshot(top, exact=False):
+    """Every entry under top: what the comparison reads, raw. With exact, the
+    access time and both times' nanoseconds too."""
     out = {}
     if not os.path.lexists(top):
         return out
@@ -199,10 +272,16 @@ def snapshot(top):
             rel = show(os.path.relpath(p, top))
             st = os.lstat(p)
             e = {'mode': '%04o' % stat.S_IMODE(st.st_mode), 'mtime': int(st.st_mtime), 'owner': '%d:%d' % (st.st_uid, st.st_gid)}
+            if exact:
+                e.update(mtime_ns=st.st_mtime_ns % 10**9, atime=st.st_atime_ns // 10**9, atime_ns=st.st_atime_ns % 10**9)
             if stat.S_ISLNK(st.st_mode):
                 e.update(type='link', target=show(os.readlink(p)))
             elif stat.S_ISDIR(st.st_mode):
                 e.update(type='dir')
+            elif stat.S_ISFIFO(st.st_mode):
+                e.update(type='fifo')
+            elif stat.S_ISSOCK(st.st_mode):
+                e.update(type='socket')
             elif stat.S_ISREG(st.st_mode):
                 data = open(p, 'rb').read()
                 e.update(type='file', size=len(data), sha256=hashlib.sha256(data).hexdigest())
@@ -289,7 +368,11 @@ def normalise(cap):
         out = norm_output(out, w, tz)
         if s.get('order') == 'host':
             out = host_order(out)
-        steps.append({'argv': s['argv'], 'exit': s['exit'], 'stdout': out, 'stderr': norm_output(err, w, tz)})
+        err = norm_output(err, w, tz)
+        if cap.get('own_words'):
+            # this repository's --help and --version are in its own words
+            out, err = ('<text>' if out else ''), ('<text>' if err else '')
+        steps.append({'argv': s['argv'], 'exit': s['exit'], 'stdout': out, 'stderr': err})
     trees = {}
     for tname, tree in cap['trees'].items():
         t = {}
@@ -297,6 +380,10 @@ def normalise(cap):
             e = dict(e)
             if in_window(e['mtime'], w):
                 e['mtime'] = '<in-window>'
+                e.pop('mtime_ns', None)
+            if 'atime' in e and in_window(e['atime'], w):
+                e['atime'] = '<in-window>'
+                e.pop('atime_ns', None)
             if 'text' in e:
                 e['text'] = norm_sizes(e['text'], w) if rel.endswith('directorysizes') else norm_info(e['text'], w, tz)
                 if rel.endswith('directorysizes'):
@@ -421,10 +508,33 @@ def cmd_check(a):
     return 1 if fails else 0
 
 
+def row_commands(row):
+    return sorted({unescape(st['run'][0]).decode() for st in row['steps'] if 'run' in st})
+
+
+def candidate_rows(a):
+    """The rows the candidate can run: every command they use is in the
+    candidate directory (or in --commands). The others are named, not run."""
+    if a.commands:
+        have = set(a.commands.split(','))
+    else:
+        have = {c for c in COMMANDS if os.access(os.path.join(a.candidate, c), os.X_OK)}
+    rows, out = [], []
+    for row in load_rows(a.rows, a.only):
+        missing = [c for c in row_commands(row) if c not in have]
+        (out if missing else rows).append((row, missing))
+    for row, missing in out:
+        print('OUT %s needs %s' % (row['name'], ' '.join(missing)))
+    return [r for r, _ in rows]
+
+
 def cmd_compare(a):
     live_guard()
     fails = 0
-    rows = load_rows(a.rows, a.only)
+    rows = candidate_rows(a)
+    if not rows:
+        print('FAIL oracle-compare no row the candidate can run')
+        return 1
     for row in rows:
         got = normalise(run_row(row, os.path.abspath(a.candidate)))
         if row.get('diverge'):
@@ -442,6 +552,18 @@ def cmd_compare(a):
     return 1 if fails else 0
 
 
+def cmd_capture(a):
+    live_guard()
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    rows = candidate_rows(a)
+    for row in rows:
+        cap = normalise(run_row(row, os.path.abspath(a.candidate)))
+        (out / (row['name'] + '.json')).write_text(json.dumps(cap, indent=1, sort_keys=True, ensure_ascii=False) + '\n')
+        print('CAPTURED %s commands=%d' % (row['name'], len(cap['steps'])))
+    return 0
+
+
 def synthetic():
     """A capture shaped like trashing one file, for the comparer's own tests."""
     now = 1794100000.0
@@ -456,7 +578,8 @@ def synthetic():
             'Trash': {'type': 'dir', 'mode': '0700', 'mtime': int(now) + 1, 'owner': '0:0'},
             'Trash/files': {'type': 'dir', 'mode': '0700', 'mtime': int(now) + 1, 'owner': '0:0'},
             'Trash/files/a b.txt': {'type': 'file', 'mode': '0644', 'mtime': FIXTURE_TIME, 'owner': '0:0', 'size': 5,
-                                    'sha256': hashlib.sha256(b'hello').hexdigest()},
+                                    'sha256': hashlib.sha256(b'hello').hexdigest(),
+                                    'mtime_ns': 123456789, 'atime': FIXTURE_TIME - 9, 'atime_ns': 5},
             'Trash/files/l': {'type': 'link', 'mode': '0777', 'mtime': FIXTURE_TIME, 'owner': '0:0', 'target': 'a b.txt'},
             'Trash/info': {'type': 'dir', 'mode': '0700', 'mtime': int(now) + 1, 'owner': '0:0'},
             'Trash/info/a b.txt.trashinfo': {'type': 'file', 'mode': '0600', 'mtime': int(now) + 1, 'owner': '0:0',
@@ -487,6 +610,10 @@ def mutations():
         'file-bytes': (lambda c: c['trees']['home']['Trash/files/a b.txt'].update(sha256='0' * 64), 'home:Trash/files/a b.txt:sha256'),
         'file-mode': (lambda c: c['trees']['home']['Trash/files/a b.txt'].update(mode='0600'), 'home:Trash/files/a b.txt:mode'),
         'file-mtime': (lambda c: c['trees']['home']['Trash/files/a b.txt'].update(mtime=FIXTURE_TIME + 1), 'home:Trash/files/a b.txt:mtime'),
+        'file-mtime-ns': (lambda c: c['trees']['home']['Trash/files/a b.txt'].update(mtime_ns=123456788), 'home:Trash/files/a b.txt:mtime_ns'),
+        'file-atime': (lambda c: c['trees']['home']['Trash/files/a b.txt'].update(atime=FIXTURE_TIME), 'home:Trash/files/a b.txt:atime'),
+        'file-atime-ns': (lambda c: c['trees']['home']['Trash/files/a b.txt'].update(atime_ns=6), 'home:Trash/files/a b.txt:atime_ns'),
+        'file-as-fifo': (lambda c: c['trees']['home']['Trash/files/a b.txt'].update(type='fifo'), 'home:Trash/files/a b.txt:type'),
         'link-as-file': (lambda c: c['trees']['home']['Trash/files/l'].update(type='file'), 'home:Trash/files/l:type'),
         'link-target': (lambda c: c['trees']['home']['Trash/files/l'].update(target='elsewhere'), 'home:Trash/files/l:target'),
         'dir-mode': (lambda c: c['trees']['home']['Trash'].update(mode='0755'), 'home:Trash:mode'),
@@ -501,6 +628,26 @@ def mutations():
         'stderr': (lambda c: c['steps'][0].update(stderr='trash: x\n'), 'step1-stderr'),
         'traceback': (lambda c: c['steps'][0].update(stderr=TRACEBACK + '\n  File "x", line 1\nError: y\n'), 'traceback'),
     }
+
+
+def in_window_ns(base):
+    import copy
+    c = copy.deepcopy(base)
+    c['trees']['home']['Trash'].update(mtime_ns=77)
+    return c
+
+
+def own_words(base):
+    """An own-words row holds which stream carries text, not the text."""
+    import copy
+    a, b, c = copy.deepcopy(base), copy.deepcopy(base), copy.deepcopy(base)
+    for x in (a, b, c):
+        x['own_words'] = True
+    a['steps'][0].update(stdout='usage: ours\n')
+    b['steps'][0].update(stdout='usage: theirs\nmore\n')
+    c['steps'][0].update(stderr='usage: ours\n')
+    na, nb, nc = normalise(a), normalise(b), normalise(c)
+    return compare(na, nb) == [] and any(f == 'step1-stdout' for f, _ in compare(na, nc))
 
 
 def cmd_selftest(a):
@@ -521,6 +668,9 @@ def cmd_selftest(a):
         ('host-order', host_order('b\na\n') == 'a\nb\n' and host_order('b\na') == 'a\nb', ''),
         ('redact', redact('ok\n' + TRACEBACK + '\n  File "x"\nE\n') == ('ok\n<traceback redacted: 4 lines>\n', 4), ''),
         ('self-equal', compare(n, normalise(copy.deepcopy(base))) == [], compare(n, normalise(copy.deepcopy(base)))),
+        ('normalise-ns-kept', n['trees']['home']['Trash/files/a b.txt'].get('mtime_ns') == 123456789, ''),
+        ('normalise-ns-in-window-dropped', 'mtime_ns' not in normalise(in_window_ns(base))['trees']['home']['Trash'], ''),
+        ('own-words', own_words(base), ''),
     ]
     for name, ok, detail in checks:
         if ok:
@@ -550,7 +700,7 @@ def cmd_selftest(a):
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest='cmd', required=True)
-    for name in ('record', 'check', 'compare'):
+    for name in ('record', 'check', 'compare', 'capture'):
         s = sub.add_parser(name)
         s.add_argument('--rows', required=True)
         s.add_argument('--only')
@@ -558,12 +708,16 @@ def main():
             s.add_argument('--golden', required=True)
         else:
             s.add_argument('--candidate', required=True)
+            s.add_argument('--commands')
+        if name == 'capture':
+            s.add_argument('--out', required=True)
     s = sub.add_parser('selftest')
     s.add_argument('--live', action='store_true')
     s.add_argument('--rows')
     s.add_argument('--only')
     a = p.parse_args()
-    return {'record': cmd_record, 'check': cmd_check, 'compare': cmd_compare, 'selftest': cmd_selftest}[a.cmd](a)
+    return {'record': cmd_record, 'check': cmd_check, 'compare': cmd_compare, 'capture': cmd_capture,
+            'selftest': cmd_selftest}[a.cmd](a)
 
 
 if __name__ == '__main__':
