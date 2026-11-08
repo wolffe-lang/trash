@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The census: build the probes, run them, and hold what they print to census/expect.json.
 
-  census.py build --wolf WOLF --out DIR [--static]
+  census.py build --wolf WOLF --out DIR [--static]   (static: also DIR/stripped/)
   census.py run --bin DIR --same DIR --other DIR --out RECORD.json
   census.py parse --console FILE --out RECORD.json [--platform NAME]
   census.py verdict --record RECORD.json --platform linux|pax
@@ -68,6 +68,10 @@ def cmd_build(a):
                 print('FAIL census-build-%s not a static ET_EXEC' % name)
                 bad += 1
                 continue
+            # The PAX image carries a stripped copy: the symbols are a twelfth of
+            # the bytes and the console session never reads them.
+            (out / 'stripped').mkdir(exist_ok=True)
+            subprocess.run(['strip', '-o', str(out / 'stripped' / name), str(exe)], check=True)
         print('PASS census-build-%s%s' % (name, ' static' if a.static else ''))
     return 1 if bad else 0
 

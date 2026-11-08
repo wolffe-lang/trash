@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# tools/gate-pax PAXTREE KERNEL.elf INPUTS CENSUS-STATIC HOME.img OUTDIR: the
+# census on PAX under KVM, held to census/expect.json's pax rows. It needs a
+# PAX tree (read-only), its console kernel, pelt and boreutils' printf and
+# mkdir built as PAX's own tools build them (INPUTS/pelt/pelt, INPUTS/bore/),
+# the static census (`tools/gate linux` builds it into target/census-static)
+# and PAX's home disk (tools/mkdisk --home). Every END is a real child exit;
+# the first nonzero step stops it.
+set -euo pipefail
+[ $# -eq 6 ] || { echo 'usage: gate-pax PAXTREE KERNEL INPUTS CENSUS-STATIC HOME.img OUTDIR'; exit 2; }
+root=$(cd "$(dirname "$0")/.." && pwd)
+pax=$1 kernel=$2 inputs=$3 census=$4 disk=$5 out=$6
+cd "$root"
+mkdir -p target/gate "$out"
+source "$root/tools/gate-steps.sh"
+step pax-identity bash -c 'echo "PASS pax-identity head=$(git -c safe.directory=* -C "$0" rev-parse HEAD) kernel_sha256=$(sha256sum "$1" | cut -c1-64) disk_sha256=$(sha256sum "$2" | cut -c1-64)"' "$pax" "$kernel" "$disk"
+step census-pax-selftest python3 -I tools/census-pax.py selftest
+step census-pax-boot python3 -I tools/census-pax.py run --pax "$pax" --kernel "$kernel" --inputs "$inputs" \
+    --census "$census" --disk "$disk" --out "$out/census"
+step census-pax-verdict python3 -I tools/census.py verdict --record "$out/census/pax.json" --platform pax
