@@ -366,6 +366,7 @@ def round_once(row, tool, d):
         # neither waits on the other's end to be answered.
         procs[who].stdin.write(oracle.unescape(step.get('stdin', '')))
         procs[who].stdin.close()
+        procs[who].stdin = None
         if n == 0 and d['gap_ms']:
             time.sleep(d['gap_ms'] / 1000)
     results = []
