@@ -7,7 +7,8 @@
 #   candidate  inside the oracle image: the toolchain, the formatter, the
 #              commands built, their unit programs, the five built static
 #              from two copies of the tree at two paths and held to each
-#              other by digest (tools/repro.py), the commands held to
+#              other by digest, and again with an ld.lld on PATH
+#              (tools/repro.py), the commands held to
 #              the oracle's rows, and the hardening rows: each command cut
 #              at each durable step, two run at once, and GNU rm's own
 #              answers on the permission rows' fixtures (a witness).
@@ -15,7 +16,8 @@
 #              the toolchain by digest, the formatter, the census built and run
 #              on Linux and held to census/expect.json, the static census and
 #              commands for PAX (and the five again from two copies of the
-#              tree, held to each other by digest), the oracle's rows on the
+#              tree, held to each other by digest, and with an ld.lld on
+#              PATH), the oracle's rows on the
 #              oracle, the
 #              commands held to them, and the hardening rows.
 set -euo pipefail
