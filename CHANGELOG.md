@@ -1,5 +1,22 @@
 ## Unreleased
 
+- `trash-list`, `trash-restore`, `trash-rm PATTERN` and `trash-empty [DAYS]`,
+  held to trash-cli's commands of the same names: the listing's lines and
+  its order, the date read as trash-cli reads it, encoded paths decoded;
+  restore by number, list or span, by path, sorted by date or path, its
+  prompt and every answer as trash-cli takes it; a restore never replaces
+  what is at the original path (the path is reserved by a hard link or an
+  empty directory, never checked and then used), makes missing directories
+  above it, and copies back across file systems; patterns by fnmatch's
+  rules, on the name or the whole path; DAYS counted on the calendar in
+  local time; `-i`, `-f`, `-v` and `--dry-run`, and the question asked on a
+  terminal. Linux x86-64 and PAX.
+- The oracle's rows for the companions (246 rows in all), the captures of
+  the rows with no oracle, the companions on PAX under KVM, a round-trip
+  property over generated trees, and unit rows for the shared module's new
+  parts. The harness gives a step a terminal, dates a fixture from now,
+  generates trees, and holds a round trip.
+
 - `trash`: files, directories and symbolic links moved into `~/Trash` in the
   Trash specification's order, the info file created exclusively first;
   collisions and long names named as trash-cli names them; trash-cli's flags,
