@@ -15,8 +15,13 @@
 //    no-follow bit), so a directory swapped for a link cannot redirect a
 //    removal, and only what was copied is removed.
 //
-// A pass that fails before the fourth removes the copy and leaves the
-// source whole. Hard links inside a tree are copied as separate files.
+// After the third pass the copy is synced (each file as it is written,
+// then every directory), so that a power cut after the source's removal
+// finds the copy on the disk. A pass that fails before the fourth removes
+// what this copy made, and only that (another command may have made the
+// destination first), and leaves the source whole. Entries are copied and
+// removed in the order of their names, so a cut's place is the same on
+// every host. Hard links inside a tree are copied as separate files.
 
 /// One copied entry: its source, its copy, and the source's record as it
 /// was read before any pass read the source.
@@ -93,12 +98,34 @@ pub fn free_space(dir: str) -> (int, int) {
     (w[5] * w[2], w[2])
 }
 
+/// A directory's entries as the host lists them, put in the order of
+/// their names.
+pub fn by_name(entries: List[List[byte]]) -> List[List[byte]] {
+    var keys = List[List[byte]]()
+    for e in entries {
+        (mut keys).push(copy e[1..])
+    }
+    var out = List[List[byte]]()
+    for i in order(keys) {
+        (mut out).push(copy entries[i])
+    }
+    out
+}
+
 /// Pass 1 for one entry and everything inside it. An empty answer is
-/// success; any other is why it failed.
-fn copy_entry(src: str, dst: str, rec: List[int], seen: Seen, mut done: List[Copied]) -> str {
+/// success; any other is why it failed. `made` lists every entry this copy
+/// created, in the order it created them.
+fn copy_entry(
+    src: str,
+    dst: str,
+    rec: List[int],
+    seen: Seen,
+    mut done: List[Copied],
+    mut made: List[str],
+) -> str {
     let kind = rec[0]
     if kind == 0 {
-        let why = copy_file(src, dst)
+        let why = copy_file(src, dst, mut made)
         if why.len > 0 {
             return why
         }
@@ -107,10 +134,11 @@ fn copy_entry(src: str, dst: str, rec: List[int], seen: Seen, mut done: List[Cop
         fs_create_dir_mode(dst, 0o700) else |_| {
             return "cannot make '{dst}': {reason()}"
         }
-        let entries = fs_read_dir_entries(src) else |_| {
+        (mut made).push(dst)
+        let listed = fs_read_dir_entries(src) else |_| {
             return "cannot list '{src}': {reason()}"
         }
-        for e in entries {
+        for e in by_name(listed) {
             let raw = e[1..]
             let name = str_from_utf8(raw) else |_| {
                 return "the name of an entry in '{src}' ({shown(raw)}) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
@@ -125,7 +153,7 @@ fn copy_entry(src: str, dst: str, rec: List[int], seen: Seen, mut done: List[Cop
                     return "cannot read '{child}': {reason()}"
                 }
             }
-            let why = copy_entry(child, "{dst}/{name}", crec, seen, mut done)
+            let why = copy_entry(child, "{dst}/{name}", crec, seen, mut done, mut made)
             if why.len > 0 {
                 return why
             }
@@ -141,11 +169,13 @@ fn copy_entry(src: str, dst: str, rec: List[int], seen: Seen, mut done: List[Cop
         fs_symlink(t, dst) else |_| {
             return "cannot make the link '{dst}': {reason()}"
         }
+        (mut made).push(dst)
     } else if kind == 4 {
         step("fifo {dst}")
         fs_mkfifo(dst, 0o600) else |_| {
             return "cannot make the fifo '{dst}': {reason()}"
         }
+        (mut made).push(dst)
     } else if kind == 5 {
         return "'{src}' is a socket, which cannot be copied to the home volume"
     } else if kind == 6 || kind == 7 {
@@ -157,8 +187,9 @@ fn copy_entry(src: str, dst: str, rec: List[int], seen: Seen, mut done: List[Cop
     ""
 }
 
-/// A regular file's bytes, by the host's own copy, into a new private file.
-fn copy_file(src: str, dst: str) -> str {
+/// A regular file's bytes, by the host's own copy, into a new private
+/// file, synced before it is closed.
+fn copy_file(src: str, dst: str, mut made: List[str]) -> str {
     let from = fs_open_mode(src, 16) else |_| {
         return "cannot open '{src}': {reason()}"
     }
@@ -168,6 +199,7 @@ fn copy_file(src: str, dst: str) -> str {
         fs_close(from) else |_| {}
         return why
     }
+    (mut made).push(dst)
     var why = ""
     var more = true
     while more {
@@ -181,6 +213,11 @@ fn copy_file(src: str, dst: str) -> str {
                 more = false
                 0
             },
+        }
+    }
+    if why.len == 0 {
+        fs_sync(to) else |_| {
+            why = "cannot write '{dst}': {reason()}"
         }
     }
     fs_close(from) else |_| {}
@@ -344,41 +381,15 @@ fn finish(done: List[Copied]) -> str {
     ""
 }
 
-/// Remove `path` and everything under it, a copy that is given up. Only
-/// this program's own copy inside the trash is ever passed here.
-pub fn remove_copy(path: str) {
-    let rec = fs_lstat(path) else |_| {
-        return
-    }
-    if rec[0] == 1 {
-        let entries = fs_read_dir_entries(path) else |_| {
-            List[List[byte]]()
-        }
-        for e in entries {
-            let name = str_from_utf8(e[1..]) else |_| {
-                continue
-            }
-            remove_copy("{path}/{name}")
-        }
-        step("open up {path}")
-        fs_set_mode(path, 0o700) else |_| {}
-        step("remove {path}")
-        fs_remove_dir(path) else |_| {}
-    } else {
-        step("remove {path}")
-        fs_remove(path) else |_| {}
-    }
-}
-
 /// Pass 4 for the entries of the held directory `fd` (named `path`): each
 /// one that was copied, then the directory is left empty. An entry that was
 /// not copied (it appeared while the copy ran) is left, and so is its
 /// directory.
 fn empty_held(fd: int, path: str, copied: Map[str, bool]) -> str {
-    let entries = fs_read_dir_entries_at(fd) else |_| {
+    let listed = fs_read_dir_entries_at(fd) else |_| {
         return "cannot list '{path}': {reason()}"
     }
-    for e in entries {
+    for e in by_name(listed) {
         let raw = e[1..]
         let name = str_from_utf8(raw) else |_| {
             return "the name of an entry in '{path}' ({shown(raw)}) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
@@ -445,32 +456,84 @@ fn remove_source(path: str, rec: List[int], done: List[Copied]) -> str {
     ""
 }
 
-/// How a copy across file systems ended.
+/// How a copy across file systems went.
 pub struct Moved {
-    /// 0 trashed; 1 refused or failed, the source whole and the copy gone;
-    /// 2 trashed, but the source could not all be removed.
+    /// 0 copied, verified, finished and synced; 1 refused or failed: what
+    /// it made is removed and the source is whole.
     state: int,
     why: str,
+    /// Each copied entry, every directory after what it holds.
+    done: List[Copied],
+    /// Every entry the copy created, in the order it created them.
+    made: List[str],
 }
 
-/// Passes 1 to 4 for the item at `src` (its record `rec`) into `dst`, the
-/// records of the entries inside it as `estimate` read them in `seen`.
-pub fn copy_across(src: str, rec: List[int], dst: str, seen: Seen) -> Moved {
+/// Remove what a copy made, and nothing else: its directories opened up
+/// where its finish closed them, then every entry, innermost first.
+pub fn remove_made(m: Moved) {
+    for p in m.made {
+        let r = fs_lstat(p) else |_| {
+            continue
+        }
+        if r[0] == 1 && r[4] / 64 % 8 != 7 {
+            step("open up {p}")
+            fs_set_mode(p, 0o700) else |_| {}
+        }
+    }
+    var i = m.made.len - 1
+    while i >= 0 {
+        let p = m.made[i]
+        let r = fs_lstat(p) else |_| {
+            i -= 1
+            continue
+        }
+        step("remove {p}")
+        if r[0] == 1 {
+            fs_remove_dir(p) else |_| {}
+        } else {
+            fs_remove(p) else |_| {}
+        }
+        i -= 1
+    }
+}
+
+/// The copy put on the disk: every directory it made, and the one that
+/// holds it (each file was synced as it was written). A directory whose
+/// finished mode bars this process from opening it is passed over.
+fn sync_copy(dst: str, done: List[Copied]) {
+    step("sync {dst}")
+    for c in done {
+        if c.rec[0] == 1 {
+            fs_sync_dir(c.dst) else |_| {}
+        }
+    }
+    fs_sync_dir(parent(dst)) else |_| {}
+}
+
+/// Passes 1 to 3 for the item at `src` (its record `rec`) into `dst`, the
+/// records of the entries inside it as `estimate` read them in `seen`, then
+/// the copy synced. The source is not touched: `remove_copied` is pass 4.
+pub fn copy_in(src: str, rec: List[int], dst: str, seen: Seen) -> Moved {
     var done = List[Copied]()
-    var why = copy_entry(src, dst, rec, seen, mut done)
+    var made = List[str]()
+    var why = copy_entry(src, dst, rec, seen, mut done, mut made)
     if why.len == 0 {
         why = verify(done)
     }
     if why.len == 0 {
         why = finish(done)
     }
+    let m = Moved { state: if why.len > 0 then 1 else 0, why: why, done: done, made: made }
     if why.len > 0 {
-        remove_copy(dst)
-        return Moved { state: 1, why: why }
+        remove_made(m)
+        return m
     }
-    let left = remove_source(src, rec, done)
-    if left.len > 0 {
-        return Moved { state: 2, why: left }
-    }
-    Moved { state: 0, why: "" }
+    sync_copy(dst, m.done)
+    m
+}
+
+/// Pass 4: the source of a copy that `copy_in` made whole. "" or why not
+/// all of it could be removed.
+pub fn remove_copied(src: str, rec: List[int], m: Moved) -> str {
+    remove_source(src, rec, m.done)
 }
