@@ -1,0 +1,318 @@
+{
+ "about": "The stress rows (tools/harden.py stress): a fixture, then two commands (`pair`) at once, N rounds from a seed; each round draws which starts first, a start gap and a pause (TRASH_PAUSE) at one of `pause.steps` for one of them, and the result is held to the outcomes its `allowed` kind admits.",
+ "rows": [
+  {
+   "name": "race-collide",
+   "about": "two trash runs of two files named a.txt at once",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "d1/a.txt",
+       "one\n"
+      ],
+      [
+       "file",
+       "d2/a.txt",
+       "two\n"
+      ]
+     ]
+    }
+   ],
+   "pair": [
+    {
+     "run": [
+      "trash",
+      "d1/a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "d2/a.txt"
+     ]
+    }
+   ],
+   "pause": {
+    "steps": [
+     1,
+     8
+    ],
+    "ms": [
+     5,
+     20,
+     50
+    ]
+   },
+   "allowed": "collide",
+   "contents": [
+    "one\n",
+    "two\n"
+   ]
+  },
+  {
+   "name": "race-put-empty",
+   "about": "trash a.txt and trash-empty at once, an older item in the trash",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "old",
+       "o\n"
+      ],
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "old"
+     ]
+    }
+   ],
+   "pair": [
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-empty"
+     ],
+     "stdin": ""
+    }
+   ],
+   "pause": {
+    "steps": [
+     1,
+     6
+    ],
+    "ms": [
+     5,
+     20,
+     50
+    ]
+   },
+   "allowed": "put-empty",
+   "item": "a.txt",
+   "contents": [
+    "a\n"
+   ]
+  },
+  {
+   "name": "race-put-rm",
+   "about": "trash a.txt and trash-rm a.txt at once",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ]
+     ]
+    }
+   ],
+   "pair": [
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    },
+    {
+     "run": [
+      "trash-rm",
+      "a.txt"
+     ]
+    }
+   ],
+   "pause": {
+    "steps": [
+     1,
+     8
+    ],
+    "ms": [
+     5,
+     20,
+     50
+    ]
+   },
+   "allowed": "put-rm",
+   "item": "a.txt",
+   "contents": [
+    "a\n"
+   ]
+  },
+  {
+   "name": "race-restore-twice",
+   "about": "two trash-restore runs of one file at once",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ],
+   "pair": [
+    {
+     "run": [
+      "trash-restore",
+      "/tmp/trash-rows/home/a.txt"
+     ],
+     "stdin": "0\n"
+    },
+    {
+     "run": [
+      "trash-restore",
+      "/tmp/trash-rows/home/a.txt"
+     ],
+     "stdin": "0\n"
+    }
+   ],
+   "pause": {
+    "steps": [
+     1,
+     4
+    ],
+    "ms": [
+     5,
+     20,
+     50
+    ]
+   },
+   "allowed": "restore-twice",
+   "item": "a.txt",
+   "contents": [
+    "a\n"
+   ]
+  },
+  {
+   "name": "race-restore-twice-dir",
+   "about": "two trash-restore runs of one directory at once",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "d"
+     ]
+    }
+   ],
+   "pair": [
+    {
+     "run": [
+      "trash-restore",
+      "/tmp/trash-rows/home/d"
+     ],
+     "stdin": "0\n"
+    },
+    {
+     "run": [
+      "trash-restore",
+      "/tmp/trash-rows/home/d"
+     ],
+     "stdin": "0\n"
+    }
+   ],
+   "pause": {
+    "steps": [
+     1,
+     4
+    ],
+    "ms": [
+     5,
+     20,
+     50
+    ]
+   },
+   "allowed": "restore-twice-dir",
+   "item": "d",
+   "contents": [
+    "f\n"
+   ]
+  },
+  {
+   "name": "race-restore-twice-other-fs",
+   "about": "two trash-restore runs at once of one file trashed from another file system",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "@xdev/x",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/x"
+     ]
+    }
+   ],
+   "pair": [
+    {
+     "run": [
+      "trash-restore",
+      "/xdev/trash-rows/x"
+     ],
+     "stdin": "0\n"
+    },
+    {
+     "run": [
+      "trash-restore",
+      "/xdev/trash-rows/x"
+     ],
+     "stdin": "0\n"
+    }
+   ],
+   "pause": {
+    "steps": [
+     1,
+     3
+    ],
+    "ms": [
+     20,
+     50
+    ]
+   },
+   "allowed": "restore-twice-other-fs",
+   "item": "x",
+   "contents": [
+    "x\n"
+   ]
+  }
+ ]
+}

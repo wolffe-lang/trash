@@ -1,0 +1,306 @@
+{
+ "about": "The cut rows (tools/harden.py cuts): a fixture (make steps and uncut runs, as tests/oracle/rows.json reads them) and one command, cut at each of its durable steps; `spend` names what the command was asked to remove, which the no-file-lost property does not hold.",
+ "rows": [
+  {
+   "name": "cut-put-file",
+   "about": "trash a.txt with no trash yet, cut at each durable step",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ]
+     ]
+    }
+   ],
+   "cut": {
+    "run": [
+     "trash",
+     "a.txt"
+    ]
+   }
+  },
+  {
+   "name": "cut-put-dir",
+   "about": "trash of a tree into a trash that is there, cut at each durable step",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "Trash",
+       "0700"
+      ],
+      [
+       "dir",
+       "Trash/files",
+       "0700"
+      ],
+      [
+       "dir",
+       "Trash/info",
+       "0700"
+      ],
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ],
+      [
+       "dir",
+       "d/g"
+      ],
+      [
+       "file",
+       "d/g/h",
+       "h\n"
+      ]
+     ]
+    }
+   ],
+   "cut": {
+    "run": [
+     "trash",
+     "d"
+    ]
+   }
+  },
+  {
+   "name": "cut-put-other-fs",
+   "about": "trash of a tree from another file system (copied, verified, finished, then removed), cut at each durable step",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "Trash",
+       "0700"
+      ],
+      [
+       "dir",
+       "Trash/files",
+       "0700"
+      ],
+      [
+       "dir",
+       "Trash/info",
+       "0700"
+      ],
+      [
+       "dir",
+       "@xdev/t",
+       "0750"
+      ],
+      [
+       "file",
+       "@xdev/t/f",
+       "f\n",
+       "0640"
+      ],
+      [
+       "link",
+       "f",
+       "@xdev/t/l"
+      ]
+     ]
+    }
+   ],
+   "cut": {
+    "run": [
+     "trash",
+     "/xdev/trash-rows/t"
+    ]
+   }
+  },
+  {
+   "name": "cut-restore-file",
+   "about": "trash-restore of a file, cut at each durable step",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ],
+   "cut": {
+    "run": [
+     "trash-restore",
+     "/tmp/trash-rows/home/a.txt"
+    ],
+    "stdin": "0\n"
+   }
+  },
+  {
+   "name": "cut-restore-dir",
+   "about": "trash-restore of a directory (onto its placeholder), cut at each durable step",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "d"
+     ]
+    }
+   ],
+   "cut": {
+    "run": [
+     "trash-restore",
+     "/tmp/trash-rows/home/d"
+    ],
+    "stdin": "0\n"
+   }
+  },
+  {
+   "name": "cut-restore-other-fs",
+   "about": "trash-restore of a file trashed from another file system (copied back), cut at each durable step",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "@xdev/x",
+       "x\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/x"
+     ]
+    }
+   ],
+   "cut": {
+    "run": [
+     "trash-restore",
+     "/xdev/trash-rows/x"
+    ],
+    "stdin": "0\n"
+   }
+  },
+  {
+   "name": "cut-rm",
+   "about": "trash-rm '*.txt' over a file and a directory item, another item kept, cut at each durable step",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ],
+      [
+       "dir",
+       "d.txt"
+      ],
+      [
+       "file",
+       "d.txt/f",
+       "f\n"
+      ],
+      [
+       "file",
+       "keep.log",
+       "k\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt",
+      "d.txt",
+      "keep.log"
+     ]
+    }
+   ],
+   "cut": {
+    "run": [
+     "trash-rm",
+     "*.txt"
+    ]
+   },
+   "spend": [
+    "Trash/files/a.txt",
+    "Trash/files/d.txt"
+   ]
+  },
+  {
+   "name": "cut-empty",
+   "about": "trash-empty over a file, a tree and an item with no info file, cut at each durable step",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ],
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt",
+      "d"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "Trash/files/stray",
+       "s\n"
+      ]
+     ]
+    }
+   ],
+   "cut": {
+    "run": [
+     "trash-empty"
+    ],
+    "stdin": ""
+   },
+   "spend": [
+    "Trash/files"
+   ]
+  }
+ ]
+}
