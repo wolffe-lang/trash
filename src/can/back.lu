@@ -262,10 +262,15 @@ fn held_restore(trash: str, x: Info, dst: str, info: str) -> str {
             fs_sync_dir(parent(dst)) else |_| {}
             step("remove {item}")
             fs_remove(item) else |_| {
+                // Gone already: another restore of the same entry, on a
+                // host that keeps no locks, finished this one. The link is
+                // kept, since it may be the only name left.
                 let k = os_error()
-                step("remove {dst}")
-                fs_remove(dst) else |_| {}
-                return errno_line(k, item)
+                if k != 2 {
+                    step("remove {dst}")
+                    fs_remove(dst) else |_| {}
+                    return errno_line(k, item)
+                }
             }
         }
     }
@@ -277,7 +282,10 @@ fn held_restore(trash: str, x: Info, dst: str, info: str) -> str {
     }
     step("remove {info}")
     fs_remove(info) else |_| {
-        return errno_line(os_error(), info)
+        let k = os_error()
+        if k != 2 {
+            return errno_line(k, info)
+        }
     }
     ""
 }
