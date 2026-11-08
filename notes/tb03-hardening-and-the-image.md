@@ -356,7 +356,8 @@ None. A row that cannot run fails by name.
 
 ## Recommendations
 
-Each is implemented as recommended (A).
+Each is implemented as recommended (A). R-tb03-1 to R-tb03-10 were ruled A
+(the user's word, about 15:55Z).
 
 - R-tb03-1, the cut hook. (A) In the shipped commands, read from the
   environment, a no-op unless set. (B) A separate test build: wolf has no
