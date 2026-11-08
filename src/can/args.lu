@@ -1,0 +1,295 @@
+// can: the arguments, read as trash-cli's parser reads them (measured, not
+// read: see notes/tb01-trash-itself.md). Short flags cluster (`-rfv`), long
+// ones take any unambiguous prefix (`--verb`), options and operands mix,
+// `--` ends the options, `-` and a negative number are operands, and an
+// unknown option is collected and named once parsing ends. `--help` and
+// `--version` act where they are met. Before any of that, a word before
+// `--` that looks like an option and names a file that is there is refused.
+
+/// What one command line asks for.
+pub struct Args {
+    force: bool,
+    interactive: bool,
+    verbose: bool,
+    help: bool,
+    version: bool,
+    operands: List[List[byte]],
+    /// A usage error, as the line after `trash: error: ` says it; empty
+    /// when there is none.
+    error: str,
+}
+
+/// The long options, in the order the oracle's parser lists them in an
+/// ambiguity: `-h`, `-d`, `-f`, `-i`, `-r`, `-v`, then `--version`.
+fn longs() -> List[str] {
+    var l = List[str]()
+    (mut l).push("--help")
+    (mut l).push("--directory")
+    (mut l).push("--force")
+    (mut l).push("--interactive")
+    (mut l).push("--recursive")
+    (mut l).push("--verbose")
+    (mut l).push("--version")
+    l
+}
+
+/// The option a short flag (`f`) or a whole long option names, or "".
+fn short_option(c: int) -> str {
+    if c == 104 {
+        return "--help"
+    }
+    if c == 100 {
+        return "--directory"
+    }
+    if c == 102 {
+        return "--force"
+    }
+    if c == 105 {
+        return "--interactive"
+    }
+    if c == 114 || c == 82 {
+        return "--recursive"
+    }
+    if c == 118 {
+        return "--verbose"
+    }
+    ""
+}
+
+/// An option as the oracle's parser names it in an error.
+fn display(option: str) -> str {
+    if option == "--help" {
+        return "-h/--help"
+    }
+    if option == "--directory" {
+        return "-d/--directory"
+    }
+    if option == "--force" {
+        return "-f/--force"
+    }
+    if option == "--interactive" {
+        return "-i/--interactive"
+    }
+    if option == "--recursive" {
+        return "-r/-R/--recursive"
+    }
+    if option == "--verbose" {
+        return "-v/--verbose"
+    }
+    option
+}
+
+/// A value quoted as the oracle's parser quotes it in an error.
+fn quoted(v: str) -> str {
+    if v.contains("'") && !v.contains("\"") {
+        return "\"{v}\""
+    }
+    "'{v.replace("\\", "\\\\").replace("'", "\\'")}'"
+}
+
+fn is_dashdash(w: List[byte]) -> bool {
+    w.len == 2 && w[0] as int == 45 && w[1] as int == 45
+}
+
+/// `-1`, `-12`, `-.5`, `-1.5`: a word the parser takes as an operand.
+fn negative_number(w: List[byte]) -> bool {
+    if w.len < 2 || w[0] as int != 45 {
+        return false
+    }
+    var digits_before = 0
+    var dot = false
+    var digits_after = 0
+    var i = 1
+    while i < w.len {
+        let c = w[i] as int
+        if c >= 48 && c <= 57 {
+            if dot {
+                digits_after += 1
+            } else {
+                digits_before += 1
+            }
+        } else if c == 46 && !dot {
+            dot = true
+        } else {
+            return false
+        }
+        i += 1
+    }
+    if dot then digits_after > 0 else digits_before > 0
+}
+
+fn has_byte(w: List[byte], c: int) -> bool {
+    for x in w {
+        if x as int == c {
+            return true
+        }
+    }
+    false
+}
+
+/// What applying one option does; false when parsing stops there (help,
+/// version).
+fn apply(mut a: Args, option: str) -> bool {
+    if option == "--help" {
+        a.help = true
+        return false
+    }
+    if option == "--version" {
+        a.version = true
+        return false
+    }
+    if option == "--force" {
+        a.force = true
+        a.interactive = false
+    } else if option == "--interactive" {
+        a.interactive = true
+        a.force = false
+    } else if option == "--verbose" {
+        a.verbose = true
+    }
+    true
+}
+
+/// Read a command line (the words after the program's name). `exists`
+/// answers whether a word names something that is there, link or not.
+pub fn parse(words: List[List[byte]], exists: fn(List[byte]) -> bool) -> Args {
+    var a = Args {
+        force: false,
+        interactive: false,
+        verbose: false,
+        help: false,
+        version: false,
+        operands: List[List[byte]](),
+        error: "",
+    }
+    for w in words {
+        if is_dashdash(w) {
+            break
+        }
+        if w.len > 1 && w[0] as int == 45 && exists(w) {
+            let s = shown(w)
+            a.error = "refusing to treat existing file {s} as an option (use './{s}' or a '--' separator)"
+            return a
+        }
+    }
+    var extras = List[str]()
+    var rest = false
+    for w in words {
+        if rest || w.len < 2 || w[0] as int != 45 {
+            (mut a.operands).push(copy w)
+            continue
+        }
+        if is_dashdash(w) {
+            rest = true
+            continue
+        }
+        let s = shown(w)
+        if w[1] as int == 45 {
+            if !long_word(mut a, mut extras, s) {
+                return a
+            }
+            continue
+        }
+        if short_option(w[1] as int).len > 0 {
+            if !cluster(mut a, mut extras, s) {
+                return a
+            }
+            continue
+        }
+        if negative_number(w) || has_byte(w, 32) {
+            (mut a.operands).push(copy w)
+            continue
+        }
+        (mut extras).push(s)
+    }
+    if a.error.len > 0 {
+        return a
+    }
+    if extras.len > 0 {
+        var joined = ""
+        for e in extras {
+            joined += if joined.len == 0 then e else " {e}"
+        }
+        a.error = "unrecognized arguments: {joined}"
+        return a
+    }
+    if a.operands.len == 0 {
+        a.error = "Please specify the files to trash."
+    }
+    a
+}
+
+/// A word that starts with `--`: a long option, a prefix of one, or not one.
+/// False when parsing stops (an error, help or version).
+fn long_word(mut a: Args, mut extras: List[str], s: str) -> bool {
+    let eq = s.find("=") else -1
+    let head = if eq < 0 then s else s[0..eq]
+    var matches = List[str]()
+    var exact = false
+    for l in longs() {
+        if l == head {
+            exact = true
+        }
+    }
+    if exact {
+        (mut matches).push(head)
+    } else {
+        for l in longs() {
+            if l.starts_with(head) {
+                (mut matches).push(l)
+            }
+        }
+    }
+    if matches.len == 0 {
+        (mut extras).push(s)
+        return true
+    }
+    if matches.len > 1 {
+        var all = ""
+        for m in matches {
+            all += if all.len == 0 then m else ", {m}"
+        }
+        a.error = "ambiguous option: {s} could match {all}"
+        return false
+    }
+    let option = matches[0]
+    if eq >= 0 {
+        a.error = "argument {display(option)}: ignored explicit argument {quoted(s[eq + 1..])}"
+        return false
+    }
+    apply(mut a, option)
+}
+
+/// A word `-x…` whose first letter is a flag: the flags it clusters, left
+/// to right. A letter that is no flag ends the word, and the rest of it,
+/// from that letter, is collected as unrecognized (`-vxq` names `-xq`).
+/// Every byte before the one looked at is an ASCII flag, so each slice of
+/// `s` starts on a character.
+fn cluster(mut a: Args, mut extras: List[str], s: str) -> bool {
+    let b = s.bytes()
+    var option = short_option(b[1] as int)
+    var i = 2
+    loop {
+        if i < b.len && b[i] as int == 61 {
+            a.error = "argument {display(option)}: ignored explicit argument {quoted(s[i + 1..])}"
+            return false
+        }
+        if i < b.len && b[i] as int == 45 {
+            a.error = "argument {display(option)}: ignored explicit argument {quoted(s[i..])}"
+            return false
+        }
+        if !apply(mut a, option) {
+            return false
+        }
+        if i >= b.len {
+            return true
+        }
+        let next = short_option(b[i] as int)
+        if next.len == 0 {
+            (mut extras).push("-{s[i..]}")
+            return true
+        }
+        option = next
+        i += 1
+    }
+}
