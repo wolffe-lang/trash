@@ -1,0 +1,113 @@
+{
+ "row": "list-made",
+ "steps": [
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "2020-01-02 03:04:05 /tmp/trash-rows/home/old.txt\n2021-06-07 08:09:10 /tmp/trash-rows/home/sp ace\n2022-01-01 00:00:00 /docs/rel\n2023-03-03 03:03:03 /tmp/trash-rows/home/orphan\n????-??-?? ??:??:?? /tmp/trash-rows/home/bad\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/bad": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/noinfo": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "a4fb621495a0122493b2203591c448903c472e306a1ede54fabad829e01075c0",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/old.txt": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "7427d152005f9ed0fa31c76ef9963cf4bb47dce6e2768111d9eb0edbfe59c704",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/rel": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "8e54b0ca18020275e4aef1ca0eb5e197e066c065c1864817652a8a39c55402cd",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/files/sp ace": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "cbc80bb5c0c0f8944bf73b3a429505ac5cde16644978bc9a1e74c5755f8ca556",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/bad.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/bad\n",
+    "type": "file"
+   },
+   "Trash/info/old.txt.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/old.txt\nDeletionDate=<outside-window:2020-01-02T03:04:05>\n",
+    "type": "file"
+   },
+   "Trash/info/orphan.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/orphan\nDeletionDate=<outside-window:2023-03-03T03:03:03>\n",
+    "type": "file"
+   },
+   "Trash/info/rel.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=docs/rel\nDeletionDate=<outside-window:2022-01-01T00:00:00>\n",
+    "type": "file"
+   },
+   "Trash/info/sp ace.trashinfo": {
+    "mode": "0600",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/tmp/trash-rows/home/sp%20ace\nDeletionDate=<outside-window:2021-06-07T08:09:10>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

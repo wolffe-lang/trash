@@ -1,0 +1,42 @@
+{
+ "row": "put-dot",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "."
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash directory '.'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash",
+    ".."
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash directory '..'\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "sub": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "sub/deeper": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

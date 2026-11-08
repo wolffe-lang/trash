@@ -1,0 +1,19 @@
+{
+ "row": "put-no-operand",
+ "steps": [
+  {
+   "argv": [
+    "trash"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash [OPTION]... FILE...\ntrash: error: Please specify the files to trash.\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

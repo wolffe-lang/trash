@@ -1,0 +1,21 @@
+{
+ "row": "put-missing-force",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "-f",
+    "nope"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

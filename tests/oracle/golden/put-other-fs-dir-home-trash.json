@@ -1,0 +1,44 @@
+{
+ "row": "put-other-fs-dir-home-trash",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "--trash-dir",
+    "/tmp/trash-rows/home/Trash",
+    "/xdev/trash-rows/d"
+   ],
+   "exit": 74,
+   "stderr": "trash: cannot trash directory '/xdev/trash-rows/d' (from volume '/xdev')\ntrash:  `- failed to trash /xdev/trash-rows/d in /tmp/trash-rows/home/Trash, because trash dir and file to be trashed are not in the same volume, trash-dir volume: /, file volume: /xdev\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {
+   "d": {
+    "mode": "0755",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "d/f": {
+    "mode": "0640",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+    "size": 2,
+    "type": "file"
+   },
+   "d/l": {
+    "mode": "0777",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "target": "f",
+    "type": "link"
+   }
+  }
+ },
+ "tz": "UTC"
+}

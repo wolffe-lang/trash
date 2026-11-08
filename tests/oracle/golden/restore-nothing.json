@@ -1,0 +1,19 @@
+{
+ "row": "restore-nothing",
+ "steps": [
+  {
+   "argv": [
+    "trash-restore"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "No files trashed from current dir ('/tmp/trash-rows/home')\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}
