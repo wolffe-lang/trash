@@ -329,12 +329,14 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
     }
     if across {
         let (free, frag) = free_space("{c.trash}/files")
-        if free >= 0 && estimate(path, rec, frag) > free {
+        var seen = Map[str, List[int]]()
+        let need = estimate(path, rec, frag, mut seen)
+        if free >= 0 && need > free {
             fs_remove(info) else |_| {}
             say("cannot trash '{op}': the home volume has too little free space to copy it")
             return true
         }
-        let m = copy_across(path, rec, dst)
+        let m = copy_across(path, rec, dst, seen)
         if m.state == 1 {
             fs_remove(info) else |_| {}
             say("cannot trash '{op}': {m.why}; it is left where it was")

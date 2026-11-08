@@ -40,8 +40,10 @@ fn rounded(n: int, frag: int) -> int {
 /// What the copy of the tree at `path` will take on a volume whose unit is
 /// `frag`: each file and link rounded up to the unit, a unit per
 /// directory. What cannot be read or named is counted as nothing; the copy
-/// itself refuses it.
-pub fn estimate(path: str, rec: List[int], frag: int) -> int {
+/// itself refuses it. Every entry's record is kept in `seen` as it was read,
+/// before its directory is listed: listing a directory moves its access
+/// time, and the copy must keep the time it had.
+pub fn estimate(path: str, rec: List[int], frag: int, mut seen: Map[str, List[int]]) -> int {
     let kind = rec[0]
     if kind != 1 {
         return rounded(rec[1], frag)
@@ -58,7 +60,8 @@ pub fn estimate(path: str, rec: List[int], frag: int) -> int {
         let crec = fs_lstat(child) else |_| {
             continue
         }
-        total += estimate(child, crec, frag)
+        seen[child] = copy crec
+        total += estimate(child, crec, frag, mut seen)
     }
     total
 }
@@ -78,7 +81,13 @@ pub fn free_space(dir: str) -> (int, int) {
 
 /// Pass 1 for one entry and everything inside it. An empty answer is
 /// success; any other is why it failed.
-fn copy_entry(src: str, dst: str, rec: List[int], mut done: List[Copied]) -> str {
+fn copy_entry(
+    src: str,
+    dst: str,
+    rec: List[int],
+    seen: Map[str, List[int]],
+    mut done: List[Copied],
+) -> str {
     let kind = rec[0]
     if kind == 0 {
         let why = copy_file(src, dst)
@@ -98,10 +107,13 @@ fn copy_entry(src: str, dst: str, rec: List[int], mut done: List[Copied]) -> str
                 return "the name of an entry in '{src}' ({shown(raw)}) is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
             }
             let child = "{src}/{name}"
-            let crec = fs_lstat(child) else |_| {
-                return "cannot read '{child}': {reason()}"
+            var crec = seen[child] else List[int]()
+            if crec.len == 0 {
+                crec = fs_lstat(child) else |_| {
+                    return "cannot read '{child}': {reason()}"
+                }
             }
-            let why = copy_entry(child, "{dst}/{name}", crec, mut done)
+            let why = copy_entry(child, "{dst}/{name}", crec, seen, mut done)
             if why.len > 0 {
                 return why
             }
@@ -418,10 +430,11 @@ pub struct Moved {
     why: str,
 }
 
-/// Passes 1 to 4 for the item at `src` (its record `rec`) into `dst`.
-pub fn copy_across(src: str, rec: List[int], dst: str) -> Moved {
+/// Passes 1 to 4 for the item at `src` (its record `rec`) into `dst`, the
+/// records of the entries inside it as `estimate` read them in `seen`.
+pub fn copy_across(src: str, rec: List[int], dst: str, seen: Map[str, List[int]]) -> Moved {
     var done = List[Copied]()
-    var why = copy_entry(src, dst, rec, mut done)
+    var why = copy_entry(src, dst, rec, seen, mut done)
     if why.len == 0 {
         why = verify(done)
     }
