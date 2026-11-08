@@ -164,7 +164,7 @@ row with its observation):
     same pelt does the same on Linux, so it is the shell's, already filed as
     pelt#20; PAX itself passes such bytes whole, in a name and in `argv`.
 - **Red first.** The first PAX take (`5e4cecf`) was red on 9 rows: the shell's
-  `?` for the non-UTF-8 fixtures (6 rows) and the two ext2 time rows. With
+  `?` for the non-UTF-8 fixtures (7 rows) and the two ext2 time rows. With
   the fixture made in C (`92b5d36`) it was red on 3, and with the
   distribution's zone data (`e91c31f`) on 4, the local-time row now answering
   where the prediction said it would not. The expectations then moved to the
