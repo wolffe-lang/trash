@@ -56,6 +56,7 @@ fn empty_dir(fd: int, path: str) -> str {
                 return "cannot open '{child}': {reason()}"
             }
             if rec[4] / 64 % 8 != 7 {
+                step("open up {child}")
                 fs_set_mode_fd(sub, 0o700) else |_| {}
             }
             let why = empty_dir(sub, child)
@@ -63,10 +64,12 @@ fn empty_dir(fd: int, path: str) -> str {
             if why.len > 0 {
                 return why
             }
+            step("remove {child}")
             fs_remove_dir_at(fd, name) else |_| {
                 return "cannot remove '{child}': {reason()}"
             }
         } else {
+            step("remove {child}")
             fs_remove_at(fd, name) else |_| {
                 return "cannot remove '{child}': {reason()}"
             }
@@ -83,6 +86,7 @@ pub fn erase(path: str) -> str {
         return ""
     }
     if rec[0] != 1 {
+        step("remove {path}")
         fs_remove(path) else |_| {
             return "cannot remove '{path}': {reason()}"
         }
@@ -96,6 +100,7 @@ pub fn erase(path: str) -> str {
         return "cannot open '{path}': {reason()}"
     }
     if rec[4] / 64 % 8 != 7 {
+        step("open up {path}")
         fs_set_mode_fd(fd, 0o700) else |_| {}
     }
     let why = empty_dir(fd, path)
@@ -103,6 +108,7 @@ pub fn erase(path: str) -> str {
     if why.len > 0 {
         return why
     }
+    step("remove {path}")
     fs_remove_dir(path) else |_| {
         return "cannot remove '{path}': {reason()}"
     }

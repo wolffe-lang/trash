@@ -58,6 +58,7 @@ fn main() -> int {
             status = 1
             continue
         }
+        can.step("remove {info}")
         fs_remove(info) else |_| {
             eprint("trash-rm: {can.errno_line(os_error(), info)}")
             status = 1
