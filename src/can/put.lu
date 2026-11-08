@@ -157,6 +157,7 @@ fn reserve(c: Ctx, base: str) -> Reserved {
         let path = "{info}/{name}.trashinfo"
         var taken = false
         var why = ""
+        step("reserve {path}")
         let fd = fs_open_perm(path, 4, 0o600) else |e| match e {
             exists => {
                 taken = true
@@ -196,6 +197,7 @@ fn reserve(c: Ctx, base: str) -> Reserved {
                 return Reserved { name: name, fd: fd, why: "" }
             }
             fs_close(fd) else |_| {}
+            step("give back {path}")
             fs_remove(path) else |_| {}
         }
         i += 1
@@ -276,6 +278,9 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
         }
     }
     for d in ["{c.trash}", "{c.trash}/files", "{c.trash}/info"] {
+        if !fs_is_dir(d) {
+            step("make {d}")
+        }
         let why = make_dir(d)
         if why.len > 0 {
             say("cannot trash '{op}': {why}")
@@ -290,6 +295,7 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
     let info = "{c.trash}/info/{r.name}.trashinfo"
     let text = info_text(real, deletion_date(time_unix_ms() / 1000))
     var why = ""
+    step("write {info}")
     fs_write_chunk(r.fd, bytes_of(text)) else |_| {
         why = reason()
     }
@@ -299,12 +305,14 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
         }
     }
     if why.len > 0 {
+        step("remove {info}")
         fs_remove(info) else |_| {}
         say("cannot trash '{op}': cannot write its info file: {why}")
         return true
     }
     let dst = "{c.trash}/files/{r.name}"
     var across = false
+    step("rename {path} to {dst}")
     fs_rename(path, dst) else |e| match e {
         cross_device => {
             across = true
@@ -323,6 +331,7 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
         },
     }
     if why.len > 0 {
+        step("remove {info}")
         fs_remove(info) else |_| {}
         say("cannot trash '{op}': {why}")
         return true
@@ -332,12 +341,14 @@ pub fn put(c: Ctx, word: List[byte]) -> bool {
         var seen = seen_none()
         let need = estimate(path, rec, frag, mut seen)
         if free >= 0 && need > free {
+            step("remove {info}")
             fs_remove(info) else |_| {}
             say("cannot trash '{op}': the home volume has too little free space to copy it")
             return true
         }
         let m = copy_across(path, rec, dst, seen)
         if m.state == 1 {
+            step("remove {info}")
             fs_remove(info) else |_| {}
             say("cannot trash '{op}': {m.why}; it is left where it was")
             return true
