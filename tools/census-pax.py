@@ -7,8 +7,9 @@
 
 The image is PAX's console kernel with an initramfs holding pelt as /bin/sh,
 boreutils' printf and mkdir, the static census programs (DIR/stripped from
-`census.py build --static`) under /census/bin, census/run.sh, and the
-repository's own user/fstab, so the ext2 disk a copy of HOME.img gives QEMU
+`census.py build --static`) under /census/bin, census/run.sh, the zone data
+PAX's distribution carries (UTC, from its tools/mkzone), and PAX's own
+user/fstab, so the ext2 disk a copy of HOME.img gives QEMU
 (tools/mkdisk --home's, PAX's own home disk) is mounted at /home. init runs
 census/run.sh with SAME on that disk (/home/pax/census) and OTHER in the
 in-memory tree (/tmp/census): two stores, as a PAX install has them. The
@@ -75,6 +76,14 @@ def cmd_run(a):
         raise SystemExit('FAIL census-pax-inputs: no programs in %s' % bins)
     for name in progs:
         files.append(('/census/bin/' + name, bins / name, 755))
+    # The zone data PAX's distribution root carries (tools/mkzone): UTC at
+    # /etc/localtime and in the zone database, so the image answers local time
+    # as an installed PAX does.
+    zone = out / 'UTC'
+    r = run([pax / 'tools/mkzone', zone], capture_output=True, text=True)
+    if r.returncode != 0:
+        raise SystemExit('FAIL census-pax-image mkzone: ' + r.stderr[-400:])
+    files += [('/etc/localtime', zone, 644), ('/usr/share/zoneinfo/UTC', zone, 644)]
     script = out / 'census.sh'
     script.write_text('mkdir -p /home/pax/census/same /tmp/census/other\n'
                       '/bin/sh /census/run.sh /census/bin /home/pax/census/same /tmp/census/other\n')

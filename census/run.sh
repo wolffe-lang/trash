@@ -20,7 +20,7 @@ run() { # program label args...
 printf 'CENSUS start\n'
 for store in same other; do
     if [ "$store" = same ]; then d=$same; else d=$other; fi
-    mkdir -p "$d/excl" "$d/md" "$d/links" "$d/changes" "$d/walk" "$d/names/nu" "$d/remove"
+    mkdir -p "$d/excl" "$d/md" "$d/links" "$d/changes" "$d/walk" "$d/names/nu" "$d/remove" "$d/sync" "$d/access"
     run create-excl "$store" "$d/excl"
     run mkdir-mode "$store" "$d/md"
     run links "$store" "$d/links"
@@ -30,10 +30,13 @@ for store in same other; do
     run names "$store" "$d/names"
     run statfs "$store" "$d"
     run remove "$store" "$d/remove"
+    run sync "$store" "$d/sync"
+    run access "$store" "$d/access"
 done
-mkdir -p "$same/rename" "$other/rename" "$same/copy" "$other/copy"
+mkdir -p "$same/rename" "$other/rename" "$same/copy" "$other/copy" "$same/hardlink" "$other/hardlink"
 run rename across "$same/rename" "$other/rename"
 run copy across "$same/copy" "$other/copy"
+run hardlink across "$same/hardlink" "$other/hardlink"
 run clock now
 "$bin/mkname" exec "$bin/args" exec 61ff62
 printf 'EXIT args@exec %s\n' "$?"

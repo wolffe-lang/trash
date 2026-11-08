@@ -1,0 +1,12 @@
+//! census: may this process write the directory an item is trashed from
+//! (the specification's check before a trashing starts)? Arguments: LABEL DIR.
+
+fn main() -> int {
+    let a = env_args()
+    var w = "yes"
+    fs_access(a[1], 2) else |e| { w = "{e} errno={os_error()}" }
+    var missing = "yes"
+    fs_access("{a[1]}/none", 2) else |e| { missing = "{e}" }
+    print("ROW access@{a[0]} write={w} missing={missing}")
+    0
+}

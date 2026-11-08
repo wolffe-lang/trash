@@ -1,0 +1,17 @@
+//! census: the syncs an info file and its directory want before the rename
+//! that makes a trashing real (a power cut mid-trash). Arguments: LABEL DIR.
+
+fn main() -> int {
+    let a = env_args()
+    let fd = fs_open_perm("{a[1]}/s.trashinfo", 4, 0o600) else |e| {
+        print("ROW sync@{a[0]} create:{e}")
+        return 0
+    }
+    var r = "ok"
+    fs_write_chunk(fd, "[Trash Info]\n".bytes()) else |e| { r = "write:{e}" }
+    fs_sync(fd) else |e| { r = "{r} file:{e} errno={os_error()}" }
+    fs_close(fd) else |_| {}
+    fs_sync_dir(a[1]) else |e| { r = "{r} dir:{e} errno={os_error()}" }
+    print("ROW sync@{a[0]} {r}")
+    0
+}

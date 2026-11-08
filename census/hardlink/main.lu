@@ -1,0 +1,21 @@
+//! census: a hard link, which never replaces — the one way a restore can put
+//! a file back without overwriting whatever appeared there (a rename always
+//! replaces, wolf-lang#706). Arguments: LABEL SAME OTHER.
+
+fn main() -> int {
+    let a = env_args()
+    let (same, other) = (a[1], a[2])
+    fs_write_text("{same}/h1", "one") else |e| { print("ROW hardlink@{a[0]} setup:{e}") }
+    fs_write_text("{same}/h3", "taken") else |e| { print("ROW hardlink@{a[0]} setup:{e}") }
+    var r = "made"
+    fs_link("{same}/h1", "{same}/h2") else |e| { r = "{e} errno={os_error()}" }
+    var again = "made"
+    fs_link("{same}/h1", "{same}/h3") else |e| { again = "{e}" }
+    var across = "made"
+    fs_link("{same}/h1", "{other}/h4") else |e| { across = "{e} errno={os_error()}" }
+    let nlink = (fs_stat("{same}/h1") else List[int]()).get(5) else -1
+    print(
+        "ROW hardlink@{a[0]} {r} nlink={nlink} over-existing={again} h3={fs_read_text("{same}/h3") else "?"} across={across}",
+    )
+    0
+}

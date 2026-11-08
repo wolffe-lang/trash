@@ -13,5 +13,24 @@ fn main() -> int {
     fs_remove("{d}/gone") else |e| { r = "{r} file:{e}" }
     fs_remove_dir("{d}/gone-dir") else |e| { r = "{r} dir:{e}" }
     print("ROW remove@{a[0]} {r} target-kept={kept} left={fs_exists("{d}/gone")}")
+    fs_create_dir_all("{d}/held/sub") else |e| { print("ROW remove-at@{a[0]} setup:{e}") }
+    fs_write_text("{d}/held/sub/f", "x") else |e| { print("ROW remove-at@{a[0]} setup:{e}") }
+    fs_symlink("sub", "{d}/held/l") else |e| { print("ROW remove-at@{a[0]} setup:{e}") }
+    let top = fs_open_mode("{d}/held", 32 + 16) else |e| {
+        print("ROW remove-at@{a[0]} open:{e} errno={os_error()}")
+        return 0
+    }
+    let sub = fs_open_at(top, "sub", 32 + 16, 0) else |e| {
+        print("ROW remove-at@{a[0]} open-at:{e} errno={os_error()}")
+        return 0
+    }
+    var h = "ok"
+    fs_remove_at(sub, "f") else |e| { h = "file:{e}" }
+    fs_close(sub) else |_| {}
+    fs_remove_at(top, "l") else |e| { h = "{h} link:{e}" }
+    fs_remove_dir_at(top, "sub") else |e| { h = "{h} dir:{e}" }
+    fs_close(top) else |_| {}
+    fs_remove_dir("{d}/held") else |e| { h = "{h} top:{e}" }
+    print("ROW remove-at@{a[0]} {h} left={fs_exists("{d}/held")}")
     0
 }

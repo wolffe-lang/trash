@@ -1,6 +1,26 @@
 {
  "about": "The census rows: per platform, the observation a probe prints (a regular expression matched whole) and whether the call is present, missing or wrong there. A missing or wrong row names its gap. Written first from the prediction in notes/tb00-the-census.md.",
  "rows": {
+  "access@other": {
+   "linux": {
+    "status": "present",
+    "want": "write=yes missing=not_found"
+   },
+   "pax": {
+    "status": "present",
+    "want": "write=yes missing=not_found"
+   }
+  },
+  "access@same": {
+   "linux": {
+    "status": "present",
+    "want": "write=yes missing=not_found"
+   },
+   "pax": {
+    "status": "present",
+    "want": "write=yes missing=not_found"
+   }
+  },
   "args-bytes@exec": {
    "linux": {
     "status": "present",
@@ -129,6 +149,16 @@
    "pax": {
     "status": "present",
     "want": "absolute=true path=/.+"
+   }
+  },
+  "hardlink@across": {
+   "linux": {
+    "status": "present",
+    "want": "made nlink=2 over-existing=exists h3=taken across=cross_device errno=18"
+   },
+   "pax": {
+    "status": "present",
+    "want": "made nlink=2 over-existing=exists h3=taken across=cross_device errno=18"
    }
   },
   "local-time@empty": {
@@ -301,6 +331,26 @@
     "want": "link=target dangling=nowhere/x"
    }
   },
+  "remove-at@other": {
+   "linux": {
+    "status": "present",
+    "want": "ok left=false"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok left=false"
+   }
+  },
+  "remove-at@same": {
+   "linux": {
+    "status": "present",
+    "want": "ok left=false"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok left=false"
+   }
+  },
   "remove@other": {
    "linux": {
     "status": "present",
@@ -394,6 +444,26 @@
    }
   },
   "symlink@same": {
+   "linux": {
+    "status": "present",
+    "want": "ok"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok"
+   }
+  },
+  "sync@other": {
+   "linux": {
+    "status": "present",
+    "want": "ok"
+   },
+   "pax": {
+    "status": "present",
+    "want": "ok"
+   }
+  },
+  "sync@same": {
    "linux": {
     "status": "present",
     "want": "ok"
