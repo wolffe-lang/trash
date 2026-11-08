@@ -255,3 +255,38 @@ other row held as predicted):
 **Red first.** Against the stubs (`00f42d1`) at `63479cc`: the oracle compare
 ran all 246 rows, 140 red (the 128 new and the 12 tb01 left out) and the 106
 others green; the PAX rows, 5 of 19 red (the 5 new), the 14 others green.
+
+## Recommendations
+
+R-tb02-1 to R-tb02-8 were ruled A (the user's word, about 14:20Z), and each is
+implemented as A.
+
+- R-tb02-1: the options that choose another trash (`--trash-dir`,
+  `--trash-dirs`, `--volumes`, `--all-users`), `--print-completion` and
+  `--overwrite` are unrecognised options, exit 2, as R-tb01-4 made
+  `--trash-dir` for `trash`. (B: take `--trash-dirs` and `--volumes` and
+  print `~/Trash`; take `--overwrite` and ignore it with a warning.)
+- R-tb02-2: each command's usage line names only what it takes; the rows of
+  usage errors diverge by that line. (B: the oracle's usage verbatim, naming
+  options that are refused.)
+- R-tb02-3: a line where the oracle's output names its own implementation
+  (trash-rm's `fnmatch.fnmatchcase` line, restore's exception repr for an
+  unreadable info file) is in this repository's words, the rest byte for
+  byte. (B: the oracle's bytes.)
+- R-tb02-4: where the oracle crashes, an undated or unreadable date sorts
+  first, `--sort none` is the order the host lists the trash in, the end of
+  input under `trash-empty -i` is a no (as R-tb01-5), an info file DAYS
+  cannot read is kept, and trash-rm names an unreadable info file and goes
+  on. (B: exit 1 with one line of our own.)
+- R-tb02-5: the trash (or a path inside it) given to `trash-restore`, and an
+  item whose original path lies inside the trash, are refused by name. (B:
+  as the oracle.)
+- R-tb02-6: a relative `Path=` in the home trash is read from `/`, as the
+  oracle reads it. (B: from the directory that holds the trash, as the
+  specification says.)
+- R-tb02-7: on a file system with no hard links, a restore on the same file
+  system goes by `trash`'s copy, whose exclusive creations never replace.
+  (B: refused by name.)
+- R-tb02-8: the companions read `~/Trash` alone, as `trash` writes only
+  there. (B: also show `$topdir/.Trash-$uid`, the specification's "best
+  effort".)
