@@ -2681,7 +2681,7 @@
   },
   {
    "name": "put-root-spellings",
-   "about": "the root directory spelled other ways",
+   "about": "the root directory spelled other ways ('//' is never run: the oracle copies the whole root file system for it)",
    "steps": [
     {
      "make": [
@@ -2694,7 +2694,7 @@
     {
      "run": [
       "trash",
-      "//"
+      "///"
      ]
     },
     {
@@ -3207,6 +3207,249 @@
      ]
     }
    ]
+  },
+  {
+   "name": "put-long-collision-243",
+   "about": "a 243-byte name trashed twice",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "1\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-collision-244",
+   "about": "a 244-byte name trashed twice",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "1\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+       "2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-collision-utf8",
+   "about": "a name of 122 two-byte characters (244 bytes) trashed twice",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+       "1\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+     ]
+    },
+    {
+     "make": [
+      [
+       "file",
+       "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+       "2\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-dash-alone-exists",
+   "about": "a file named - given alone",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "-",
+       "d\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-long-flag-file-exists",
+   "about": "a long flag that is also the name of a file here",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "--verbose",
+       "v\n"
+      ],
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--verbose",
+      "a"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-flag-file-after-operand",
+   "about": "a flag after an operand that is also the name of a file here",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "-v",
+       "v\n"
+      ],
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a",
+      "-v"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-combined-unknown-first",
+   "about": "an unknown flag first in a combined word",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-xv",
+      "a"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-vxq",
+      "a"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "put-help-wins",
+   "about": "--help among errors",
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "a",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "--nope",
+      "--help",
+      "a"
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "-x",
+      "-h"
+     ]
+    }
+   ],
+   "words": "own"
   }
  ]
 }
