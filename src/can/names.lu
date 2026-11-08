@@ -1,0 +1,50 @@
+// can: the names an item takes in `files/`, and its info file's text.
+
+use std.time
+
+/// The suffix of try `i`: none, then `_1`, `_2`, ... after the whole name
+/// (`a.txt_1`, as the oracle names a collision).
+pub fn suffix(i: int) -> str {
+    if i == 0 then "" else "_{i}"
+}
+
+/// The name of try `i` for an item named `base`. Once a try's info file name
+/// has been too long (`short`), every later try keeps the info file name as
+/// long as the original name was, in code points: the name loses as many as
+/// the suffix and `.trashinfo` add, as the oracle shortens one.
+pub fn candidate(base: str, i: int, short: bool) -> str {
+    let s = suffix(i)
+    if !short {
+        return "{base}{s}"
+    }
+    let keep = chars(base) - chars(s) - 10
+    let head = if keep > 0 then first_chars(base, keep) else ""
+    "{head}{s}"
+}
+
+/// Whether the info file of `name` is longer than a directory entry may be.
+pub fn too_long(name: str, name_max: int) -> bool {
+    name.len + 10 > name_max
+}
+
+/// An info file, exactly as the oracle writes one: three lines.
+pub fn info_text(path: str, date: str) -> str {
+    "[Trash Info]\nPath={encode(path)}\nDeletionDate={date}\n"
+}
+
+/// `DeletionDate`: local time to the second, no zone. When no zone data
+/// answers (`TZ` names nothing, no `/etc/localtime`), UTC, as a C library
+/// reads time without them.
+pub fn deletion_date(unix_s: int) -> str {
+    let l = time.local(unix_s) else |_| {
+        return utc_date(unix_s)
+    }
+    time.format(l, "%Y-%m-%dT%H:%M:%S") else utc_date(unix_s)
+}
+
+fn utc_date(unix_s: int) -> str {
+    let l = time.local_in("UTC0", unix_s) else |_| {
+        return "1970-01-01T00:00:00"
+    }
+    time.format(l, "%Y-%m-%dT%H:%M:%S") else "1970-01-01T00:00:00"
+}
