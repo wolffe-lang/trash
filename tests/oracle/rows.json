@@ -1,5 +1,5 @@
 {
- "about": "The oracle rows (tools/oracle.py): each runs on trash-cli and on this repository's tools in matching scratch homes. Paths in make steps are relative to the home, or @xdev/ for the second file system; \\\\xHH in a path or an argument is one byte. A step may say \"tty\" (its input a terminal); \"dated\" and \"tree\" make steps date an info file from now and generate a tree from a seed; \"property\": \"round-trip\" holds the trees outside the trash to what they were before the first command.",
+ "about": "The oracle rows (tools/oracle.py): each runs on trash-cli and on this repository's tools in matching scratch homes. Paths in make steps are relative to the home, or @xdev/ for the second file system; \\\\xHH in a path or an argument is one byte. A step may say \"tty\" (its input a terminal); \"dated\" and \"tree\" make steps date an info file from now and generate a tree from a seed; \"property\": \"round-trip\" holds the trees outside the trash to what they were before the first command. A row may run as a user (\"user\": [UID, GID]), in a home that user owns.",
  "rows": [
   {
    "name": "put-file",
@@ -984,9 +984,11 @@
      "run": [
       "trash-list"
      ],
-     "order": "host"
+     "order": "host",
+     "errors": "host"
     }
-   ]
+   ],
+   "diverge": "trash-list names, on standard error, an item with no info file (the specification's emergency case) and an info file with no item; its listing on standard output is the oracle's"
   },
   {
    "name": "restore-first",
@@ -3570,9 +3572,11 @@
      "run": [
       "trash-list"
      ],
-     "order": "host"
+     "order": "host",
+     "errors": "host"
     }
-   ]
+   ],
+   "diverge": "trash-list names, on standard error, an item with no info file (the specification's emergency case) and an info file with no item; its listing on standard output is the oracle's"
   },
   {
    "name": "list-bad-dates",
@@ -8768,6 +8772,488 @@
       "-i"
      ],
      "stdin": "yep\n"
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "perm-shared-dir",
+   "about": "another user's file in a shared (0777) directory, trashed by a user who may write that directory",
+   "user": [
+    1000,
+    1000
+   ],
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "shared",
+       "0777"
+      ],
+      [
+       "file",
+       "shared/f",
+       "f\n"
+      ],
+      [
+       "chown",
+       "shared",
+       "2000",
+       "2000"
+      ],
+      [
+       "chown",
+       "shared/f",
+       "2000",
+       "2000"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "shared/f"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "perm-sticky-other",
+   "about": "another user's file in a sticky (1777) directory another user owns",
+   "user": [
+    1000,
+    1000
+   ],
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "sticky",
+       "1777"
+      ],
+      [
+       "file",
+       "sticky/f",
+       "f\n"
+      ],
+      [
+       "chown",
+       "sticky",
+       "2000",
+       "2000"
+      ],
+      [
+       "chown",
+       "sticky/f",
+       "2000",
+       "2000"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "sticky/f"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "perm-sticky-own",
+   "about": "the user's own file in a sticky (1777) directory another user owns",
+   "user": [
+    1000,
+    1000
+   ],
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "sticky",
+       "1777"
+      ],
+      [
+       "file",
+       "sticky/mine",
+       "m\n"
+      ],
+      [
+       "chown",
+       "sticky",
+       "2000",
+       "2000"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "sticky/mine"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "perm-readonly-parent",
+   "about": "the user's file in the user's own read-only (0555) directory",
+   "user": [
+    1000,
+    1000
+   ],
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "ro"
+      ],
+      [
+       "file",
+       "ro/f",
+       "f\n"
+      ],
+      [
+       "dir",
+       "ro",
+       "0555"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "ro/f"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "perm-unreadable",
+   "about": "a file the user may move but not read (mode 0000), on the home's file system",
+   "user": [
+    1000,
+    1000
+   ],
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "secret",
+       "s\n",
+       "0000"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "secret"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "perm-unreadable-other-fs",
+   "about": "a file the user may remove but not read (mode 0000), on another file system",
+   "user": [
+    1000,
+    1000
+   ],
+   "steps": [
+    {
+     "make": [
+      [
+       "file",
+       "@xdev/secret",
+       "s\n",
+       "0000"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/secret"
+     ]
+    }
+   ],
+   "diverge": "a file on another file system is copied into ~/Trash, and one the copy cannot read is refused by name and left where it was; the oracle renames it into that volume's own trash"
+  },
+  {
+   "name": "perm-trash-readonly",
+   "about": "the user's own trash, its info directory made read-only (0500)",
+   "user": [
+    1000,
+    1000
+   ],
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "Trash",
+       "0700"
+      ],
+      [
+       "dir",
+       "Trash/files",
+       "0700"
+      ],
+      [
+       "dir",
+       "Trash/info",
+       "0500"
+      ],
+      [
+       "file",
+       "a.txt",
+       "a\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "a.txt"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "perm-restore-readonly-parent",
+   "about": "trash-restore into a directory made read-only (0555) since the item was trashed",
+   "user": [
+    1000,
+    1000
+   ],
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "file",
+       "d/f",
+       "f\n"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "d/f"
+     ]
+    },
+    {
+     "make": [
+      [
+       "dir",
+       "d",
+       "0555"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-restore"
+     ],
+     "stdin": "0\n"
+    }
+   ]
+  },
+  {
+   "name": "perm-empty-readonly-tree",
+   "about": "trash-empty, as the user, of the user's tree holding a read-only (0555) directory",
+   "user": [
+    1000,
+    1000
+   ],
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "d"
+      ],
+      [
+       "dir",
+       "d/ro"
+      ],
+      [
+       "file",
+       "d/ro/f",
+       "f\n"
+      ],
+      [
+       "dir",
+       "d/ro",
+       "0555"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "d"
+     ]
+    },
+    {
+     "run": [
+      "trash-empty"
+     ],
+     "stdin": ""
+    }
+   ]
+  },
+  {
+   "name": "space-full-trash",
+   "about": "a small home whose trash already holds most of it: a copy from another file system refused, then made once the trash is emptied",
+   "home": "small",
+   "steps": [
+    {
+     "make": [
+      [
+       "big",
+       "fill",
+       "1572864"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "fill"
+     ]
+    },
+    {
+     "make": [
+      [
+       "big",
+       "@xdev/big",
+       "1048576"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/big"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    },
+    {
+     "run": [
+      "trash-empty"
+     ],
+     "stdin": ""
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/big"
+     ]
+    },
+    {
+     "run": [
+      "trash-list"
+     ]
+    }
+   ],
+   "diverge": "an item on another file system is copied into ~/Trash, refused by name before anything is copied when the home volume cannot hold it; the oracle uses the other volume's own trash"
+  },
+  {
+   "name": "space-tree",
+   "about": "a tree from another file system larger than a small home, each of its files small enough alone",
+   "home": "small",
+   "steps": [
+    {
+     "make": [
+      [
+       "dir",
+       "@xdev/t"
+      ],
+      [
+       "big",
+       "@xdev/t/a",
+       "409600"
+      ],
+      [
+       "big",
+       "@xdev/t/b",
+       "409600"
+      ],
+      [
+       "big",
+       "@xdev/t/c",
+       "409600"
+      ],
+      [
+       "big",
+       "@xdev/t/d",
+       "409600"
+      ],
+      [
+       "big",
+       "@xdev/t/e",
+       "409600"
+      ],
+      [
+       "big",
+       "@xdev/t/f",
+       "409600"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash",
+      "/xdev/trash-rows/t"
+     ]
+    }
+   ],
+   "diverge": "an item on another file system is copied into ~/Trash, refused by name before anything is copied when the home volume cannot hold it; the oracle uses the other volume's own trash"
+  },
+  {
+   "name": "space-empty-v",
+   "about": "trash-empty -v of a small home's trash holding most of it",
+   "home": "small",
+   "steps": [
+    {
+     "make": [
+      [
+       "big",
+       "Trash/files/big",
+       "1572864"
+      ],
+      [
+       "file",
+       "Trash/info/big.trashinfo",
+       "[Trash Info]\nPath=/small/trash-rows/home/big\nDeletionDate=2020-01-02T03:04:05\n",
+       "0600"
+      ]
+     ]
+    },
+    {
+     "run": [
+      "trash-empty",
+      "-v"
+     ],
+     "stdin": "",
+     "order": "host"
     },
     {
      "run": [
