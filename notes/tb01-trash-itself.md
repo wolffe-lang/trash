@@ -287,7 +287,7 @@ The oracle's bytes win where it fixes them; elsewhere, rm and boreutils'
 |---|---|---|
 | A path that is not UTF-8 cannot be named | wolf-lang#687 | refuses such an operand by name; a copy across file systems meeting one inside a tree, or as a link's target, fails by name and leaves the source whole |
 | Every rename replaces | wolf-lang#706 | the exclusive create of the info file reserves the name, and `files/` is checked under it |
-| A `copy` of a map's list value is not yet compiled at 0.2.38 ("cannot compile this yet") | not filed (R-tb01-8) | the survey's records live in a list behind a name-to-index map |
+| A `copy` of a map's list value is not yet compiled at 0.2.38 ("cannot compile this yet": a row payload) | wolf-lang#404 (open; this lane's witness added to it) | the survey's records live in a list behind a name-to-index map |
 | A non-UTF-8 name cannot be removed by wolf | wolf-lang#687 | the PAX rows remove theirs with the C fixture |
 
 ## SKIPs
@@ -297,8 +297,8 @@ commands are listed as `OUT` by name and counted apart.
 
 ## Recommendations
 
-R-tb01-1 to R-tb01-7 were each ruled A, as recommended, and are
-implemented.
+R-tb01-1 to R-tb01-7 are implemented as recommended (A), pending a ruling.
+R-tb01-8 and R-tb01-9 were ruled A.
 
 - R-tb01-1: `-i` matches the oracle and asks nothing of a dangling link.
 - R-tb01-2: operands are read lexically; `Path=` is the parent's real path.
@@ -310,10 +310,11 @@ implemented.
   exit status and stream.
 - R-tb01-7: an entry the copy cannot make is found at copy time; the partial
   copy is removed and the source left whole.
-- R-tb01-8 (open): file the 0.2.38 refusal of `copy` on a map's list value
-  upstream with its four-line witness. (A) File it as a wolf-lang issue,
-  recommended; (B) leave the workaround's comment as the only record.
-- R-tb01-9 (open): the footprint. (A) `cross-cutting`, recommended:
+- R-tb01-8: the 0.2.38 refusal of `copy` on a map's list value recorded
+  upstream with its four-line witness. (A) Upstream, recommended and ruled:
+  it is wolf-lang#404's row-payload shape, so the witness went there rather
+  than into a duplicate; (B) the workaround's comment as the only record.
+- R-tb01-9: the footprint. (A) `cross-cutting`, recommended and ruled:
   `tools/in-container`, which CI runs, changed its mounts. (B) `module`: no
   path the audit classes as CI changed.
 
