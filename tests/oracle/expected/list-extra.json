@@ -1,0 +1,20 @@
+{
+ "row": "list-extra",
+ "steps": [
+  {
+   "argv": [
+    "trash-list",
+    "extra"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash-list [-h] [--version]\ntrash-list: error: unrecognized arguments: extra\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

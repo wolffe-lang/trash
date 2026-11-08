@@ -1,0 +1,48 @@
+{
+ "row": "restore-sort-none",
+ "steps": [
+  {
+   "argv": [
+    "trash-restore",
+    "--sort",
+    "none"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 2021-01-01 00:00:00 /tmp/trash-rows/home/a\nWhat file to restore [0..0]: "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "mode": "0755",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "a": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

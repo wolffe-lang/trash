@@ -1,0 +1,138 @@
+{
+ "row": "pax-roundtrip",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "/tmp/rows/t",
+    "h"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/tmp/rows/t"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /tmp/rows/t\nWhat file to restore [0..0]: "
+  },
+  {
+   "argv": [
+    "trash-restore",
+    "/home/rh/h"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "   0 <in-window> /home/rh/h\nWhat file to restore [0..0]: "
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info": {
+    "atime": "<in-window>",
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "h": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0700",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "h/up": {
+    "mode": "0777",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "target": "../h",
+    "type": "link"
+   },
+   "h/x": {
+    "atime": 1500000002,
+    "atime_ns": 7,
+    "mode": "0600",
+    "mtime": 1500000000,
+    "mtime_ns": 5,
+    "owner": "0:0",
+    "sha256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+    "size": 2,
+    "type": "file"
+   }
+  },
+  "xdev": {
+   "t": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0750",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t/f": {
+    "atime": 1600000001,
+    "atime_ns": 987654321,
+    "mode": "0640",
+    "mtime": 1600000000,
+    "mtime_ns": 123456789,
+    "owner": "0:0",
+    "sha256": "092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6",
+    "size": 2,
+    "type": "file"
+   },
+   "t/l": {
+    "mode": "0777",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "target": "f",
+    "type": "link"
+   },
+   "t/sub": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0755",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "t/sub/g": {
+    "atime": 1700000000,
+    "atime_ns": 0,
+    "mode": "0644",
+    "mtime": 1700000000,
+    "mtime_ns": 0,
+    "owner": "0:0",
+    "sha256": "768c71d785bf6bbbf8c4d6af6582041f2659027140a962cd0c55b11eddfd5e3d",
+    "size": 2,
+    "type": "file"
+   }
+  }
+ },
+ "tz": "UTC"
+}

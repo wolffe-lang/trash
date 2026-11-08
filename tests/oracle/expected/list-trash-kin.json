@@ -1,0 +1,49 @@
+{
+ "row": "list-trash-kin",
+ "steps": [
+  {
+   "argv": [
+    "trash-list",
+    "--trash-dir",
+    "/tmp/trash-rows/home/Trash"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash-list [-h] [--version]\ntrash-list: error: unrecognized arguments: --trash-dir /tmp/trash-rows/home/Trash\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list",
+    "--trash-dirs"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash-list [-h] [--version]\ntrash-list: error: unrecognized arguments: --trash-dirs\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list",
+    "--all-users"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash-list [-h] [--version]\ntrash-list: error: unrecognized arguments: --all-users\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list",
+    "--print-completion",
+    "bash"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash-list [-h] [--version]\ntrash-list: error: unrecognized arguments: --print-completion bash\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

@@ -1,0 +1,20 @@
+{
+ "row": "list-unknown",
+ "steps": [
+  {
+   "argv": [
+    "trash-list",
+    "-x"
+   ],
+   "exit": 2,
+   "stderr": "usage: trash-list [-h] [--version]\ntrash-list: error: unrecognized arguments: -x\n",
+   "stdout": ""
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {},
+  "xdev": {}
+ },
+ "tz": "UTC"
+}

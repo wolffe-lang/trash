@@ -190,6 +190,7 @@ def statements():
              stderr="trash: cannot trash '%s/d': the name of an entry in '%s/d' (b\\xffc) is not UTF-8, and wolf cannot "
                     "name such a path yet (wolf-lang#687); %s\n" % (X, X, LEFT)),
     ], trash_dirs(), {'d': d(), 'd/a': f('a\n'), 'd/b\\xffc': f('b\n'), 'd/sub': d(), 'd/sub/z': f('z\n')})
+    s.update(companions())
     return s
 
 
@@ -273,6 +274,234 @@ def pax_statements():
              stderr="trash: cannot trash '%s/d': the name of an entry in '%s/d' (b\\xffc) is not UTF-8, and wolf cannot "
                     "name such a path yet (wolf-lang#687); %s\n" % (PX, PX, LEFT)),
     ], trash_dirs(), {'d': d(), 'd/a': f('a\n'), 'd/b\\xffc': unreachable, 'd/sub': d(), 'd/sub/z': f('z\n')})
+    s.update(pax_companions())
+    return s
+
+
+# ---------------------------------------------------------------- T2: the companions
+
+LIST_USAGE = 'usage: trash-list [-h] [--version]\n'
+RESTORE_USAGE = 'usage: trash-restore [-h] [--sort {date,path,none}] [--version] [path]\n'
+EMPTY_USAGE = 'usage: trash-empty [-h] [--version] [-v] [-i] [-f] [--dry-run] [days]\n'
+RM_USAGE = ('Usage:\n    trash-rm PATTERN\n\nPlease specify PATTERN.\n'
+            "PATTERN is matched as a shell pattern (*, ?, [...] and [!...]) against each item's original name, "
+            "or against its whole original path when it starts with '/'.\n")
+NOT_UTF8_PATH = "its path is not UTF-8, and wolf cannot name such a path yet (wolf-lang#687)"
+PROMPT = 'What file to restore [0..%d]: '
+ASK = 'Would empty the following trash directories:\n    - %s/Trash\nProceed? (y/N) ' % H
+
+
+def fixture_dirs():
+    """Trash/, files/ and info/ as a fixture's info files make them: 0755, made in the window."""
+    return {'Trash': d('0755', W), 'Trash/files': d('0755', W), 'Trash/info': d('0755', W)}
+
+
+def fixture_info(path, date=None, text=None):
+    """An info file a fixture wrote, stamped with the fixture's time."""
+    if text is None:
+        text = '[Trash Info]\nPath=%s\n' % path + ('' if date is None else 'DeletionDate=<outside-window:%s>\n' % date)
+    return {'type': 'file', 'mode': '0600', 'mtime': FIX, 'owner': '0:0', 'text': text}
+
+
+def listed(i, date, path):
+    return '%4d %s %s\n' % (i, date, path)
+
+
+def plan_tree(plan, exact=True):
+    """A generated tree's entries (tools/oracle.py's tree_plan), as a snapshot reads them."""
+    out = {}
+    for e in plan:
+        ms, mns, as_, ans = e['times']
+        rel = e['path'][len('@xdev/'):] if e['path'].startswith('@xdev/') else e['path']
+        mode = '%04o' % e['mode']
+        if e['kind'] == 'dir':
+            out[rel] = d(mode, ms, e['owner'], mtime_ns=mns, atime=as_, atime_ns=ans)
+        elif e['kind'] == 'file':
+            out[rel] = f(e['data'], mode, ms, e['owner'], mtime_ns=mns, atime=as_, atime_ns=ans)
+        elif e['kind'] == 'link':
+            out[rel] = link(e['target'], ms, e['owner'], mtime_ns=mns)
+        else:
+            out[rel] = other(e['kind'], mode, ms, e['owner'], mtime_ns=mns, atime=as_, atime_ns=ans)
+    return out
+
+
+def oracle_tool():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('oracle', ROOT / 'tools/oracle.py')
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def companions():
+    """The companions' rows where this repository departs from the oracle."""
+    s = {}
+    unknown = lambda usage, prog, words: usage + '%s: error: unrecognized arguments: %s\n' % (prog, words)
+    # Usage errors, in this repository's usage lines.
+    s['list-unknown'] = cap('list-unknown', [step(['trash-list', '-x'], 2, stderr=unknown(LIST_USAGE, 'trash-list', '-x'))], {})
+    s['list-extra'] = cap('list-extra', [step(['trash-list', 'extra'], 2,
+                                               stderr=unknown(LIST_USAGE, 'trash-list', 'extra'))], {})
+    s['list-trash-kin'] = cap('list-trash-kin', [
+        step(['trash-list', '--trash-dir', H + '/Trash'], 2,
+             stderr=unknown(LIST_USAGE, 'trash-list', '--trash-dir %s/Trash' % H)),
+        step(['trash-list', '--trash-dirs'], 2, stderr=unknown(LIST_USAGE, 'trash-list', '--trash-dirs')),
+        step(['trash-list', '--all-users'], 2, stderr=unknown(LIST_USAGE, 'trash-list', '--all-users')),
+        step(['trash-list', '--print-completion', 'bash'], 2,
+             stderr=unknown(LIST_USAGE, 'trash-list', '--print-completion bash')),
+    ], {})
+    one = {**fixture_dirs(), 'Trash/files/a': f('a\n'), 'Trash/info/a.trashinfo': fixture_info(H + '/a', '2021-01-01T00:00:00')}
+    s['restore-sort-bad'] = cap('restore-sort-bad', [
+        step(['trash-restore', '--sort', 'bogus'], 2,
+             stderr=RESTORE_USAGE + "trash-restore: error: argument --sort: invalid choice: 'bogus' "
+                                    "(choose from 'date', 'path', 'none')\n"),
+    ], one)
+    s['restore-sort-none'] = cap('restore-sort-none', [
+        step(['trash-restore', '--sort', 'none'], stdout=listed(0, '2021-01-01 00:00:00', H + '/a') + PROMPT % 0),
+    ], {**fixture_dirs(), 'a': f('a\n')})
+    s['restore-no-date'] = cap('restore-no-date', [
+        step(['trash-restore'], stdout=listed(0, '????-??-?? ??:??:??', H + '/nd') + listed(1, '2020-01-01 00:00:00', H + '/d1') +
+             PROMPT % 1),
+    ], {**fixture_dirs(), 'Trash/files/d1': f('d1\n'), 'Trash/info/d1.trashinfo': fixture_info(H + '/d1', '2020-01-01T00:00:00'),
+        'nd': f('nd\n')})
+    put_a = {**trash_dirs(), 'Trash/files/a.txt': f('a\n'), 'Trash/info/a.txt.trashinfo': info(H + '/a.txt')}
+    s['restore-overwrite'] = cap('restore-overwrite', [
+        step(['trash', 'a.txt']),
+        step(['trash-restore', '--overwrite'], 2, stderr=unknown(RESTORE_USAGE, 'trash-restore', '--overwrite')),
+    ], {**put_a, 'a.txt': f('new\n')})
+    # Across file systems: copied back, then removed from the trash.
+    z = {'mtime_ns': 0, 'atime': FIX, 'atime_ns': 0}
+    s['restore-other-fs'] = cap('restore-other-fs', [
+        step(['trash', X + '/x.txt', X + '/t']),
+        step(['trash-restore', X + '/x.txt'], stdout=listed(0, W, X + '/x.txt') + PROMPT % 0),
+        step(['trash-restore', X + '/t'], stdout=listed(0, W, X + '/t') + PROMPT % 0),
+    ], trash_dirs(**EXACT_W), {
+        'x.txt': f('x\n', '0640', FIX, '1000:1000', **z),
+        't': d('0750', **z),
+        't/f': f('f\n', '0644', 1600000000, mtime_ns=123456789, atime=1600000001, atime_ns=987654321),
+        't/l': link('f', mtime_ns=0),
+    })
+    s['restore-other-fs-occupied'] = cap('restore-other-fs-occupied', [
+        step(['trash', X + '/x.txt']),
+        step(['trash-restore', X + '/x.txt'], 1, stdout=listed(0, W, X + '/x.txt') + PROMPT % 0,
+             stderr='Refusing to overwrite existing file "x.txt".\n'),
+    ], {**trash_dirs(), 'Trash/files/x.txt': f('x\n'), 'Trash/info/x.txt.trashinfo': info(X + '/x.txt')}, {'x.txt': f('new\n')})
+    # The trash itself.
+    s['restore-into-trash'] = cap('restore-into-trash', [
+        step(['trash-restore'], 1,
+             stdout=listed(0, '2020-01-01 00:00:00', H + '/Trash/files/a.txt') + listed(1, '2021-01-01 00:00:00', H + '/a.txt') +
+             PROMPT % 1,
+             stderr="trash-restore: cannot restore '%s/Trash/files/a.txt': it is inside the trash\n" % H),
+    ], {**fixture_dirs(), 'Trash/files/a.txt': f('a.txt\n'), 'Trash/files/a.txt_1': f('a.txt_1\n'),
+        'Trash/info/a.txt.trashinfo': fixture_info(H + '/a.txt', '2021-01-01T00:00:00'),
+        'Trash/info/a.txt_1.trashinfo': fixture_info(H + '/Trash/files/a.txt', '2020-01-01T00:00:00')})
+    s['restore-trash-given'] = cap('restore-trash-given', [
+        step(['trash', 'a.txt']),
+        step(['trash-restore', H + '/Trash'], 1,
+             stderr="trash-restore: cannot restore from '%s/Trash': it is the trash itself\n" % H),
+    ], put_a)
+    # Names wolf cannot reach yet.
+    s['restore-not-utf8'] = cap('restore-not-utf8', [
+        step(['trash-restore'], 1, stdout=listed(0, '2020-01-01 00:00:00', H + '/x\\xffy') + PROMPT % 0,
+             stderr="trash-restore: cannot restore '%s/x\\xffy': %s\n" % (H, NOT_UTF8_PATH)),
+    ], {**fixture_dirs(), 'Trash/files/x': f('x\n'), 'Trash/info/x.trashinfo': fixture_info(H + '/x%FFy', '2020-01-01T00:00:00')})
+    s['list-not-utf8-info'] = cap('list-not-utf8-info', [
+        step(['trash-list'], stdout='2021-01-01 00:00:00 %s/ok\n' % H,
+             stderr="trash-list: cannot read '%s/Trash/info/x\\xffy.trashinfo': %s\n" % (H, NOT_UTF8)),
+    ], {**fixture_dirs(), 'Trash/files/ok': f('ok\n'), 'Trash/files/x\\xffy': f('x\n'),
+        'Trash/info/ok.trashinfo': fixture_info(H + '/ok', '2021-01-01T00:00:00'),
+        'Trash/info/x\\xffy.trashinfo': fixture_info(H + '/xy', '2020-01-01T00:00:00')})
+    s['empty-not-utf8-tree'] = cap('empty-not-utf8-tree', [
+        step(['trash', 'd', 'a.txt']),
+        step(['trash-empty'], 1,
+             stderr="trash-empty: cannot remove '%s/Trash/files/d': the name of an entry in '%s/Trash/files/d' (x\\xffy) is "
+                    "not UTF-8, and wolf cannot name such a path yet (wolf-lang#687); it is left in the trash\n" % (H, H)),
+    ], {**trash_dirs(), 'Trash/files/d': d(), 'Trash/files/d/x\\xffy': f('x\n'), 'Trash/info/d.trashinfo': info(H + '/d')})
+    # trash-rm's usage text: its last line in this repository's words.
+    s['rm-no-arg'] = cap('rm-no-arg', [
+        step(['trash', 'a.txt']), step(['trash-rm'], 8, stderr=RM_USAGE),
+        step(['trash-list'], stdout='%s %s/a.txt\n' % (W, H)),
+    ], put_a)
+    # trash-empty's usage errors, and the end of input under -i (a no).
+    for name, arg in (('word', 'x'), ('fraction', '1.5')):
+        s['empty-days-' + name] = cap('empty-days-' + name, [
+            step(['trash', 'a.txt']),
+            step(['trash-empty', arg], 2, stderr=EMPTY_USAGE + "trash-empty: error: argument days: invalid int value: '%s'\n" % arg),
+            step(['trash-list'], stdout='%s %s/a.txt\n' % (W, H)),
+        ], put_a)
+    s['empty-trash-dir'] = cap('empty-trash-dir', [
+        step(['trash', 'a.txt']),
+        step(['trash-empty', '--trash-dir', H + '/Trash'], 2, stderr=unknown(EMPTY_USAGE, 'trash-empty', '--trash-dir')),
+    ], put_a)
+    s['empty-i-eof'] = cap('empty-i-eof', [
+        step(['trash', 'a.txt']), step(['trash-empty', '-i'], stdout=ASK),
+        step(['trash-list'], stdout='%s %s/a.txt\n' % (W, H)),
+    ], put_a)
+    # An info file that cannot be read or parsed: kept under DAYS; named in restore's own words.
+    nopath_text = '[Trash Info]\nDeletionDate=<outside-window:2020-01-01T00:00:00>\n'
+    s['empty-info-shapes-days'] = cap('empty-info-shapes-days', [step(['trash-empty', '1'])], {
+        **fixture_dirs(), 'Trash/files/empty': f('empty\n'), 'Trash/files/nopath': f('nopath\n'),
+        'Trash/info/empty.trashinfo': fixture_info(None, text=''), 'Trash/info/nopath.trashinfo': fixture_info(None, text=nopath_text),
+        'Trash/info/notinfo.txt': f('n\n', '0600'), 'Trash/info/sub.trashinfo': d('0700'), 'Trash/info/sub.trashinfo/f': f('f\n')})
+    sub = H + '/Trash/info/sub.trashinfo'
+    s['restore-info-shapes'] = cap('restore-info-shapes', [
+        step(['trash-restore'], stdout=listed(0, '2020-01-01 00:00:00', H + '/ok') + PROMPT % 0,
+             stderr=''.join(sorted([
+                 "Unreadable trashinfo file: %s, because [Errno 21] Is a directory: '%s'\n" % (sub, sub),
+                 'Non parsable trashinfo file: %s/Trash/info/nopath.trashinfo, because Unable to parse Path\n' % H,
+                 'Non parsable trashinfo file: %s/Trash/info/empty.trashinfo, because Unable to parse Path\n' % H]))),
+    ], {**fixture_dirs(), 'Trash/files/empty': f('empty\n'), 'Trash/files/nopath': f('nopath\n'),
+        'Trash/info/empty.trashinfo': fixture_info(None, text=''), 'Trash/info/nopath.trashinfo': fixture_info(None, text=nopath_text),
+        'Trash/info/sub.trashinfo': d('0700'), 'ok': f('ok\n')})
+    # The round trip across file systems: copied in, copied back, every entry as it was.
+    oracle = oracle_tool()
+    trees = {}
+    for i in range(1, 7):
+        trees.update(plan_tree(oracle.tree_plan('@xdev/t%d' % i, 10 + i)))
+    c = cap('roundtrip-other-fs', [step(['trash'] + [X + '/t%d' % i for i in range(1, 7)])] +
+            [step(['trash-restore', X + '/t%d' % i], stdout=listed(0, W, X + '/t%d' % i) + PROMPT % 0) for i in range(1, 7)],
+            trash_dirs(**EXACT_W), trees)
+    c['property'] = []
+    s['roundtrip-other-fs'] = c
+    return s
+
+
+def pax_companions():
+    """The companions on PAX, at PAX's paths."""
+    s = {}
+    pdirs = {'Trash': d('0755', W), 'Trash/files': d('0755', W), 'Trash/info': d('0755', W)}
+    s['pax-list'] = cap('pax-list', [
+        step(['trash', 'a.txt', 'd']),
+        step(['trash-list'], stdout='2020-01-02 03:04:05 %s/old one\n%s %s/a.txt\n%s %s/d\n' % (PH, W, PH, W, PH)),
+    ], {**pdirs, 'Trash/files/a.txt': f('a\n'), 'Trash/files/d': d(), 'Trash/files/d/f': f('f\n'), 'Trash/files/old': f('o\n'),
+        'Trash/info/a.txt.trashinfo': info(PH + '/a.txt'), 'Trash/info/d.trashinfo': info(PH + '/d'),
+        'Trash/info/old.trashinfo': fixture_info(PH + '/old%20one', '2020-01-02T03:04:05')})
+    s['pax-restore'] = cap('pax-restore', [
+        step(['trash', 'a.txt', 'd', 'l']),
+        step(['trash-restore', PH + '/a.txt'], stdout=listed(0, W, PH + '/a.txt') + PROMPT % 0),
+        step(['trash-restore', PH + '/d'], stdout=listed(0, W, PH + '/d') + PROMPT % 0),
+        step(['trash-restore', PH + '/l'], stdout=listed(0, W, PH + '/l') + PROMPT % 0),
+        step(['trash', 'a.txt']),
+        step(['trash-restore', PH + '/a.txt'], 1, stdout=listed(0, W, PH + '/a.txt') + PROMPT % 0,
+             stderr='Refusing to overwrite existing file "a.txt".\n'),
+    ], {**trash_dirs(), 'Trash/files/a.txt': f('a\n'), 'Trash/info/a.txt.trashinfo': info(PH + '/a.txt'), 'a.txt': f('new\n'),
+        'd': d(), 'd/f': f('f\n'), 'l': link('a.txt')})
+    s['pax-rm'] = cap('pax-rm', [
+        step(['trash', 'a.txt', 'b.txt', 'c.log']), step(['trash-rm', '*.txt']),
+        step(['trash-list'], stdout='%s %s/c.log\n' % (W, PH)),
+    ], {**trash_dirs(), 'Trash/files/c.log': f('c\n'), 'Trash/info/c.log.trashinfo': info(PH + '/c.log')})
+    s['pax-empty'] = cap('pax-empty', [
+        step(['trash', 'a.txt']), step(['trash-empty', '1']), step(['trash-list'], stdout='%s %s/a.txt\n' % (W, PH)),
+        step(['trash-empty']), step(['trash-list']),
+    ], pdirs)
+    z = {'mtime_ns': 0, 'atime': FIX, 'atime_ns': 0}
+    s['pax-roundtrip'] = cap('pax-roundtrip', [
+        step(['trash', PX + '/t', 'h']),
+        step(['trash-restore', PX + '/t'], stdout=listed(0, W, PX + '/t') + PROMPT % 0),
+        step(['trash-restore', PH + '/h'], stdout=listed(0, W, PH + '/h') + PROMPT % 0),
+    ], {**trash_dirs(**EXACT_W), 'h': d('0700', **z), 'h/x': f('x\n', '0600', 1500000000, mtime_ns=5, atime=1500000002, atime_ns=7),
+        'h/up': link('../h', mtime_ns=0)}, {
+        't': d('0750', **z), 't/f': f('f\n', '0640', 1600000000, mtime_ns=123456789, atime=1600000001, atime_ns=987654321),
+        't/sub': d(**z), 't/sub/g': f('g\n', **z), 't/l': link('f', mtime_ns=0)})
     return s
 
 

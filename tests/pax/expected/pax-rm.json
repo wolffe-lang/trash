@@ -1,0 +1,73 @@
+{
+ "row": "pax-rm",
+ "steps": [
+  {
+   "argv": [
+    "trash",
+    "a.txt",
+    "b.txt",
+    "c.log"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-rm",
+    "*.txt"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "trash-list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "<in-window> /home/rh/c.log\n"
+  }
+ ],
+ "tracebacks": 0,
+ "trees": {
+  "home": {
+   "Trash": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/files/c.log": {
+    "mode": "0644",
+    "mtime": 1700000000,
+    "owner": "0:0",
+    "sha256": "a3a5e715f0cc574a73c3f9bebb6bc24f32ffd5b67b387244c2c909da779a1478",
+    "size": 2,
+    "type": "file"
+   },
+   "Trash/info": {
+    "mode": "0700",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "type": "dir"
+   },
+   "Trash/info/c.log.trashinfo": {
+    "mode": "0600",
+    "mtime": "<in-window>",
+    "owner": "0:0",
+    "text": "[Trash Info]\nPath=/home/rh/c.log\nDeletionDate=<in-window>\n",
+    "type": "file"
+   }
+  },
+  "xdev": {}
+ },
+ "tz": "UTC"
+}
