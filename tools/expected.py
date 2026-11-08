@@ -452,6 +452,15 @@ def companions():
     ], {**fixture_dirs(), 'Trash/files/empty': f('empty\n'), 'Trash/files/nopath': f('nopath\n'),
         'Trash/info/empty.trashinfo': fixture_info(None, text=''), 'Trash/info/nopath.trashinfo': fixture_info(None, text=nopath_text),
         'Trash/info/sub.trashinfo': d('0700'), 'ok': f('ok\n')})
+    s['restore-bad-date'] = cap('restore-bad-date', [
+        step(['trash-restore'], stdout=listed(0, '????-??-?? ??:??:??', H + '/bad') + listed(1, '2020-01-01 00:00:00', H + '/d1') +
+             PROMPT % 1),
+    ], {**fixture_dirs(), 'Trash/files/d1': f('d1\n'), 'Trash/info/d1.trashinfo': fixture_info(H + '/d1', '2020-01-01T00:00:00'),
+        'bad': f('bad\n')})
+    isdir = "[Errno 21] Is a directory: '%s/Trash/info/sub.trashinfo'" % H
+    s['rm-info-dir'] = cap('rm-info-dir', [
+        step(['trash-rm', 'ok'], stderr='trash-rm: %s\n' % isdir), step(['trash-list'], stderr=isdir + '\n'),
+    ], {**fixture_dirs(), 'Trash/info/sub.trashinfo': d('0700')})
     # The round trip across file systems: copied in, copied back, every entry as it was.
     oracle = oracle_tool()
     trees = {}
