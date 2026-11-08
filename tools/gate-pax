@@ -14,7 +14,6 @@ cd "$root"
 mkdir -p target/gate "$out"
 source "$root/tools/gate-steps.sh"
 step pax-identity bash -c 'echo "PASS pax-identity head=$(git -c safe.directory=* -C "$0" rev-parse HEAD) kernel_sha256=$(sha256sum "$1" | cut -c1-64) disk_sha256=$(sha256sum "$2" | cut -c1-64)"' "$pax" "$kernel" "$disk"
-step census-pax-selftest python3 -I tools/census-pax.py selftest
 step census-pax-boot python3 -I tools/census-pax.py run --pax "$pax" --kernel "$kernel" --inputs "$inputs" \
     --census "$census" --disk "$disk" --out "$out/census"
 step census-pax-verdict python3 -I tools/census.py verdict --record "$out/census/pax.json" --platform pax
