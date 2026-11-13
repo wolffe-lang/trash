@@ -11,8 +11,8 @@ with tempfile.TemporaryDirectory(dir=tmp) as work:
     work = Path(work)
     apt = work / 'apt-get'
     apt.write_text('''#!/bin/sh
-case " $* " in
-  *" --snapshot 20261107T000000Z "*" install "*" libc6-dev "*) exit 0 ;;
+case "$*" in
+  '--snapshot 20261107T000000Z install -y --no-install-recommends libc6-dev') exit 0 ;;
   *) printf '%s\\n' 'FAIL snapshot-install selected a live archive' >&2; exit 1 ;;
 esac
 ''')
