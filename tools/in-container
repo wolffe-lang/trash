@@ -13,6 +13,7 @@
 #   TRASH_ENGINE   podman or docker (default docker)
 #   TRASH_CPUS     the CPU list taskset gives every step inside (default 0)
 #   TRASH_MEMORY   the container's memory cap (default 12g)
+#   TRASH_IMAGE_PREFIX   image name prefix (default trash-oracle)
 #   TRASH_ARCHIVES a directory of the pinned toolchain archives, mounted read-only
 #   TRASH_BOOTSTRAP=1  write ci/packages.lock and ci/oracle-manifest.lock from the
 #                  image instead of checking them (a re-pin; nothing else runs)
@@ -27,7 +28,7 @@ image_step() {
     key=$(cat "$root/ci/oracle.Containerfile" "$root/ci/apt-snapshot" "$root/ci/packages.txt" "$root/ci/snapshot-update.sh" \
         "$root/ci/build-requirements.txt" "$root/ci/oracle-sdist.txt" "$root/ci/oracle-requirements.txt" \
         "$root/ci/oracle-wheel.txt" | sha256sum | cut -c1-20)
-    image="trash-oracle:$key"
+    image="${TRASH_IMAGE_PREFIX:-trash-oracle}:$key"
     if ! "$engine" image inspect "$image" > /dev/null 2>&1; then
         "$engine" build --build-arg "BUILD_CPUS=$cpus" -f "$root/ci/oracle.Containerfile" -t "$image" "$root" || return
     fi

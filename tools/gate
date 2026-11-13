@@ -35,6 +35,7 @@ unset TZ
 source "$root/tools/gate-steps.sh"
 step pin-metadata python3 -I tools/check-pins.py
 step snapshot-index python3 -I tools/snapshot-update-test.py
+step image-prefix python3 -I tools/image-prefix-test.py
 step census-selftest python3 -I tools/census.py selftest
 step census-pax-selftest python3 -I tools/census-pax.py selftest
 step oracle-selftest python3 -I tools/oracle.py selftest
