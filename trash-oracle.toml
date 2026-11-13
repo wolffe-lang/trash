@@ -16,3 +16,5 @@ bin = "/opt/trash-cli/bin"
 [container]
 base = "docker.io/library/ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55"
 apt_snapshot = "20261107T000000Z"
+bootstrap_ca_version = "20260816ubuntu0.24.04.2"
+bootstrap_ca_sha256 = "f9fbacd417b515450b831032cc39d18059e9874e67525679a43c16071dabf9a0"

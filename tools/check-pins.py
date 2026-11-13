@@ -61,8 +61,19 @@ def main():
     base = (ROOT / 'ci/oracle.Containerfile').read_text().splitlines()[0].removeprefix('FROM ')
     if base != oracle['container']['base']:
         raise ValueError('the image base differs from the pin')
-    if (ROOT / 'ci/apt-snapshot').read_text().strip() != oracle['container']['apt_snapshot']:
+    container = oracle['container']
+    if (ROOT / 'ci/apt-snapshot').read_text().strip() != container['apt_snapshot']:
         raise ValueError('the archive snapshot differs from the pin')
+    content = (ROOT / 'ci/oracle.Containerfile').read_text()
+    filename = 'ca-certificates_%s_all.deb' % container['bootstrap_ca_version']
+    url = 'https://snapshot.ubuntu.com/ubuntu/%s/pool/main/c/ca-certificates/%s' % (container['apt_snapshot'], filename)
+    digest = container['bootstrap_ca_sha256']
+    if not re.fullmatch(r'[0-9a-f]{64}', digest) or ('ADD --checksum=sha256:%s %s ' % (digest, url)) not in content:
+        raise ValueError('the certificate bootstrap differs from the pin')
+    if digest not in content.split('RUN taskset', 1)[1]:
+        raise ValueError('the certificate bootstrap digest is not checked')
+    if 'ca-certificates=%s' % container['bootstrap_ca_version'] not in (ROOT / 'ci/packages.lock').read_text().splitlines():
+        raise ValueError('the certificate bootstrap differs from the package lock')
     print('PASS pin-metadata toolchains=2 oracle=trash-cli-%s wheel=%s' % (tc['version'], tc['wheel_sha256'][:12]))
 
 
