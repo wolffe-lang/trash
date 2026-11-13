@@ -25,7 +25,7 @@ cpus=${TRASH_CPUS:-0}
 memory=${TRASH_MEMORY:-12g}
 mkdir -p "$root/target/oracle"
 image_step() {
-    key=$(cat "$root/ci/oracle.Containerfile" "$root/ci/apt-snapshot" "$root/ci/packages.txt" "$root/ci/snapshot-update.sh" \
+    key=$(cat "$root/ci/oracle.Containerfile" "$root/ci/apt-snapshot" "$root/ci/packages.txt" "$root/ci/snapshot-update.sh" "$root/ci/snapshot-install.sh" \
         "$root/ci/build-requirements.txt" "$root/ci/oracle-sdist.txt" "$root/ci/oracle-requirements.txt" \
         "$root/ci/oracle-wheel.txt" | sha256sum | cut -c1-20)
     image="${TRASH_IMAGE_PREFIX:-trash-oracle}:$key"
