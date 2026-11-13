@@ -22,4 +22,8 @@ esac
                             env=env, capture_output=True, text=True)
     assert result.returncode != 0, 'snapshot index failure was ignored'
     assert 'FAIL snapshot-index' in result.stderr, result.stderr
-print('PASS snapshot-index failure stops the build')
+    apt.write_text('#!/bin/sh\nexit 0\n')
+    result = subprocess.run(['sh', str(root / 'ci/snapshot-update.sh'), '20261107T000000Z'],
+                            env=env, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+print('PASS snapshot-index failure stops the build and success continues')
