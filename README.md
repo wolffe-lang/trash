@@ -137,7 +137,10 @@ upstream issue for each gap. `tools/census.py` runs them on Linux;
 trash-cli, pinned by the digest of its published source archive and of the
 wheel built from it (`trash-oracle.toml`), runs in a container image built by
 `ci/oracle.Containerfile` from a dated Ubuntu archive snapshot, every package
-version locked (`ci/packages.lock`). It is only ever run as a program.
+version locked (`ci/packages.lock`). The image verifies a pinned certificate
+package before using it to bootstrap snapshot TLS; a failed index update stops
+the build rather than falling back to a live archive. It is only ever run as a
+program.
 
 `tools/oracle.py` runs each row of `tests/oracle/rows.json` on trash-cli and
 on this repository's commands in matching scratch homes, and compares every
