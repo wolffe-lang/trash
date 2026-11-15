@@ -153,8 +153,8 @@ reproduce them.
 
 ## Building and testing
 
-The toolchain is pinned by digest in `wolf-toolchain.toml` (wolf 0.2.38 and
-lupin 0.1.60); `tools/fetch-toolchain.py` fetches and checks it.
+The toolchain is pinned by digest in `wolf-toolchain.toml` (wolf 0.2.40 and
+lupin 0.1.62); `tools/fetch-toolchain.py` fetches and checks it.
 
 - `bash tools/gate unit`: the pins, the census, oracle, PAX and hardening
   harnesses' own tests, and the expected captures. Needs only Python 3.11 or later.
