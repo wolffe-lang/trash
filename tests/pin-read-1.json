@@ -2,79 +2,79 @@
  "lupin": {
   "assets": [
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.60/lupin-0.1.60-aarch64-apple-darwin.tar.gz",
-    "digest": "sha256:f3cae16fdb88a94702c0fd816d5eb90cdc8e8636c028dcf40f03868c5dc36bb8",
-    "id": 719320035,
-    "name": "lupin-0.1.60-aarch64-apple-darwin.tar.gz"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.62/lupin-0.1.62-aarch64-apple-darwin.tar.gz",
+    "digest": "sha256:228790ef3aef7605a2f9524abdcb6de5c8a5fa179437d82f3d3af262495a4e7f",
+    "id": 741637603,
+    "name": "lupin-0.1.62-aarch64-apple-darwin.tar.gz"
    },
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.60/lupin-0.1.60-aarch64-unknown-linux-gnu.tar.gz",
-    "digest": "sha256:dc19e519c77e3b830965ba1516cecf3ef0097d658bc8dfd12ae96f2693d3373c",
-    "id": 719319897,
-    "name": "lupin-0.1.60-aarch64-unknown-linux-gnu.tar.gz"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.62/lupin-0.1.62-aarch64-unknown-linux-gnu.tar.gz",
+    "digest": "sha256:f5391308ad9cd8ae1e31a42e7a17c1453679e2a0ac03f83783c4ac52e650ef2e",
+    "id": 741570541,
+    "name": "lupin-0.1.62-aarch64-unknown-linux-gnu.tar.gz"
    },
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.60/lupin-0.1.60-x86_64-pc-windows-msvc.zip",
-    "digest": "sha256:c0f01bebf3c54243d6db0f4162668b24124b2f4708d8227965d486fb575d4ac6",
-    "id": 719322085,
-    "name": "lupin-0.1.60-x86_64-pc-windows-msvc.zip"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.62/lupin-0.1.62-x86_64-pc-windows-msvc.zip",
+    "digest": "sha256:423ba4073179b72d925e9e835a3b035ca0fdfcb69042dd0eab0732e23141e537",
+    "id": 741573799,
+    "name": "lupin-0.1.62-x86_64-pc-windows-msvc.zip"
    },
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.60/lupin-0.1.60-x86_64-unknown-linux-gnu.tar.gz",
-    "digest": "sha256:e7d4c4f1534736c9262f4ccd01a631f03ff70e3b8122eefe6e9ec1e15c02637e",
-    "id": 719319956,
-    "name": "lupin-0.1.60-x86_64-unknown-linux-gnu.tar.gz"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.62/lupin-0.1.62-x86_64-unknown-linux-gnu.tar.gz",
+    "digest": "sha256:3b3bf9c23a9e545a4a99e65a5183d0c5e71e91d6bfb8a189147e2701c03e177f",
+    "id": 741571183,
+    "name": "lupin-0.1.62-x86_64-unknown-linux-gnu.tar.gz"
    },
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.60/lupin-0.1.60-x86_64-unknown-linux-musl.tar.gz",
-    "digest": "sha256:daf6bf2bee8620ec25e8dc776c5f35f5a9bdccd955ca0cb0b3be9c22425f082c",
-    "id": 719320043,
-    "name": "lupin-0.1.60-x86_64-unknown-linux-musl.tar.gz"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.62/lupin-0.1.62-x86_64-unknown-linux-musl.tar.gz",
+    "digest": "sha256:1cfbe548262c3bd0b75be731adbf88caf8239d8f4a5b75cb6727052eb0b33057",
+    "id": 741570593,
+    "name": "lupin-0.1.62-x86_64-unknown-linux-musl.tar.gz"
    },
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.60/lupin.exe",
-    "digest": "sha256:ab485bc7321085c3d18fa5cc869c5c64fceb547662311d6910e3b1e8a73c82d0",
-    "id": 719322086,
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.62/lupin.exe",
+    "digest": "sha256:035da8a67e1d658e7de86b901c5671be0722386565956b304b21ae934662e687",
+    "id": 741573801,
     "name": "lupin.exe"
    }
   ],
-  "release_id": 437263073,
-  "tag": "v0.1.60"
+  "release_id": 443651522,
+  "tag": "v0.1.62"
  },
  "wolf": {
   "assets": [
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.38/wolf-0.2.38-aarch64-apple-darwin.tar.gz",
-    "digest": "sha256:66a2c31324e9e4c4cbb6f103e4014e36b400366c198598b67c71491a65cffba4",
-    "id": 720094575,
-    "name": "wolf-0.2.38-aarch64-apple-darwin.tar.gz"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.40/wolf-0.2.40-aarch64-apple-darwin.tar.gz",
+    "digest": "sha256:3f18a56562fb089da05a50a612e031cd297f20a617b9e6e7ada768fbeb69e72b",
+    "id": 742318507,
+    "name": "wolf-0.2.40-aarch64-apple-darwin.tar.gz"
    },
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.38/wolf-0.2.38-aarch64-unknown-linux-gnu.tar.gz",
-    "digest": "sha256:e0a6763095cf99cb60a18f260966c96dd62be826076aa0ea22e4ad4f141a60e6",
-    "id": 720088552,
-    "name": "wolf-0.2.38-aarch64-unknown-linux-gnu.tar.gz"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.40/wolf-0.2.40-aarch64-unknown-linux-gnu.tar.gz",
+    "digest": "sha256:cea26eea215e7cdba60db2870c0eb4d2c5738065046ec5fe6e0eec7da55e48cd",
+    "id": 742302479,
+    "name": "wolf-0.2.40-aarch64-unknown-linux-gnu.tar.gz"
    },
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.38/wolf-0.2.38-x86_64-pc-windows-msvc.tar.gz",
-    "digest": "sha256:f9a5eadfd963200bb1287c68c2f3b88bc2e716d001670bd7a08180f9cc4f6d3c",
-    "id": 720097215,
-    "name": "wolf-0.2.38-x86_64-pc-windows-msvc.tar.gz"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.40/wolf-0.2.40-x86_64-pc-windows-msvc.tar.gz",
+    "digest": "sha256:df7ef8037df30394de4909217d42861732a6ed60c0991eb00990b4bc5441cbd8",
+    "id": 742336382,
+    "name": "wolf-0.2.40-x86_64-pc-windows-msvc.tar.gz"
    },
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.38/wolf-0.2.38-x86_64-unknown-linux-gnu.tar.gz",
-    "digest": "sha256:8447a57944da67ba8e76f5b4e88c2f38a32f39466f44b65e5817dcc276394f39",
-    "id": 720090150,
-    "name": "wolf-0.2.38-x86_64-unknown-linux-gnu.tar.gz"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.40/wolf-0.2.40-x86_64-unknown-linux-gnu.tar.gz",
+    "digest": "sha256:bc2020e0b7400c18162a6072c299c65c0582ea74a0eba22aaa57ca04ae13e7e1",
+    "id": 742327489,
+    "name": "wolf-0.2.40-x86_64-unknown-linux-gnu.tar.gz"
    },
    {
-    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.38/wolf-rt-0.2.38-x86_64-unknown-linux-musl.tar.gz",
-    "digest": "sha256:486f54735c18a352ae20eb7a7c2bbc3c7d245ca1be488841727d1e4ca6bfa125",
-    "id": 720088818,
-    "name": "wolf-rt-0.2.38-x86_64-unknown-linux-musl.tar.gz"
+    "browser_download_url": "https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.40/wolf-rt-0.2.40-x86_64-unknown-linux-musl.tar.gz",
+    "digest": "sha256:6d30737a02f02f9b19f6ef5b8b381802f0d0e2a179c37a4c1f638bca5e05c6da",
+    "id": 742323480,
+    "name": "wolf-rt-0.2.40-x86_64-unknown-linux-musl.tar.gz"
    }
   ],
-  "release_id": 437435429,
-  "tag": "v0.2.38"
+  "release_id": 443798290,
+  "tag": "v0.2.40"
  }
 }
