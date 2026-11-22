@@ -1,5 +1,9 @@
 ## Unreleased
 
+- The version is 0.1.0, no longer `0.1.0-dev`. The package manifest
+  (`src/wolf.pkg`, new; it declares `env`, `fs` and `exec`) names it, every
+  command's `--version` prints it from one constant, and a row
+  (`tools/check-version`, in the gate) fails if they differ.
 - Hardening. Every command syncs what it has made before it removes
   anything, so a power cut part-way loses no file, and a second run finishes
   what was cut short or refuses by name: `trash` takes back a name it had
