@@ -44,6 +44,8 @@ step expected-statements python3 -I tools/expected.py check
 step pax-rows-selftest python3 -I tools/pax-rows.py selftest
 step harden-selftest python3 -I tools/harden.py selftest
 step repro-selftest python3 -I tools/repro.py selftest
+step version-rows python3 -I tools/check-version --self-test
+step version python3 -I tools/check-version
 [ "$mode" != unit ] || exit 0
 [ -f /opt/oracle-manifest.txt ] || { echo 'FAIL gate-linux-outside-the-image: run it through tools/in-container'; exit 2; }
 stage=$root/.wolf-bin
@@ -55,6 +57,7 @@ step wolf-fmt "$wolf" fmt --check census src tests/pax/rowtool
 if [ "$mode" = candidate ]; then
     rm -rf target/bin target/unit
     step trash-build python3 -I tools/build.py --wolf "$wolf" --out target/bin
+    step version-printed python3 -I tools/check-version --bin-dir target/bin
     step trash-unit python3 -I tools/unit.py --wolf "$wolf" --out target/unit
     step repro python3 -I tools/repro.py run --wolf "$wolf" --out target/repro
     step oracle-compare python3 -I tools/oracle.py compare --rows tests/oracle/rows.json --candidate target/bin

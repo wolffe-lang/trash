@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+"""The commands' version has one source: the package manifest names it, one
+constant in src/can/edge.lu holds it for the programs, and every command's
+--version prints it. This row fails when they disagree.
+
+  tools/check-version [--root DIR] [--bin-dir DIR]
+  tools/check-version --self-test
+
+Without --bin-dir it compares the manifest and the constant and refuses a
+second version literal in the sources; with --bin-dir it also runs
+`DIR/<command> --version` for each command that has the flag and requires
+`<command> (wolffe-lang trash) <version>` as its line.
+"""
+import argparse
+import pathlib
+import re
+import subprocess
+import tempfile
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+CONST = re.compile(r'^const VERSION: str = "([^"]*)"$', re.M)
+LITERAL = re.compile(r'\(wolffe-lang trash\) [0-9]')
+COMMANDS = ('trash', 'trash-list', 'trash-restore', 'trash-empty')
+EDGE = 'src/can/edge.lu'
+
+
+def manifest_version(root):
+    text = re.sub(r'//[^\n]*', '', (root / 'src/wolf.pkg').read_text())
+    fields = re.findall(r'\bversion\s*:\s*"([^"]*)"', text)
+    if len(fields) != 1:
+        raise SystemExit('FAIL version-manifest-field-count %d' % len(fields))
+    return fields[0]
+
+
+def source_version(root):
+    found = CONST.findall((root / EDGE).read_text())
+    if len(found) != 1:
+        raise SystemExit('FAIL version-constant-count %d' % len(found))
+    return found[0]
+
+
+def check(root, bin_dir=None):
+    manifest = manifest_version(root)
+    source = source_version(root)
+    if manifest != source:
+        raise SystemExit('FAIL version-source-disagree manifest=%s source=%s' % (manifest, source))
+    for path in sorted((root / 'src').rglob('*.lu')):
+        if path.name.endswith('_test.lu'):
+            continue
+        if LITERAL.search(path.read_text()):
+            raise SystemExit('FAIL version-second-literal %s' % path.relative_to(root))
+    if bin_dir:
+        for command in COMMANDS:
+            exe = pathlib.Path(bin_dir) / command
+            if not exe.is_file():
+                raise SystemExit('FAIL version-binary-missing %s' % exe)
+            out = subprocess.run([str(exe), '--version'], capture_output=True, text=True)
+            want = '%s (wolffe-lang trash) %s\n' % (command, manifest)
+            if out.returncode != 0 or out.stdout != want:
+                raise SystemExit('FAIL version-printed-disagrees %s manifest=%s printed=%r' % (command, manifest, out.stdout))
+    print('PASS version %s%s' % (manifest, ' printed' if bin_dir else ''))
+
+
+def tree(base, pkg_version, const_version, extra=''):
+    (base / 'src/can').mkdir(parents=True)
+    (base / 'src/wolf.pkg').write_text('pkg { name: "trash", version: "%s", edition: "1" }\n' % pkg_version)
+    (base / EDGE).write_text('const VERSION: str = "%s"\n' % const_version + extra)
+
+
+def self_test():
+    def refused(why, **kw):
+        with tempfile.TemporaryDirectory() as t:
+            base = pathlib.Path(t)
+            tree(base, **kw)
+            try:
+                check(base)
+            except SystemExit as e:
+                assert why in str(e), (why, e)
+                return
+            raise AssertionError('not refused: ' + why)
+    with tempfile.TemporaryDirectory() as t:
+        tree(pathlib.Path(t), '1.2.3', '1.2.3')
+        check(pathlib.Path(t))
+    refused('version-source-disagree', pkg_version='1.2.4', const_version='1.2.3')
+    refused('version-second-literal', pkg_version='1.2.3', const_version='1.2.3',
+            extra='fn f() -> str { "x (wolffe-lang trash) 1.2.3" }\n')
+    with tempfile.TemporaryDirectory() as t:
+        base = pathlib.Path(t)
+        tree(base, '1.2.3', '1.2.3')
+        (base / 'src/wolf.pkg').write_text('pkg { version: "1.2.3", version: "1.2.3" }\n')
+        try:
+            check(base)
+            raise AssertionError('two fields not refused')
+        except SystemExit as e:
+            assert 'version-manifest-field-count' in str(e)
+    print('PASS version-self-test agree disagree second-literal two-fields')
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument('--root', type=pathlib.Path, default=ROOT)
+    p.add_argument('--bin-dir')
+    p.add_argument('--self-test', action='store_true')
+    a = p.parse_args()
+    if a.self_test:
+        self_test()
+    else:
+        check(a.root, a.bin_dir)
+
+
+if __name__ == '__main__':
+    main()
