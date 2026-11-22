@@ -57,9 +57,13 @@ pub fn add_bytes(mut buf: List[byte], b: List[byte]) {
     }
 }
 
-/// The version line every companion prints, in this repository's words.
+/// The version every command prints; `src/wolf.pkg` names the same number and
+/// `tools/check-version` fails when they differ.
+const VERSION: str = "0.1.0-dev"
+
+/// The version line every command prints, in this repository's words.
 pub fn version_of(prog: str) -> str {
-    "{prog} (wolffe-lang trash) 0.1.0-dev\n"
+    "{prog} (wolffe-lang trash) {VERSION}\n"
 }
 
 /// A line that starts with `y` or `Y` is a yes; any other answer, and the

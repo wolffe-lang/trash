@@ -48,10 +48,6 @@ fn help() -> str {
     """
 }
 
-fn version() -> str {
-    "trash (wolffe-lang trash) 0.1.0-dev\n"
-}
-
 /// Whether a word names something that is there, a link or not.
 fn exists(w: List[byte]) -> bool {
     let s = str_from_utf8(w) else |_| {
@@ -77,7 +73,7 @@ fn main() -> int {
         return 0
     }
     if a.version {
-        print_raw(version())
+        print_raw(can.version_of("trash"))
         return 0
     }
     if a.error.len > 0 {
