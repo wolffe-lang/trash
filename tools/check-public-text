@@ -1,0 +1,833 @@
+#!/usr/bin/env python3
+"""check-public-text: this repository's public text names none of the private machinery it is built with.
+
+    python3 -I tools/check-public-text                     the gate
+    python3 -I tools/check-public-text --self-test         the check's own cases; reads no repository file
+    python3 -I tools/check-public-text --against-rev REV   the gate, and the baseline holds no more than REV's
+    python3 -I tools/check-public-text --against-event     the same, REV from the CI event (GITHUB_EVENT_NAME)
+    python3 -I tools/check-public-text --shrink            lower the baseline to the tree; never raises it
+    python3 -I tools/check-public-text --init              write the first baseline
+    python3 -I tools/check-public-text --report [--all]    every hit, for cleaning; --all adds excluded files
+    python3 -I tools/check-public-text --digest WORD       the digest of a word, as the tables below hold it
+    python3 -I tools/check-public-text --tool-digest       this file's sha256, for the `tool` line of the conf
+
+It refuses internal work-item ids, decision numbers, machine names and planning paths in documents, code
+comments and CI files: the shapes are in TOKEN, DECISION and HOME below, the words in WORDS, which holds only
+sha256 digests of lowercase words, so this file names none of them.
+
+Documents (Markdown, text, README, CHANGELOG, docs/) are read whole outside fenced code; CI files under
+.github/ are read whole, since their names and messages are public; code is read in its comments only. Not
+read: evidence records and logs, prompts, audits and any path named for a work item; fixtures and test data;
+vendored and generated files; binary files; string literals in code; file names. A word inside a path or a
+file name refers to that file and passes.
+
+Text that held such words when the check arrived is counted in tools/public-text.baseline: one line per file
+and word, the word as the first twelve hex digits of its digest, with its count. The gate fails when a file
+holds more of a word than the baseline counts, or a word the baseline lacks; it notes where the file holds
+fewer. --shrink rewrites the baseline down to the tree after a cleanup and refuses while anything is over.
+--against-rev REV fails when the baseline's total for any word is above REV's, or names a word REV's lacks:
+the baseline may only shrink (an entry may move with its text from file to file). --against-event takes REV
+from the event CI runs for (GITHUB_EVENT_NAME, GITHUB_EVENT_PATH): for a pull request the base tip, the first
+parent of the merge commit its checkout makes (a head that is no merge commit is refused); for a push the
+push's previous tip, `before`, which the workflow fetches, so every commit of a push of several is held to
+it. A push that made its branch has no previous tip: its baseline must then be empty. An all-zero REV means
+the same for --against-rev.
+
+tools/public-text.conf holds this repository's own lines:
+    tool SHA256            this file's digest; a copy that differs from it fails
+    allow WORD             a word this repository uses publicly that has a refused shape
+    allow-pattern REGEX    the same, for every word the expression matches whole
+    skip GLOB              a tracked path not to read (fnmatch, against the path from the root)
+    scan records           read records too (for a repository whose records are clean)
+each optionally followed by `  # why`. This file is the same in every repository of the organization; it is
+replaced whole, with its pin, and never edited in one place.
+
+Output: `FAIL public-text PATH:LINE WORD CLASS (count N > baseline M)` for each line that holds a word over
+its baseline (a machine name, planning word or home path prints as its class, not itself), exit 1;
+`NOTE public-text stale PATH DIGEST (count N < baseline M)`; `PASS public-text ...`, exit 0. Errors in the
+conf or the baseline, a pin that does not match, a tree that is not a git checkout, or a run that reads no
+file, are FAIL lines too: the check never passes by not looking.
+"""
+import argparse
+import collections
+import fnmatch
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+
+SELF = os.path.abspath(__file__)
+ROOT = os.path.dirname(os.path.dirname(SELF))
+CONF = "tools/public-text.conf"
+BASELINE = "tools/public-text.baseline"
+OWN = {"tools/check-public-text", CONF, BASELINE}
+HEADER = ("# public-text baseline: known internal references, per file, as counts of word digests.\n"
+          "# It may only shrink. After a cleanup: python3 -I tools/check-public-text --shrink\n")
+
+# A work item: two or three lowercase letters, two or three digits, at most one lowercase letter. One letter
+# and digits is refused only as a session (s and two or three digits) or a round (r and two digits from forty
+# up). Never after a letter, digit, underscore or backslash (so escapes such as \x1b are not words).
+TOKEN = re.compile(r"(?<![A-Za-z0-9_\\])([a-z]{1,3})([0-9]{1,3})([a-z]?)(?![A-Za-z0-9_])")
+# A decision number: R-, letters, digits, a dash and a number; D and two digits; the word ruling and a number.
+DECISION = re.compile(r"(?<![A-Za-z0-9_])R-[A-Za-z]{1,4}[0-9]{0,3}[a-z]?-[0-9]+(?![A-Za-z0-9_])"
+                      r"|(?<![A-Za-z0-9_./-])D[0-9]{2}(?![A-Za-z0-9_])"
+                      r"|(?<![A-Za-z0-9_])[Rr]ulings? #?[0-9]+(?![A-Za-z0-9_])")
+# A home directory, other than a hosted runner's and the usual placeholders.
+HOME = re.compile(r"(?<![A-Za-z0-9_.~-])/(?:Users|home)/(?!(?:runner|user|you|linuxbrew|Shared|example|someone)/)"
+                  r"[A-Za-z0-9._-]+/")
+WORD = re.compile(r"[A-Za-z][A-Za-z0-9]*")
+# sha256 of the lowercase word: what it is, and the context in which it is one.
+WORDS = {
+    "2322faf222ec526ec597d7dc6b039f5813de6991003c0f6b65ab3b4b8a84d76a": ("machine-name", "word"),
+    "e0a3bde142798e0ebf0e412e48dedddcc9774d95eaf3e41981d469a67a8758a4": ("machine-name", "word"),
+    "b684e5a7d5767cce17964ffa279952b91971d22dcafa7a9c17097d77a4135544": ("machine-name", "word"),
+    "c439fe5659a36bab5d18cb1d74c29a40c7815c1337b31f92a3adcfb988d584d4": ("machine-name", "word"),
+    "cb3261e4290ebc9a8845f9e7cb0a1ef9a4fa138c1209dfbc450f4d604943b446": ("machine-name", "word"),
+    "9c4a535033d89a730e574b5caa269991d9bade574a676505b96fce4a452f5ed4": ("planning-path", "slash-after"),
+    "249215fed826e1cff9368c2c7490760a16f7bd49f875d39a9f23eaf1505d076d": ("planning-path", "capitals"),
+    "81a60f2038a06bd1346b9f04b68c14987978461a63996266d729cdc090dfa719": ("planning-path", "dash-number"),
+    "9c5646b582f10531c791dd2372854409c96e8276f979c0aa4a505ec760e06100": ("planning-word", "after-the"),
+}
+# Words of a refused shape that name public things: hashes and ciphers, platforms, encodings, protocols, file
+# systems, language standards, terminals. One-letter forms (x86, p256, u8, f64, p99, v2) never match a shape.
+ALLOW_WORDS = set("""sha224 sha256 sha384 sha512 aes128 aes192 aes256 amd64 arm64 utf8 utf16 utf32 ucs2 ucs4
+tcp4 tcp6 udp4 udp6 ipv4 ipv6 ext2 ext3 ext4 c89 c99 c11 c17 c23 vt52 vt100 vt102 vt220 vt320 x11 s390x s16 s32
+s64 s128""".split())
+# Letters that, followed by digits, name public things: platforms, registers and operand classes, relocations,
+# tool versions, protocols, checksums.
+ALLOW_LETTERS = set("""amd arm aes sha utf ucs ipv tcp udp ext elf int xmm ymm zmm gpr imm rel rip reg low lld gcc
+avx sse win ppc rv fp bf tls vt osc crc mem""".split())
+STRIP = "`*_()[]{}<>,;:\"'!?"
+EXT = re.compile(r"\.[A-Za-z][A-Za-z0-9]{0,5}$")
+BARE = re.compile(r"[a-z]{1,3}[0-9]{1,3}[a-z]?|[0-9]+")
+RECORD = re.compile(r"(^|/)[^/]*evidence[^/]*/|(^|/)ev/|^(docs/)?(prompts|audit)/"
+                    r"|\.(log|jsonl|tsv|out|err|stderr|stdout|hex|rc|status|exit|strace)$")
+VENDORED = re.compile(r"(^|/)(census/sources|vendor|vendored|third_party|external)/")
+GENERATED = re.compile(r"\.lock$|-lock\.json$|baseline[^/]*\.json$|(^|/)anchors[^/]*$|\.min\.(js|css)$|(^|/)dist/")
+FIXTURE = re.compile(r"(^|/)(fixtures?|goldens?|testdata|snapshots?)/")
+UNDER_TESTS = re.compile(r"(^|/)tests?/")
+DOC_EXT = (".md", ".markdown", ".txt", ".rst", ".adoc")
+DOC_NAMES = ("README", "CHANGELOG", "CONTRIBUTING", "NOTICE", "SECURITY", "LICENSE")
+PY_EXT = (".py",)
+HASH_EXT = (".sh", ".bash", ".zsh", ".fish", ".toml", ".yml", ".yaml", ".rb", ".pl", ".mk", ".cfg", ".ini",
+            ".conf", ".manifest", ".s", ".nix", ".cmake", ".r", ".tf")
+HASH_NAMES = ("Makefile", "GNUmakefile", "Containerfile", "Dockerfile", "PKGBUILD", ".gitignore", ".gitattributes",
+              ".gitmodules", "CODEOWNERS", ".editorconfig", "Brewfile", "Gemfile")
+SLASH_EXT = (".lu", ".rs", ".c", ".h", ".cc", ".cpp", ".hpp", ".js", ".mjs", ".cjs", ".ts", ".go", ".zig",
+             ".java", ".kt", ".swift", ".css", ".scss", ".pkg", ".ld", ".proto", ".scala", ".dart")
+ASM_EXT = (".S",)
+SEMI_EXT = (".el", ".lisp", ".scm", ".asm", ".clj")
+DASH_EXT = (".lua", ".sql", ".hs")
+XML_EXT = (".html", ".htm", ".xml", ".svg", ".xhtml")
+
+
+class Refused(Exception):
+    """A conf, baseline or tree the check cannot read: a FAIL, never a pass."""
+
+
+def digest(word):
+    return hashlib.sha256(word.encode("utf-8")).hexdigest()
+
+
+def short(word):
+    return digest(word)[:12]
+
+
+class Conf:
+    def __init__(self, text="", where=CONF):
+        self.tool = None
+        self.allow = set()
+        self.patterns = []
+        self.skip = []
+        self.records = False
+        for number, raw in enumerate(text.splitlines(), 1):
+            line = re.split(r"(?:^|\s)#", raw, 1)[0].strip()
+            if not line:
+                continue
+            words = line.split()
+            head, rest = words[0], words[1:]
+            if head == "tool" and len(rest) == 1 and re.fullmatch(r"[0-9a-f]{64}", rest[0]):
+                self.tool = rest[0]
+            elif head == "allow" and len(rest) == 1:
+                self.allow.add(rest[0])
+            elif head == "allow-pattern" and len(rest) == 1:
+                try:
+                    self.patterns.append(re.compile(rest[0]))
+                except re.error:
+                    raise Refused("%s:%d: allow-pattern does not compile" % (where, number))
+            elif head == "skip" and len(rest) == 1:
+                self.skip.append(rest[0])
+            elif words == ["scan", "records"]:
+                self.records = True
+            else:
+                raise Refused("%s:%d: cannot read this line" % (where, number))
+
+    def allows(self, word):
+        return word in self.allow or any(p.fullmatch(word) for p in self.patterns)
+
+
+def read_baseline(text, where=BASELINE):
+    counts = {}
+    for number, raw in enumerate(text.splitlines(), 1):
+        if not raw.strip() or raw.startswith("#"):
+            continue
+        fields = raw.split("\t")
+        if len(fields) != 3 or not re.fullmatch(r"[1-9][0-9]*", fields[0]) or not re.fullmatch(r"[0-9a-f]{12}", fields[1]) \
+                or not fields[2] or (fields[2], fields[1]) in counts:
+            raise Refused("%s:%d: cannot read this line" % (where, number))
+        counts[(fields[2], fields[1])] = int(fields[0])
+    return counts
+
+
+def write_baseline(counts):
+    lines = ["%d\t%s\t%s\n" % (n, d, p) for (p, d), n in sorted(counts.items()) if n > 0]
+    return HEADER + "".join(lines)
+
+
+def token_class(word, letters, digits, conf):
+    if word in ALLOW_WORDS or conf.allows(word):
+        return None
+    if len(letters) == 1:
+        if letters == "s" and len(digits) >= 2:
+            return "session"
+        if letters == "r" and len(digits) == 2 and int(digits) >= 40 and digits != "64":
+            return "round"
+        return None
+    if len(digits) == 1 or letters in ALLOW_LETTERS:
+        return None
+    return "work-item"
+
+
+def around(line, a, b):
+    i, j = a, b
+    while i > 0 and not line[i - 1].isspace():
+        i -= 1
+    while j < len(line) and not line[j].isspace():
+        j += 1
+    return line[i:j].strip(STRIP)
+
+
+def is_reference(word):
+    """A path or a file name, which ruling out file names leaves alone; a/b of bare words is a list, not a path."""
+    if EXT.search(word):
+        return True
+    if "/" not in word:
+        return False
+    return any(not BARE.fullmatch(part) for part in word.split("/") if part)
+
+
+def hits_in(segment, conf, words=None):
+    """Each (word key, what to print, class) refused in one piece of public text."""
+    table = WORDS if words is None else words
+    out = []
+    for m in TOKEN.finditer(segment):
+        if m.start() > 0 and segment[m.start() - 1] in "#-":
+            continue
+        cls = token_class(m.group(0), m.group(1), m.group(2), conf)
+        if cls and not is_reference(around(segment, m.start(), m.end())):
+            out.append((m.group(0), m.group(0), cls))
+    for m in DECISION.finditer(segment):
+        if not conf.allows(m.group(0)):
+            out.append((m.group(0), m.group(0), "decision"))
+    for m in HOME.finditer(segment):
+        if not conf.allows(m.group(0)):
+            out.append((m.group(0), "home-path", "home-path"))
+    for m in WORD.finditer(segment):
+        w = m.group(0)
+        if not 4 <= len(w) <= 12:
+            continue
+        entry = table.get(digest(w.lower()))
+        if not entry:
+            continue
+        cls, rule = entry
+        a, b = m.start(), m.end()
+        before, after = segment[a - 1:a] if a else "", segment[b:b + 1]
+        if rule == "word":
+            if (before and before in "_$") or after == "_" or is_reference(around(segment, a, b)):
+                continue
+        elif rule == "slash-after":
+            if after != "/":
+                continue
+        elif rule == "capitals":
+            if w != w.upper():
+                continue
+        elif rule == "dash-number":
+            if not re.match(r"-[0-9]", segment[b:b + 2]):
+                continue
+        elif rule == "after-the":
+            if not re.search(r"(?:^|[^A-Za-z])[Tt]he $", segment[:a]) or re.match(r" scripts?\b", segment[b:]):
+                continue
+        out.append((w.lower(), cls, cls))
+    return out
+
+
+def mode_of(path, first):
+    base = path.rsplit("/", 1)[-1]
+    if path.startswith(".github/") and path.endswith((".yml", ".yaml")):
+        return "whole"
+    if path.endswith(DOC_EXT) or base.upper().startswith(DOC_NAMES) or (path.startswith("docs/") and "." not in base):
+        return "doc"
+    if path.endswith(PY_EXT) or (first.startswith("#!") and "python" in first):
+        return "python"
+    if path.endswith(ASM_EXT):
+        return "asm"
+    if path.endswith(SLASH_EXT):
+        return "slash"
+    if path.endswith(HASH_EXT) or base in HASH_NAMES or first.startswith("#!"):
+        return "hash"
+    if path.endswith(SEMI_EXT):
+        return "semi"
+    if path.endswith(DASH_EXT):
+        return "dash"
+    if path.endswith(XML_EXT):
+        return "xml"
+    return None
+
+
+def marker_at(line, i, marks):
+    """The first comment marker at or after i that starts the line or follows a space or an opening."""
+    best = None
+    for mk in marks:
+        k = line.find(mk, i)
+        while k >= 0:
+            if k == 0 or line[k - 1] in " \t({;,}":
+                break
+            k = line.find(mk, k + 1)
+        if k >= 0 and (best is None or k < best[0]):
+            best = (k, mk)
+    return best
+
+
+def segments(mode, lines):
+    """(line number, public text) for each line of a file read in mode."""
+    if mode == "whole":
+        for n, line in enumerate(lines, 1):
+            yield n, line
+        return
+    if mode == "doc":
+        fence = None
+        for n, line in enumerate(lines, 1):
+            s = line.lstrip()
+            if s.startswith(("```", "~~~")):
+                mark = s[:3]
+                if fence is None:
+                    fence = mark
+                elif mark == fence:
+                    fence = None
+                continue
+            if fence is None:
+                yield n, line
+        return
+    line_marks = {"python": ["#"], "hash": ["#"], "asm": ["#", "//"], "slash": ["//"], "semi": [";"],
+                  "dash": ["--"], "xml": []}[mode]
+    blocks = {"python": [('"""', '"""'), ("'''", "'''")], "asm": [("/*", "*/")], "slash": [("/*", "*/")],
+              "xml": [("<!--", "-->")], "hash": [], "semi": [], "dash": []}[mode]
+    open_marks = dict(blocks)
+    inside = None
+    for n, line in enumerate(lines, 1):
+        out = []
+        i = 0
+        while i <= len(line):
+            if inside:
+                j = line.find(inside, i)
+                if j < 0:
+                    out.append(line[i:])
+                    break
+                out.append(line[i:j])
+                i = j + len(inside)
+                inside = None
+                continue
+            found = marker_at(line, i, line_marks + list(open_marks))
+            if found is None:
+                break
+            k, mk = found
+            if mk in open_marks:
+                inside = open_marks[mk]
+                i = k + len(mk)
+            else:
+                out.append(line[k:])
+                break
+        text = " ".join(out)
+        if text.strip():
+            yield n, text
+
+
+def excluded(path, conf):
+    if path in OWN:
+        return "own"
+    if any(fnmatch.fnmatchcase(path, g) for g in conf.skip):
+        return "skip"
+    if VENDORED.search(path):
+        return "vendored"
+    if GENERATED.search(path):
+        return "generated"
+    if FIXTURE.search(path):
+        return "fixture"
+    if not conf.records:
+        if RECORD.search(path):
+            return "record"
+        for part in path.split("/"):
+            for m in TOKEN.finditer(re.sub(r"[-_.]", " ", part)):
+                if token_class(m.group(0), m.group(1), m.group(2), conf):
+                    return "record"
+    if UNDER_TESTS.search(path) and mode_of(path, "") in (None, "doc", "whole"):
+        return "fixture"
+    return None
+
+
+def scan_text(path, text, conf, words=None, mode=None):
+    """Each (line number, key, printed, class) in one file's public text."""
+    lines = text.splitlines()
+    mode = mode or mode_of(path, lines[0] if lines else "")
+    if mode is None:
+        return []
+    return [(n, key, shown, cls) for n, seg in segments(mode, lines) for key, shown, cls in hits_in(seg, conf, words)]
+
+
+def git(*args, root=None):
+    r = subprocess.run(["git", "-C", root or ROOT] + list(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return r.returncode, r.stdout
+
+
+def tracked():
+    code, out = git("ls-files", "-z")
+    if code:
+        raise Refused("%s is not a git checkout" % ROOT)
+    return [p for p in out.decode("utf-8", "replace").split("\0") if p]
+
+
+def read_file(path):
+    full = os.path.join(ROOT, path)
+    if os.path.islink(full) or not os.path.isfile(full) or os.path.getsize(full) > 4000000:
+        return None
+    with open(full, "rb") as f:
+        data = f.read()
+    if b"\0" in data[:8192]:
+        return None
+    return data.decode("utf-8", "replace")
+
+
+def scan_tree(conf, everything=False):
+    """{(path, digest): [(line, printed, class, kind)]}, and how many files were read."""
+    found = collections.defaultdict(list)
+    files = 0
+    for path in tracked():
+        why = excluded(path, conf)
+        if why and not (everything and why != "own"):
+            continue
+        text = read_file(path)
+        if text is None:
+            continue
+        files += 1
+        mode = "whole" if why else None
+        for n, key, shown, cls in scan_text(path, text, conf, mode=mode):
+            found[(path, short(key))].append((n, shown, cls, why or "public"))
+    return found, files
+
+
+def over_and_stale(counts, base):
+    over = sorted(k for k, n in counts.items() if n > base.get(k, 0))
+    stale = sorted(k for k, m in base.items() if counts.get(k, 0) < m)
+    return over, stale
+
+
+def grown(head, rev):
+    """Digests whose total in the head baseline is above the total in REV's: [(digest, head total, REV total)]."""
+    th, tr = collections.Counter(), collections.Counter()
+    for (p, d), n in head.items():
+        th[d] += n
+    for (p, d), n in rev.items():
+        tr[d] += n
+    return sorted((d, th[d], tr[d]) for d in th if th[d] > tr[d])
+
+
+def load_conf():
+    path = os.path.join(ROOT, CONF)
+    if not os.path.isfile(path):
+        raise Refused("%s is missing" % CONF)
+    with open(path, encoding="utf-8") as f:
+        conf = Conf(f.read())
+    with open(SELF, "rb") as f:
+        mine = hashlib.sha256(f.read()).hexdigest()
+    if conf.tool != mine:
+        raise Refused("tools/check-public-text differs from the digest its conf pins (tool %s)" % mine)
+    return conf
+
+
+def load_baseline(required=True):
+    path = os.path.join(ROOT, BASELINE)
+    if not os.path.isfile(path):
+        if required:
+            raise Refused("%s is missing; write the first one with --init" % BASELINE)
+        return None
+    with open(path, encoding="utf-8") as f:
+        return read_baseline(f.read())
+
+
+def report_over(found, counts, base, over):
+    for key in over:
+        path, _ = key
+        for n, shown, cls, _ in sorted(found[key]):
+            print("FAIL public-text %s:%d %s %s (count %d > baseline %d)" % (path, n, shown, cls, counts[key],
+                                                                             base.get(key, 0)), flush=True)
+
+
+NO_TIP = re.compile(r"0*")
+
+
+def base_rev(event_name, event):
+    """The commit a CI event's baseline is held to, or None when there is none (a push that made its branch)."""
+    if event_name in ("pull_request", "pull_request_target"):
+        return "HEAD^1"
+    if event_name == "push":
+        before = (event or {}).get("before") or ""
+        return None if NO_TIP.fullmatch(before) else before
+    raise Refused("no baseline guard for a %s event" % (event_name or "missing"))
+
+
+def guard(base, rev, root=None, merge=False):
+    """(lines to print, failed): the baseline BASE held to REV's; None holds it to empty."""
+    if rev is None:
+        if base:
+            return ["FAIL public-text-baseline no previous tip to hold %d entries to: the push made the branch"
+                    % len(base)], True
+        return ["NOTE public-text no previous tip; the baseline is empty"], False
+    code, _ = git("rev-parse", "--verify", "--quiet", rev + "^{commit}", root=root)
+    if code:
+        raise Refused("--against-rev %s names no commit here" % rev)
+    if merge:
+        code, out = git("rev-list", "--parents", "-n", "1", "HEAD", root=root)
+        if code or len(out.split()) != 3:
+            raise Refused("this pull request's HEAD is not its merge commit, so HEAD^1 is not its base")
+    code, out = git("show", "%s:%s" % (rev, BASELINE), root=root)
+    if code:
+        return ["NOTE public-text %s has no baseline; the baseline guard starts with the next change" % rev], False
+    lines = ["FAIL public-text-baseline %s total %d > %d at %s" % (d, h, r, rev)
+             for d, h, r in grown(base, read_baseline(out.decode("utf-8", "replace"), rev + ":" + BASELINE))]
+    return lines, bool(lines)
+
+
+def event_rev():
+    """(REV, merge) for --against-event, from the environment GitHub Actions sets."""
+    name = os.environ.get("GITHUB_EVENT_NAME", "")
+    data = {}
+    path = os.environ.get("GITHUB_EVENT_PATH", "")
+    if path:
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            raise Refused("GITHUB_EVENT_PATH cannot be read")
+    return base_rev(name, data), name.startswith("pull_request")
+
+
+def gate(against, event=False):
+    conf = load_conf()
+    base = load_baseline()
+    found, files = scan_tree(conf)
+    if files == 0:
+        raise Refused("no file was read")
+    counts = {k: len(v) for k, v in found.items()}
+    over, stale = over_and_stale(counts, base)
+    report_over(found, counts, base, over)
+    for path, d in stale:
+        print("NOTE public-text stale %s %s (count %d < baseline %d)" % (path, d, counts.get((path, d), 0),
+                                                                         base[(path, d)]))
+    bad = bool(over)
+    if event or against is not None:
+        rev, merge = event_rev() if event else (None if NO_TIP.fullmatch(against) else against, False)
+        lines, failed = guard(base, rev, merge=merge)
+        for line in lines:
+            print(line, flush=True)
+        bad = bad or failed
+    if bad:
+        return 1
+    print("PASS public-text %d files, %d known, 0 new" % (files, sum(counts.values())))
+    return 0
+
+
+def shrink():
+    conf = load_conf()
+    base = load_baseline()
+    found, files = scan_tree(conf)
+    if files == 0:
+        raise Refused("no file was read")
+    counts = {k: len(v) for k, v in found.items()}
+    over, _ = over_and_stale(counts, base)
+    if over:
+        report_over(found, counts, base, over)
+        print("FAIL public-text --shrink refused: the tree holds more than the baseline")
+        return 1
+    with open(os.path.join(ROOT, BASELINE), "w", encoding="utf-8") as f:
+        f.write(write_baseline(counts))
+    print("PASS public-text baseline %d -> %d" % (sum(base.values()), sum(counts.values())))
+    return 0
+
+
+def init():
+    conf = load_conf()
+    if load_baseline(required=False) is not None:
+        print("FAIL public-text --init refused: %s exists; lower it with --shrink" % BASELINE)
+        return 1
+    found, files = scan_tree(conf)
+    if files == 0:
+        raise Refused("no file was read")
+    counts = {k: len(v) for k, v in found.items()}
+    with open(os.path.join(ROOT, BASELINE), "w", encoding="utf-8") as f:
+        f.write(write_baseline(counts))
+    print("PASS public-text baseline written: %d files read, %d known" % (files, sum(counts.values())))
+    return 0
+
+
+def report(everything):
+    conf = load_conf()
+    found, files = scan_tree(conf, everything)
+    for key in sorted(found):
+        for n, shown, cls, kind in sorted(found[key]):
+            print("HIT %s %s %s:%d %s" % (kind, cls, key[0], n, shown))
+    if everything:
+        named = collections.Counter()
+        for path in tracked():
+            if excluded(path, conf) == "record" and not RECORD.search(path):
+                named[path.split("/", 1)[0]] += 1
+        for top, n in sorted(named.items()):
+            print("NAMED %s %d paths named for a work item" % (top, n))
+    print("REPORT public-text %d files read, %d hits" % (files, sum(len(v) for v in found.values())))
+    return 0
+
+
+def self_test():
+    """Synthetic cases only: a made-up family, made-up words injected as digests, no real name."""
+    f = {"q": "qz", "s": "s", "r": "r", "R": "R", "D": "D", "ru": "ru", "h": "home", "u": "Users"}
+    t = lambda s: s.format(**f)
+    words = dict(WORDS)
+    words[digest("zqmachine")] = ("machine-name", "word")
+    words[digest("zqfolder")] = ("planning-path", "slash-after")
+    words[digest("zqboard")] = ("planning-path", "capitals")
+    words[digest("zqlog")] = ("planning-path", "dash-number")
+    words[digest("zqrole")] = ("planning-word", "after-the")
+    none = Conf()
+    failures = []
+    caught = passed = other = 0
+
+    def check(ok, name):
+        if not ok:
+            failures.append(name)
+
+    must_catch = [
+        ("README.md", "the {q}12 probes"), ("README.md", "({q}x123b)"), ("README.md", "{q}12's note"),
+        ("README.md", "## {q}12: a heading"), ("README.md", "the {q}12-plant branch"), ("README.md", "since {s}987"),
+        ("README.md", "the {r}97 round"), ("README.md", "the {r}97q pins"), ("README.md", "per {R}-{q}12-3"),
+        ("README.md", "per {R}-QZ-2"), ("README.md", "settled in {D}99"), ("README.md", "{ru}ling #999 says"),
+        ("README.md", "{ru}lings 12 and 13"), ("README.md", "{q}12/{q}13 together"), ("README.md", "`{q}12`"),
+        ("README.md", "see /{h}/somebody/work"), ("README.md", "see /{u}/somebody/work"),
+        ("README.md", "built on zqmachine today"), ("README.md", "zqmachine-1 again"), ("README.md", "ZQMachine's disk"),
+        ("README.md", "in ~/notes/zqfolder/plan.md"), ("README.md", "the ZQBOARD file"), ("README.md", "zqlog-12 says"),
+        ("README.md", "on the zqrole's word"), ("README.md", "The zqrole decides"),
+        ("src/a.lu", "x = 1 // {q}12 measured it"), ("src/a.lu", "/* {q}12 */ x"), ("src/a.lu", "//! {q}12: why"),
+        ("src/a.rs", "/// built on zqmachine"), ("tools/x.py", "x = 1  # {q}12"),
+        ("tools/x.py", '"""Doc: {q}12."""'), ("tools/x.sh", "# {q}12 here"), ("wolf.pkg", "// {q}12"),
+        ("x.toml", "a = 1 # {s}212's pin"), ("boot/a.S", "mov %rax, %rbx  # {q}12"), ("x.el", ";; {q}12"),
+        ("x.lua", "-- {q}12"), ("page.html", "<p>x</p> <!-- {q}12 -->"),
+        (".github/workflows/ci.yml", "      - name: {q}12 rows"), (".github/workflows/ci.yml", "  # zqmachine only"),
+        ("docs/NOTES", "{q}12 in an extensionless doc"),
+    ]
+    for path, text in must_catch:
+        got = scan_text(path, t(text), none, words)
+        check(bool(got), "not caught: %s %r" % (path, t(text)))
+        caught += 1
+    multi = scan_text("src/a.lu", t("/* one\n   {q}12 inside\n*/ x"), none, words)
+    check([h[0] for h in multi] == [2], "a block comment's second line: %r" % multi)
+    doc = scan_text("tools/x.py", t('"""\nfirst line\n{q}12 in a docstring\n"""\nx = 1\n'), none, words)
+    check([h[0] for h in doc] == [3], "a docstring's third line: %r" % doc)
+    caught += 2
+
+    must_pass = [
+        ("README.md", " ".join(sorted(ALLOW_WORDS))),
+        ("README.md", " ".join(sorted(p + "16" for p in ALLOW_LETTERS))),
+        ("README.md", "x86-64, arm64, p256, x25519, u8, f64, p99, v2, e2e, h2, i386, k8s, a1, b0, n2"),
+        ("README.md", "commit 4c37f9c and 0a1b2c3d4e5f6a7"), ("README.md", "the escape \\x1b[0m and \\u001b"),
+        ("README.md", t("`notes/{q}12-evidence/run.log`")), ("README.md", t("under notes/{q}12/ and {q}12.md")),
+        ("README.md", t("kex-strict-s-v00 and pax#85 and #{q}12-anchor")), ("README.md", t("D1, D2 and {s}1")),
+        ("README.md", t("lsp2, mpx5, crt0, int3, jbd2, com1")), ("README.md", t("{s}16, {s}32, {s}64, {r}64, {r}12, {r}30")),
+        ("README.md", t("```\n{q}12 inside a fence\n```")), ("README.md", t("~~~\n{q}12 inside a fence\n~~~")),
+        ("README.md", "zqmachine_HOST and $zqmachine and notes/zqmachine-run.log"), ("README.md", "zqfolder without a slash"),
+        ("README.md", "a zqboard in lowercase"), ("README.md", "zqlog-ahead"), ("README.md", "zqrole scripts"),
+        ("README.md", "a zqrole alone"), ("README.md", t("/{h}/runner/work and /{h}/linuxbrew/.linuxbrew")),
+        ("README.md", "sha256 and ed25519 and RFC 4254"),
+        ("src/a.lu", t('let url = "https://example.com/{q}12"')), ("src/a.lu", t("let s = \"{q}12\"")),
+        ("tools/x.py", t("x = '{q}12'  # fine")), ("tools/x.sh", t("echo pax#{q}12")),
+        ("data.json", t('{{"id": "{q}12"}}')),
+    ]
+    for path, text in must_pass:
+        got = scan_text(path, text, none, words)
+        check(not got, "refused: %s %r: %r" % (path, text, got))
+        passed += 1
+
+    allow = Conf(t("allow {q}12  # a public word\nallow-pattern ch[0-9]{{2}}\n"))
+    check(not scan_text("README.md", t("{q}12 and ch07"), allow, words), "a conf allow")
+    check(scan_text("README.md", t("{q}13"), allow, words), "a conf allow lets only its word")
+    other += 2
+
+    for path, why in [(t("notes/{q}12-the-thing.md"), "record"), ("notes/a-evidence/x.md", "record"),
+                      ("x/run.log", "record"), ("prompts/judge.md", "record"), ("docs/audit/a.md", "record"),
+                      ("census/sources/x/y.S", "vendored"), ("vendor/a/b.lu", "vendored"), ("Cargo.lock", "generated"),
+                      ("ci/local-gate-baseline.json", "generated"), ("tests/fixtures/a.lu", "fixture"),
+                      ("tests/cases.json", "fixture"), ("tools/check-public-text", "own"), (BASELINE, "own")]:
+        check(excluded(path, none) == why, "excluded %s: %r, not %r" % (path, excluded(path, none), why))
+        other += 1
+    for path in ["README.md", "src/a_test.lu", "tests/run.py", ".github/workflows/ci.yml", "docs/X.md"]:
+        check(excluded(path, none) is None, "read %s" % path)
+        other += 1
+    check(excluded(t("notes/{q}12-the-thing.md"), Conf("scan records")) is None, "scan records")
+    other += 1
+
+    a, b, c = ("README.md", "a" * 12), ("README.md", "b" * 12), ("docs/X.md", "a" * 12)
+    check(over_and_stale({a: 2}, {a: 2}) == ([], []), "equal passes")
+    check(over_and_stale({a: 3}, {a: 2}) == ([a], []), "one more fails")
+    check(over_and_stale({a: 2, b: 1}, {a: 2}) == ([b], []), "a new word fails")
+    check(over_and_stale({a: 1}, {a: 2}) == ([], [a]), "one fewer passes, stale")
+    check(over_and_stale({c: 2}, {a: 2}) == ([c], [a]), "a word moved to another file fails")
+    check(write_baseline({a: 1, b: 0}) == HEADER + "1\t%s\tREADME.md\n" % ("a" * 12), "the baseline's form")
+    check(read_baseline(write_baseline({a: 3, c: 1})) == {a: 3, c: 1}, "the baseline reads back")
+    check(grown({c: 2}, {a: 2}) == [], "the guard lets an entry move")
+    check(grown({a: 3}, {a: 2}) == [("a" * 12, 3, 2)], "the guard refuses growth")
+    check(grown({b: 1}, {a: 2}) == [("b" * 12, 1, 0)], "the guard refuses a new word")
+    other += 10
+    for text, name in [("tool abc", "a short pin"), ("frobnicate x", "an unknown line"), ("allow-pattern (", "a bad regex"),
+                       ("allow a b", "two words to allow")]:
+        try:
+            Conf(text)
+            failures.append("conf accepted %s" % name)
+        except Refused:
+            pass
+        other += 1
+    for text, name in [("x\tdeadbeef\tREADME.md", "a count that is no number"),
+                       ("1\tdeadbeef\tREADME.md", "a short digest"), ("0\t%s\tREADME.md" % ("a" * 12), "a zero count"),
+                       ("1\t%s\tREADME.md\n1\t%s\tREADME.md" % ("a" * 12, "a" * 12), "a repeated entry")]:
+        try:
+            read_baseline(text)
+            failures.append("baseline accepted %s" % name)
+        except Refused:
+            pass
+        other += 1
+
+    check(len([1 for v in WORDS.values() if v[0] == "machine-name"]) == 5, "five machine names")
+    check(all(re.fullmatch(r"[0-9a-f]{64}", k) for k in WORDS), "every word is a full digest")
+    with open(SELF, encoding="utf-8") as fh:
+        source = fh.read()
+    mine = scan_text("tools/check-public-text.py", source, none)
+    check(not mine, "this file names something it refuses: %r" % mine[:3])
+    other += 3
+
+    check(base_rev("pull_request", {"before": "a" * 40}) == "HEAD^1", "a pull request is held to its base tip")
+    check(base_rev("push", {"before": "0" * 40}) is None and base_rev("push", {}) is None,
+          "a push that made its branch has no previous tip")
+    other += 2
+    other += guard_rows(check, t)
+
+    for name in failures:
+        print("FAIL public-text-self-test " + name, flush=True)
+    if failures:
+        return 1
+    print("PASS public-text-self-test caught %d, passed %d, other %d" % (caught, passed, other))
+    return 0
+
+
+def guard_rows(check, t):
+    """The baseline guard against real commits, in a repository made for it: a push of two commits whose first
+    grows the baseline must fail, though HEAD^1 (its own first commit) already holds the grown baseline."""
+    import shutil
+    import tempfile
+    if not shutil.which("git"):
+        check(False, "git is needed for the baseline guard's rows")
+        return 1
+    rows = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        env = dict(os.environ, HOME=tmp, GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
+                   GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@example.invalid",
+                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@example.invalid")
+
+        def run(*args):
+            r = subprocess.run(["git", "-C", tmp, "-c", "commit.gpgsign=false", "-c", "core.hooksPath=" + os.devnull]
+                               + list(args), env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if r.returncode:
+                raise Refused("git %s: %s" % (args[0], r.stderr.decode("utf-8", "replace").strip()))
+            return r.stdout.decode().strip()
+
+        def commit(files, message):
+            for path, text in files.items():
+                full = os.path.join(tmp, path)
+                os.makedirs(os.path.dirname(full), exist_ok=True)
+                with open(full, "w", encoding="utf-8") as f:
+                    f.write(text)
+            run("add", "-A")
+            run("commit", "-q", "-m", message)
+            return run("rev-parse", "HEAD")
+
+        word = t("{q}12")
+        run("init", "-q")
+        before = commit({"README.md": "clean\n", BASELINE: HEADER}, "the previous tip")
+        grown_base = {("README.md", short(word)): 1}
+        commit({"README.md": "clean\n%s\n" % word, BASELINE: write_baseline(grown_base)}, "grow the baseline")
+        commit({"NOTES.md": "unrelated\n"}, "a second commit")
+        _, failed = guard(grown_base, base_rev("push", {"before": before}), root=tmp)
+        check(failed, "a two-commit push whose first commit grows the baseline passes the push guard")
+        _, failed = guard(grown_base, "HEAD^1", root=tmp)
+        check(not failed, "HEAD^1 of that push is its own first commit, which already holds the grown baseline")
+        _, failed = guard(grown_base, base_rev("push", {"before": "0" * 40}), root=tmp)
+        check(failed, "a push that made its branch with entries in its baseline passes")
+        _, failed = guard({}, None, root=tmp)
+        check(not failed, "a push that made its branch with an empty baseline fails")
+        rows += 4
+        for rev, merge, name in [("f" * 40, False, "a REV that names no commit"),
+                                 ("HEAD^1", True, "a pull request whose HEAD is no merge commit")]:
+            try:
+                guard(grown_base, rev, root=tmp, merge=merge)
+                check(False, "the guard accepted %s" % name)
+            except Refused:
+                pass
+            rows += 1
+    return rows
+
+
+def main():
+    p = argparse.ArgumentParser(description="no internal references in this repository's public text")
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("--self-test", action="store_true")
+    g.add_argument("--shrink", action="store_true")
+    g.add_argument("--init", action="store_true")
+    g.add_argument("--report", action="store_true")
+    g.add_argument("--digest", metavar="WORD")
+    g.add_argument("--tool-digest", action="store_true")
+    p.add_argument("--all", action="store_true", help="with --report: excluded files too")
+    g2 = p.add_mutually_exclusive_group()
+    g2.add_argument("--against-rev", metavar="REV")
+    g2.add_argument("--against-event", action="store_true")
+    a = p.parse_args()
+    try:
+        if a.self_test:
+            return self_test()
+        if a.digest is not None:
+            print(digest(a.digest.lower()))
+            return 0
+        if a.tool_digest:
+            with open(SELF, "rb") as f:
+                print(hashlib.sha256(f.read()).hexdigest())
+            return 0
+        if a.shrink:
+            return shrink()
+        if a.init:
+            return init()
+        if a.report:
+            return report(a.all)
+        return gate(a.against_rev, a.against_event)
+    except Refused as e:
+        print("FAIL public-text %s" % e, flush=True)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

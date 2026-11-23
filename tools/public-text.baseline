@@ -1,0 +1,10 @@
+# public-text baseline: known internal references, per file, as counts of word digests.
+# It may only shrink. After a cleanup: python3 -I tools/check-public-text --shrink
+1	187763458089	src/can/back.lu
+1	5bcbce17d62e	src/can/back.lu
+2	a247fb4763ca	src/can/back.lu
+1	187763458089	src/can/copy.lu
+1	1b3a44e871a7	src/can/opts.lu
+1	b84e7b31827d	src/can/opts.lu
+1	8f07e44d6eb9	src/can/pick.lu
+1	8a26a77f8006	src/trash-rm.lu
