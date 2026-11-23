@@ -1,5 +1,10 @@
 ## Unreleased
 
+- `tools/check-public-text`, the check every repository of the organization carries, pinned by digest in
+  `tools/public-text.conf`: documents, code comments and CI files hold no new internal work-item ids, decision
+  numbers, machine names or planning paths (the ones already here are counted in `tools/public-text.baseline`,
+  which may only shrink). The unit gate runs it and its self-test, and `.github/workflows/public-text.yml` runs
+  both on every pull request, with no label.
 - The version is 0.1.0, no longer `0.1.0-dev`. The package manifest
   (`src/wolf.pkg`, new; it declares `env`, `fs` and `exec`) names it, every
   command's `--version` prints it from one constant, and a row
