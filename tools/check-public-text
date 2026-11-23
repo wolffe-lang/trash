@@ -102,6 +102,8 @@ avx sse win ppc rv fp bf tls vt osc crc mem""".split())
 STRIP = "`*_()[]{}<>,;:\"'!?"
 EXT = re.compile(r"\.[A-Za-z][A-Za-z0-9]{0,5}$")
 BARE = re.compile(r"[a-z]{1,3}[0-9]{1,3}[a-z]?|[0-9]+")
+# Seven or more hex digits are a commit hash, whatever their letters and digits happen to spell.
+HEXWORD = re.compile(r"[0-9a-f]+")
 RECORD = re.compile(r"(^|/)[^/]*evidence[^/]*/|(^|/)ev/|^(docs/)?(prompts|audit)/"
                     r"|\.(log|jsonl|tsv|out|err|stderr|stdout|hex|rc|status|exit|strace)$")
 VENDORED = re.compile(r"(^|/)(census/sources|vendor|vendored|third_party|external)/")
@@ -187,7 +189,7 @@ def write_baseline(counts):
 
 
 def token_class(word, letters, digits, conf):
-    if word in ALLOW_WORDS or conf.allows(word):
+    if word in ALLOW_WORDS or conf.allows(word) or (len(word) >= 7 and HEXWORD.fullmatch(word)):
         return None
     if len(letters) == 1:
         if letters == "s" and len(digits) >= 2:
@@ -648,7 +650,8 @@ def self_test():
         ("README.md", " ".join(sorted(ALLOW_WORDS))),
         ("README.md", " ".join(sorted(p + "16" for p in ALLOW_LETTERS))),
         ("README.md", "x86-64, arm64, p256, x25519, u8, f64, p99, v2, e2e, h2, i386, k8s, a1, b0, n2"),
-        ("README.md", "commit 4c37f9c and 0a1b2c3d4e5f6a7"), ("README.md", "the escape \\x1b[0m and \\u001b"),
+        ("README.md", "commit 4c37f9c and 0a1b2c3d4e5f6a7"), ("README.md", "commits cfa147a, `abc123d` and dea456f"),
+        ("README.md", "the escape \\x1b[0m and \\u001b"),
         ("README.md", t("`notes/{q}12-evidence/run.log`")), ("README.md", t("under notes/{q}12/ and {q}12.md")),
         ("README.md", t("kex-strict-s-v00 and pax#85 and #{q}12-anchor")), ("README.md", t("D1, D2 and {s}1")),
         ("README.md", t("lsp2, mpx5, crt0, int3, jbd2, com1")), ("README.md", t("{s}16, {s}32, {s}64, {r}64, {r}12, {r}30")),
