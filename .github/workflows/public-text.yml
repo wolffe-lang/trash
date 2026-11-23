@@ -1,0 +1,42 @@
+# The public-text check on every pull request and every push to the default branch, with no label and
+# no tier: tools/check-public-text's self-test, then the check, with the baseline held to the one before
+# the change. A pull request is held to its base tip, the first parent of the merge commit its checkout
+# makes; a push, to the push's previous tip (`before`, fetched below), so a push of several commits is
+# held as a whole. A push that made its branch has no previous tip, and then its baseline must be empty.
+# This file is the same in every repository of the organization.
+name: public text
+
+on:
+  pull_request:
+  push:
+    branches: [trunk, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-text-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  public-text:
+    name: public text
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 2
+      - name: public text self-test
+        run: python3 -I tools/check-public-text --self-test
+      - name: public text base
+        if: ${{ github.event_name == 'push' }}
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          case "$BEFORE" in
+            *[1-9a-f]*) git fetch --no-tags --depth=1 origin "$BEFORE" ;;
+            *) echo "this push made the branch: it has no previous tip" ;;
+          esac
+      - name: public text
+        run: python3 -I tools/check-public-text --against-event
