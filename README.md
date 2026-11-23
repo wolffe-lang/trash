@@ -200,3 +200,5 @@ implementation (desktop file managers, `gio`, other `trash` tools).
 
 GPL-3.0-or-later with the wolf Training Data Permission. See `LICENSE` and
 `LICENSE-TRAINING-DATA`.
+
+A planted line for the public-text check: qz97.
