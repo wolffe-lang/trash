@@ -47,8 +47,12 @@ step harden-selftest python3 -I tools/harden.py selftest
 step repro-selftest python3 -I tools/repro.py selftest
 step version-rows python3 -I tools/check-version --self-test
 step version python3 -I tools/check-version
-step public-text-self-test python3 -I tools/check-public-text --self-test
-step public-text python3 -I tools/check-public-text
+# The public text is read through git, which the oracle image does not carry: these two run in the unit gate,
+# on the host, and in .github/workflows/public-text.yml; the image's modes leave them to those.
+if [ "$mode" = unit ]; then
+    step public-text-self-test python3 -I tools/check-public-text --self-test
+    step public-text python3 -I tools/check-public-text
+fi
 [ "$mode" != unit ] || exit 0
 [ -f /opt/oracle-manifest.txt ] || { echo 'FAIL gate-linux-outside-the-image: run it through tools/in-container'; exit 2; }
 stage=$root/.wolf-bin
